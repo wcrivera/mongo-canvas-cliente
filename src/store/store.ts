@@ -31,6 +31,7 @@ export const store = configureStore({
     ayudantiaMongo: ayudantiaMongoSlice.reducer,
     solucionTextoMongo: solucionTextoMongoSlice.reducer,
     ejercicioMongo: ejercicioMongoSlice.reducer,
+    auth: authReducer
   },
 });
 
