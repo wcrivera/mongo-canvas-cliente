@@ -1,0 +1,78 @@
+import { createSlice } from "@reduxjs/toolkit";
+
+export interface ICanvasDeploymentTema {
+  canvas_curso_id: number;
+  canvas_id:       number | null;
+  status:          'pending' | 'synced' | 'dirty' | 'missing' | 'error';
+  synced_at:       string | null;
+  error_msg:       string;
+}
+
+export interface ITema {
+  _id:                string;
+  clase_id:           string;
+  capitulo_id:        string;
+  curso_id:           string;
+  nombre:             string;
+  position:           number;
+  canvas_deployments: ICanvasDeploymentTema[];
+  createdAt:          string;
+  updatedAt:          string;
+}
+
+export interface TemaState {
+  temas:      ITema[];
+  isLoading:  boolean;
+  error:      string | null;
+}
+
+const initialState: TemaState = {
+  temas:     [],
+  isLoading: false,
+  error:     null,
+};
+
+export const temaMongoSlice = createSlice({
+  name: "temaMongo",
+  initialState,
+  reducers: {
+    setTemas: (state, action) => {
+      state.temas = action.payload;
+    },
+    agregarTema: (state, action) => {
+      state.temas.push(action.payload);
+    },
+    actualizarTema: (state, action) => {
+      const idx = state.temas.findIndex(t => t._id === action.payload._id);
+      if (idx !== -1) state.temas[idx] = action.payload;
+    },
+    eliminarTemaState: (state, action) => {
+      state.temas = state.temas.filter(t => t._id !== action.payload);
+    },
+    limpiarTemas: (state) => {
+      state.temas = [];
+    },
+    startLoadingTema: (state) => {
+      state.isLoading = true;
+      state.error     = null;
+    },
+    endLoadingTema: (state) => {
+      state.isLoading = false;
+    },
+    setErrorTema: (state, action) => {
+      state.isLoading = false;
+      state.error     = action.payload;
+    },
+  },
+});
+
+export const {
+  setTemas,
+  agregarTema,
+  actualizarTema,
+  eliminarTemaState,
+  limpiarTemas,
+  startLoadingTema,
+  endLoadingTema,
+  setErrorTema,
+} = temaMongoSlice.actions;

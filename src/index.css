@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colores personalizados */
+  --color-chapter-blue: #4A6D8C;
+  
+  --color-chapter-50: #f0f4f8;
+  --color-chapter-100: #d9e4ee;
+  --color-chapter-200: #b3c9dd;
+  --color-chapter-300: #8daecb;
+  --color-chapter-400: #6793ba;
+  --color-chapter-500: #4A6D8C;
+  --color-chapter-600: #3c5770;
+  --color-chapter-700: #2e4154;
+  --color-chapter-800: #1f2c38;
+  --color-chapter-900: #0f161c;
+}
+
+/* Animaciones personalizadas */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Clases de utilidad para animaciones */
+@utility animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@utility animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+@utility animate-slideDown {
+  animation: slideDown 0.2s ease-out;
+}
+
+@utility animate-fadeIn-fast {
+  animation: fadeIn 0.15s ease-in-out;
+}
+
+@utility animate-fadeIn-slow {
+  animation: fadeIn 0.5s ease-in-out;
+}
