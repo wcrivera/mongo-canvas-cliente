@@ -1,52 +1,61 @@
-import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { setCredenciales } from '../../store/slices/auth/authSlice';
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setCredenciales } from "../../store/slices/auth/authSlice";
+import { cargarPerfil } from "../../store/slices/auth/thunks";
+import type { AppDispatch } from "../../store";
 
 const decodeJWT = (token: string) => {
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const base64Url = token.split(".")[1];
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
   const jsonPayload = decodeURIComponent(
     atob(base64)
-      .split('')
-      .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-      .join(''),
+      .split("")
+      .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+      .join(""),
   );
   return JSON.parse(jsonPayload);
 };
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
-  const navigate       = useNavigate();
-  const dispatch       = useDispatch();
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    const token = searchParams.get("token");
 
     if (!token) {
-      navigate('/login?error=no_token', { replace: true });
+      navigate("/login?error=no_token", { replace: true });
       return;
     }
 
-    try {
-      const payload = decodeJWT(token);
+    const iniciarSesion = async () => {
+      try {
+        const payload = decodeJWT(token);
 
-      dispatch(setCredenciales({
-        token,
-        email: payload.email,
-        role:  payload.role,
-        id:    payload.id,
-      }));
+        dispatch(
+          setCredenciales({
+            token,
+            email: payload.email,
+            role: payload.role,
+            id: payload.id,
+          }),
+        );
 
-      // Persistir token en sessionStorage para sobrevivir navegaciones
-      sessionStorage.setItem('auth_token', token);
+        sessionStorage.setItem("auth_token", token);
 
-      navigate('/inicio', { replace: true });
+        // Cargar perfil completo para saber si tiene token Canvas
+        await dispatch(cargarPerfil());
 
-    } catch (e) {
-      console.error('Error decodificando JWT:', e);
-      navigate('/login?error=invalid_token', { replace: true });
-    }
+        navigate("/inicio", { replace: true });
+      } catch (e) {
+        console.error("Error en callback:", e);
+        navigate("/login?error=invalid_token", { replace: true });
+      }
+    };
+
+    iniciarSesion();
   }, [dispatch, navigate, searchParams]);
 
   return (

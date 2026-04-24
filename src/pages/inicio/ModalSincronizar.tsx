@@ -1,25 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  Dialog, DialogTitle, DialogContent,
-  DialogActions, Button, Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Typography,
   LinearProgress,
 } from "@mui/material";
-import SyncIcon        from "@mui/icons-material/Sync";
+import SyncIcon from "@mui/icons-material/Sync";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon       from "@mui/icons-material/Error";
-import InfoIcon        from "@mui/icons-material/Info";
-import AutorenewIcon   from "@mui/icons-material/Autorenew";
+import ErrorIcon from "@mui/icons-material/Error";
+import InfoIcon from "@mui/icons-material/Info";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 
 interface Paso {
-  msg:    string;
-  status: 'ok' | 'error' | 'info' | 'working';
+  msg: string;
+  status: "ok" | "error" | "info" | "working";
 }
 
 interface Props {
-  curso_id:        string;
+  curso_id: string;
   canvas_curso_id: number;
-  canvas_nombre:   string;
-  onClose:         () => void;
+  canvas_nombre: string;
+  onClose: () => void;
 }
 
 const ModalSincronizar = ({
@@ -28,49 +32,53 @@ const ModalSincronizar = ({
   canvas_nombre,
   onClose,
 }: Props) => {
-  const [pasos, setPasos]           = useState<Paso[]>([]);
-  const [progreso, setProgreso]     = useState({ actual: 0, total: 0, msg: '' });
-  const [terminado, setTerminado]   = useState(false);
-  const [exitoso, setExitoso]       = useState(false);
-  const [iniciado, setIniciado]     = useState(false);
-  const listRef                     = useRef<HTMLDivElement>(null);
-  const eventSourceRef              = useRef<EventSource | null>(null);
+  const [pasos, setPasos] = useState<Paso[]>([]);
+  const [progreso, setProgreso] = useState({ actual: 0, total: 0, msg: "" });
+  const [terminado, setTerminado] = useState(false);
+  const [exitoso, setExitoso] = useState(false);
+  const [iniciado, setIniciado] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const handleIniciar = () => {
     setIniciado(true);
     setPasos([]);
-    setProgreso({ actual: 0, total: 0, msg: '' });
+    setProgreso({ actual: 0, total: 0, msg: "" });
     setTerminado(false);
 
-    const url = `${import.meta.env.VITE_BACKEND_URL}/api/sincronizar/${curso_id}/${canvas_curso_id}`;
-    const es   = new EventSource(url);
+    const token = sessionStorage.getItem("auth_token");
+    const url = `${import.meta.env.VITE_BACKEND_URL}/api/sincronizar/${curso_id}/${canvas_curso_id}?token=${token}`;
+    const es = new EventSource(url);
     eventSourceRef.current = es;
 
     es.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
-      if (data.tipo === 'paso') {
-        setPasos(prev => [...prev, { msg: data.msg, status: data.status }]);
+      if (data.tipo === "paso") {
+        setPasos((prev) => [...prev, { msg: data.msg, status: data.status }]);
         // Auto scroll
         setTimeout(() => {
           listRef.current?.scrollTo({
-            top:      listRef.current.scrollHeight,
-            behavior: 'smooth',
+            top: listRef.current.scrollHeight,
+            behavior: "smooth",
           });
         }, 50);
       }
 
-      if (data.tipo === 'progreso') {
+      if (data.tipo === "progreso") {
         setProgreso({ actual: data.actual, total: data.total, msg: data.msg });
       }
 
-      if (data.tipo === 'fin') {
+      if (data.tipo === "fin") {
         setTerminado(true);
         setExitoso(data.ok);
-        setPasos(prev => [...prev, {
-          msg:    data.msg,
-          status: data.ok ? 'ok' : 'error',
-        }]);
+        setPasos((prev) => [
+          ...prev,
+          {
+            msg: data.msg,
+            status: data.ok ? "ok" : "error",
+          },
+        ]);
         es.close();
       }
     };
@@ -78,10 +86,13 @@ const ModalSincronizar = ({
     es.onerror = () => {
       setTerminado(true);
       setExitoso(false);
-      setPasos(prev => [...prev, {
-        msg:    'Error de conexión con el servidor',
-        status: 'error',
-      }]);
+      setPasos((prev) => [
+        ...prev,
+        {
+          msg: "Error de conexión con el servidor",
+          status: "error",
+        },
+      ]);
       es.close();
     };
   };
@@ -92,16 +103,28 @@ const ModalSincronizar = ({
     };
   }, []);
 
-  const iconPaso = (status: Paso['status']) => {
-    if (status === 'ok')      return <CheckCircleIcon sx={{ fontSize: 14, color: "#1a9e5c" }} />;
-    if (status === 'error')   return <ErrorIcon       sx={{ fontSize: 14, color: "#ef4444" }} />;
-    if (status === 'working') return <AutorenewIcon   sx={{ fontSize: 14, color: "#f59e0b", animation: "spin 1s linear infinite" }} />;
+  const iconPaso = (status: Paso["status"]) => {
+    if (status === "ok")
+      return <CheckCircleIcon sx={{ fontSize: 14, color: "#1a9e5c" }} />;
+    if (status === "error")
+      return <ErrorIcon sx={{ fontSize: 14, color: "#ef4444" }} />;
+    if (status === "working")
+      return (
+        <AutorenewIcon
+          sx={{
+            fontSize: 14,
+            color: "#f59e0b",
+            animation: "spin 1s linear infinite",
+          }}
+        />
+      );
     return <InfoIcon sx={{ fontSize: 14, color: "#6793ba" }} />;
   };
 
-  const porcentaje = progreso.total > 0
-    ? Math.round((progreso.actual / progreso.total) * 100)
-    : 0;
+  const porcentaje =
+    progreso.total > 0
+      ? Math.round((progreso.actual / progreso.total) * 100)
+      : 0;
 
   return (
     <Dialog
@@ -131,7 +154,6 @@ const ModalSincronizar = ({
       </DialogTitle>
 
       <DialogContent sx={{ p: 0 }}>
-
         {/* ── Progreso general ── */}
         {iniciado && progreso.total > 0 && (
           <div className="px-6 pt-4 pb-2">
@@ -160,7 +182,8 @@ const ModalSincronizar = ({
         {!iniciado && (
           <div className="px-6 py-6">
             <Typography variant="body2" sx={{ color: "#3d3d3d", mb: 2 }}>
-              Esta operación sincronizará todo el contenido del curso al curso Canvas seleccionado:
+              Esta operación sincronizará todo el contenido del curso al curso
+              Canvas seleccionado:
             </Typography>
             <div className="flex flex-col gap-1.5">
               {[
@@ -173,12 +196,15 @@ const ModalSincronizar = ({
                 "Índice general de capítulos",
               ].map((item) => (
                 <div key={item} className="flex items-center gap-2">
-                  <div style={{
-                    width: 6, height: 6,
-                    borderRadius: "50%",
-                    background: "#4A6D8C",
-                    flexShrink: 0,
-                  }} />
+                  <div
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "#4A6D8C",
+                      flexShrink: 0,
+                    }}
+                  />
                   <Typography variant="caption" sx={{ color: "#555" }}>
                     {item}
                   </Typography>
@@ -189,7 +215,8 @@ const ModalSincronizar = ({
               variant="caption"
               sx={{ color: "#f59e0b", mt: 2, display: "block" }}
             >
-              ⚠ Este proceso puede tomar varios minutos dependiendo del contenido.
+              ⚠ Este proceso puede tomar varios minutos dependiendo del
+              contenido.
             </Typography>
           </div>
         )}
@@ -210,19 +237,18 @@ const ModalSincronizar = ({
                 className="flex items-start gap-2 py-1.5"
                 style={{ borderBottom: "1px solid #f0f0f0" }}
               >
-                <div className="mt-0.5 shrink-0">
-                  {iconPaso(paso.status)}
-                </div>
+                <div className="mt-0.5 shrink-0">{iconPaso(paso.status)}</div>
                 <Typography
                   variant="caption"
                   sx={{
-                    color: paso.status === 'error'
-                      ? "#ef4444"
-                      : paso.status === 'ok'
-                        ? "#1a9e5c"
-                        : paso.status === 'working'
-                          ? "#f59e0b"
-                          : "#555",
+                    color:
+                      paso.status === "error"
+                        ? "#ef4444"
+                        : paso.status === "ok"
+                          ? "#1a9e5c"
+                          : paso.status === "working"
+                            ? "#f59e0b"
+                            : "#555",
                     fontFamily: "monospace",
                     fontSize: "0.72rem",
                     lineHeight: 1.5,
@@ -263,10 +289,11 @@ const ModalSincronizar = ({
               border: `1px solid ${exitoso ? "#6ee7b7" : "#fca5a5"}`,
             }}
           >
-            {exitoso
-              ? <CheckCircleIcon sx={{ color: "#1a9e5c", fontSize: 20 }} />
-              : <ErrorIcon       sx={{ color: "#ef4444", fontSize: 20 }} />
-            }
+            {exitoso ? (
+              <CheckCircleIcon sx={{ color: "#1a9e5c", fontSize: 20 }} />
+            ) : (
+              <ErrorIcon sx={{ color: "#ef4444", fontSize: 20 }} />
+            )}
             <Typography
               variant="body2"
               sx={{
@@ -276,12 +303,10 @@ const ModalSincronizar = ({
             >
               {exitoso
                 ? "Sincronización completada exitosamente"
-                : "Sincronización completada con errores"
-              }
+                : "Sincronización completada con errores"}
             </Typography>
           </div>
         )}
-
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>

@@ -2,8 +2,9 @@ import { useState } from "react";
 import {
   Typography, TextField, Button,
   Select, MenuItem, FormControl,
-  InputLabel, IconButton, Tooltip,
-  CircularProgress,
+  InputLabel, IconButton,
+  CircularProgress, Checkbox,
+  Divider,
 } from "@mui/material";
 import AddIcon    from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -16,273 +17,276 @@ interface Props {
   onCreada: () => void;
 }
 
-interface IOpcionForm {
-  texto:       string;
-  es_correcta: boolean;
-}
+interface IOpcionForm      { texto: string; es_correcta: boolean; }
+interface IParForm          { izquierda: string; derecha: string; }
+interface IRespuestaNumForm { tipo: "exact" | "range" | "precision"; exacto: number; margen: number; minimo: number; maximo: number; precision: number; }
+
+const TIPOS: { value: TipoPregunta; label: string }[] = [
+  { value: "multiple_choice",  label: "Opción múltiple" },
+  { value: "multiple_answers", label: "Respuestas múltiples" },
+  { value: "true_false",       label: "Verdadero / Falso" },
+  { value: "short_answer",     label: "Respuesta corta" },
+  { value: "essay",            label: "Ensayo / Desarrollo" },
+  { value: "matching",         label: "Coincidencia" },
+  { value: "numerical",        label: "Respuesta numérica" },
+];
 
 const FormPregunta = ({ quiz_id, onCreada }: Props) => {
   const dispatch = useAppDispatch();
 
-  const [form, setForm] = useState({
-    enunciado: "",
-    tipo:      'multiple_choice' as TipoPregunta,
-    puntos:    1,
-  });
-  const [opciones, setOpciones]   = useState<IOpcionForm[]>([
+  const [tipo,      setTipo]      = useState<TipoPregunta>("multiple_choice");
+  const [enunciado, setEnunciado] = useState("");
+  const [puntos,    setPuntos]    = useState(1);
+  const [guardando, setGuardando] = useState(false);
+  const [error,     setError]     = useState<string | null>(null);
+
+  const [opciones, setOpciones] = useState<IOpcionForm[]>([
     { texto: "", es_correcta: false },
     { texto: "", es_correcta: false },
   ]);
-  const [guardando, setGuardando] = useState(false);
-  const [error, setError]         = useState<string | null>(null);
+  const [pares, setPares] = useState<IParForm[]>([
+    { izquierda: "", derecha: "" },
+    { izquierda: "", derecha: "" },
+  ]);
+  const [respNum, setRespNum] = useState<IRespuestaNumForm>({
+    tipo: "exact", exacto: 0, margen: 0, minimo: 0, maximo: 10, precision: 2,
+  });
 
-  const opcionesPorTipo = () => {
-    if (form.tipo === 'true_false') {
-      return [
-        { texto: "Verdadero", es_correcta: false },
-        { texto: "Falso",     es_correcta: false },
-      ];
-    }
-    return opciones;
-  };
-
-  const handleTipoChange = (tipo: TipoPregunta) => {
-    setForm(f => ({ ...f, tipo }));
-    if (tipo === 'true_false') {
-      setOpciones([
-        { texto: "Verdadero", es_correcta: false },
-        { texto: "Falso",     es_correcta: false },
-      ]);
-    } else if (tipo === 'multiple_choice') {
-      setOpciones([
-        { texto: "", es_correcta: false },
-        { texto: "", es_correcta: false },
-      ]);
-    }
-  };
-
-  const handleOpcionTexto = (idx: number, texto: string) => {
+  const handleOpcionTexto    = (idx: number, texto: string) =>
     setOpciones(ops => ops.map((op, i) => i === idx ? { ...op, texto } : op));
+
+  const handleOpcionCorrecta = (idx: number, multiple: boolean) => {
+    if (multiple) {
+      setOpciones(ops => ops.map((op, i) => i === idx ? { ...op, es_correcta: !op.es_correcta } : op));
+    } else {
+      setOpciones(ops => ops.map((op, i) => ({ ...op, es_correcta: i === idx })));
+    }
   };
 
-  const handleOpcionCorrecta = (idx: number) => {
-    setOpciones(ops => ops.map((op, i) => ({
-      ...op,
-      es_correcta: i === idx,
-    })));
-  };
+  const agregarOpcion  = () => setOpciones(ops => [...ops, { texto: "", es_correcta: false }]);
+  const eliminarOpcion = (idx: number) => setOpciones(ops => ops.filter((_, i) => i !== idx));
 
-  const handleAgregarOpcion = () => {
-    setOpciones(ops => [...ops, { texto: "", es_correcta: false }]);
-  };
+  const handleParIzq = (idx: number, v: string) => setPares(ps => ps.map((p, i) => i === idx ? { ...p, izquierda: v } : p));
+  const handleParDer = (idx: number, v: string) => setPares(ps => ps.map((p, i) => i === idx ? { ...p, derecha: v } : p));
+  const agregarPar   = () => setPares(ps => [...ps, { izquierda: "", derecha: "" }]);
+  const eliminarPar  = (idx: number) => setPares(ps => ps.filter((_, i) => i !== idx));
 
-  const handleEliminarOpcion = (idx: number) => {
-    setOpciones(ops => ops.filter((_, i) => i !== idx));
+  const handleTipoChange = (t: TipoPregunta) => {
+    setTipo(t);
+    if (t === "true_false") {
+      setOpciones([{ texto: "Verdadero", es_correcta: false }, { texto: "Falso", es_correcta: false }]);
+    } else if (t === "multiple_choice" || t === "multiple_answers") {
+      setOpciones([{ texto: "", es_correcta: false }, { texto: "", es_correcta: false }]);
+    }
   };
 
   const handleGuardar = async () => {
-    if (!form.enunciado.trim()) {
-      setError("El enunciado es requerido");
-      return;
-    }
-
-    const ops = opcionesPorTipo();
-
-    if (form.tipo === 'multiple_choice' || form.tipo === 'true_false') {
-      if (!ops.some(op => op.es_correcta)) {
-        setError("Debes marcar al menos una opción como correcta");
-        return;
-      }
-      if (ops.some(op => !op.texto.trim())) {
-        setError("Todas las opciones deben tener texto");
-        return;
-      }
-    }
-
+    if (!enunciado.trim()) { setError("El enunciado es requerido."); return; }
     setError(null);
     setGuardando(true);
 
-    await dispatch(crearPregunta({
-      quiz_id,
-      enunciado: form.enunciado,
-      tipo:      form.tipo,
-      puntos:    form.puntos,
-      opciones:  ops,
-    }));
+    const payload: Parameters<typeof crearPregunta>[0] = {
+      quiz_id, enunciado: enunciado.trim(), tipo, puntos,
+    };
 
+    switch (tipo) {
+      case "multiple_choice":
+      case "multiple_answers":
+        payload.opciones = opciones;
+        break;
+      case "true_false":
+        payload.opciones = [
+          { texto: "Verdadero", es_correcta: opciones[0]?.es_correcta ?? false },
+          { texto: "Falso",     es_correcta: opciones[1]?.es_correcta ?? false },
+        ];
+        break;
+      case "matching":
+        payload.pares = pares;
+        break;
+      case "numerical":
+        payload.respuesta_numerica = {
+          tipo:      respNum.tipo,
+          exacto:    respNum.exacto,
+          margen:    respNum.margen,
+          minimo:    respNum.minimo,
+          maximo:    respNum.maximo,
+          precision: respNum.precision,
+        };
+        break;
+    }
+
+    const result = await dispatch(crearPregunta(payload));
     setGuardando(false);
-    setForm({ enunciado: "", tipo: 'multiple_choice', puntos: 1 });
-    setOpciones([
-      { texto: "", es_correcta: false },
-      { texto: "", es_correcta: false },
-    ]);
-    onCreada();
+    if (result.ok) {
+      setEnunciado("");
+      setOpciones([{ texto: "", es_correcta: false }, { texto: "", es_correcta: false }]);
+      onCreada();
+    } else {
+      setError(result.msg ?? "Error al guardar");
+    }
   };
 
-  const mostrarOpciones =
-    form.tipo === 'multiple_choice' || form.tipo === 'true_false';
+  const esMultiple = tipo === "multiple_answers";
 
   return (
-    <div
-      className="rounded-2xl p-5 animate-slideDown"
-      style={{
-        background: "white",
-        border: "1px solid #d9e4ee",
-        boxShadow: "0 4px 16px rgba(74,109,140,0.08)",
-      }}
-    >
-      <Typography
-        variant="subtitle2"
-        sx={{ color: "#2e4154", mb: 3, fontWeight: 600 }}
-      >
+    <div className="flex flex-col gap-4 p-4 bg-white rounded-2xl border border-[#d9e4ee]">
+      <Typography variant="subtitle2" sx={{ color: "#4A6D8C", fontWeight: 700 }}>
         Nueva pregunta
       </Typography>
 
-      <div className="flex flex-col gap-4">
+      <TextField
+        label="Enunciado" value={enunciado}
+        onChange={e => setEnunciado(e.target.value)}
+        multiline rows={3} fullWidth size="small"
+        error={!!error} helperText={error ?? ""}
+        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+      />
 
-        {/* Enunciado */}
+      <div className="grid grid-cols-2 gap-3">
+        <FormControl size="small" fullWidth>
+          <InputLabel>Tipo de pregunta</InputLabel>
+          <Select
+            value={tipo} label="Tipo de pregunta"
+            onChange={e => handleTipoChange(e.target.value as TipoPregunta)}
+            sx={{ borderRadius: 2 }}
+          >
+            {TIPOS.map(t => <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>)}
+          </Select>
+        </FormControl>
+
         <TextField
-          label="Enunciado"
-          placeholder="Escribe la pregunta..."
-          value={form.enunciado}
-          onChange={(e) => setForm(f => ({ ...f, enunciado: e.target.value }))}
-          fullWidth
-          multiline
-          rows={2}
-          size="small"
-          autoFocus
-          error={!!error}
-          helperText={error ?? ""}
-          sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+          label="Puntos" type="number" value={puntos}
+          onChange={e => setPuntos(Number(e.target.value))}
+          size="small" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
         />
+      </div>
 
-        {/* Tipo + Puntos */}
-        <div className="grid grid-cols-2 gap-3">
+      <Divider />
+
+      {/* ── Opciones ── */}
+      {(tipo === "multiple_choice" || tipo === "multiple_answers" || tipo === "true_false") && (
+        <div className="flex flex-col gap-2">
+          <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
+            {esMultiple ? "Opciones — marca todas las correctas" : "Opciones — marca la correcta"}
+          </Typography>
+
+          {(tipo === "true_false"
+            ? [{ texto: "Verdadero", es_correcta: opciones[0]?.es_correcta ?? false }, { texto: "Falso", es_correcta: opciones[1]?.es_correcta ?? false }]
+            : opciones
+          ).map((op, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              {esMultiple ? (
+                <Checkbox checked={op.es_correcta} onChange={() => handleOpcionCorrecta(idx, true)} size="small" sx={{ color: "#4A6D8C" }} />
+              ) : (
+                <input type="radio" name="correcta" checked={op.es_correcta} onChange={() => handleOpcionCorrecta(idx, false)} style={{ accentColor: "#4A6D8C", flexShrink: 0 }} />
+              )}
+
+              {tipo === "true_false" ? (
+                <Typography variant="body2">{op.texto}</Typography>
+              ) : (
+                <TextField
+                  value={op.texto} onChange={e => handleOpcionTexto(idx, e.target.value)}
+                  size="small" fullWidth placeholder={`Opción ${idx + 1}`}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                />
+              )}
+
+              {tipo !== "true_false" && opciones.length > 2 && (
+                <IconButton size="small" onClick={() => eliminarOpcion(idx)} sx={{ color: "#ef4444" }}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              )}
+            </div>
+          ))}
+
+          {tipo !== "true_false" && (
+            <Button size="small" startIcon={<AddIcon />} onClick={agregarOpcion} sx={{ alignSelf: "flex-start", color: "#4A6D8C" }}>
+              Agregar opción
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* ── Coincidencia ── */}
+      {tipo === "matching" && (
+        <div className="flex flex-col gap-2">
+          <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
+            Pares de coincidencia
+          </Typography>
+          {pares.map((par, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <TextField value={par.izquierda} onChange={e => handleParIzq(idx, e.target.value)} size="small" fullWidth placeholder="Término" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              <Typography sx={{ color: "#8daecb" }}>↔</Typography>
+              <TextField value={par.derecha} onChange={e => handleParDer(idx, e.target.value)} size="small" fullWidth placeholder="Definición" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              {pares.length > 2 && (
+                <IconButton size="small" onClick={() => eliminarPar(idx)} sx={{ color: "#ef4444" }}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              )}
+            </div>
+          ))}
+          <Button size="small" startIcon={<AddIcon />} onClick={agregarPar} sx={{ alignSelf: "flex-start", color: "#4A6D8C" }}>
+            Agregar par
+          </Button>
+        </div>
+      )}
+
+      {/* ── Respuesta numérica ── */}
+      {tipo === "numerical" && (
+        <div className="flex flex-col gap-3">
+          <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
+            Configuración de respuesta numérica
+          </Typography>
+
           <FormControl size="small" fullWidth>
-            <InputLabel>Tipo de pregunta</InputLabel>
+            <InputLabel>Tipo de respuesta</InputLabel>
             <Select
-              value={form.tipo}
-              label="Tipo de pregunta"
-              onChange={(e) => handleTipoChange(e.target.value as TipoPregunta)}
+              value={respNum.tipo} label="Tipo de respuesta"
+              onChange={e => setRespNum(r => ({ ...r, tipo: e.target.value as "exact" | "range" | "precision" }))}
               sx={{ borderRadius: 2 }}
             >
-              <MenuItem value="multiple_choice">Opción múltiple</MenuItem>
-              <MenuItem value="true_false">Verdadero / Falso</MenuItem>
-              <MenuItem value="short_answer">Respuesta corta</MenuItem>
-              <MenuItem value="essay">Ensayo</MenuItem>
+              <MenuItem value="exact">Valor exacto (con margen)</MenuItem>
+              <MenuItem value="range">Rango (mínimo — máximo)</MenuItem>
+              <MenuItem value="precision">Precisión decimal</MenuItem>
             </Select>
           </FormControl>
 
-          <TextField
-            label="Puntos"
-            type="number"
-            value={form.puntos}
-            onChange={(e) => setForm(f => ({ ...f, puntos: Number(e.target.value) }))}
-            size="small"
-            // inputProps={{ min: 1 }}
-            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-          />
+          {respNum.tipo === "exact" && (
+            <div className="grid grid-cols-2 gap-3">
+              <TextField label="Respuesta exacta" type="number" size="small" value={respNum.exacto} onChange={e => setRespNum(r => ({ ...r, exacto: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              <TextField label="Margen de error (±)" type="number" size="small" value={respNum.margen} onChange={e => setRespNum(r => ({ ...r, margen: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+            </div>
+          )}
+          {respNum.tipo === "range" && (
+            <div className="grid grid-cols-2 gap-3">
+              <TextField label="Valor mínimo" type="number" size="small" value={respNum.minimo} onChange={e => setRespNum(r => ({ ...r, minimo: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              <TextField label="Valor máximo" type="number" size="small" value={respNum.maximo} onChange={e => setRespNum(r => ({ ...r, maximo: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+            </div>
+          )}
+          {respNum.tipo === "precision" && (
+            <div className="grid grid-cols-2 gap-3">
+              <TextField label="Respuesta exacta" type="number" size="small" value={respNum.exacto} onChange={e => setRespNum(r => ({ ...r, exacto: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+              <TextField label="Decimales requeridos" type="number" size="small" value={respNum.precision} onChange={e => setRespNum(r => ({ ...r, precision: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+            </div>
+          )}
         </div>
+      )}
 
-        {/* Opciones */}
-        {mostrarOpciones && (
-          <div className="flex flex-col gap-2">
-            <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
-              Opciones — marca la correcta
-            </Typography>
+      {/* ── Ensayo / Short answer ── */}
+      {(tipo === "essay" || tipo === "short_answer") && (
+        <Typography variant="caption" sx={{ color: "#8daecb" }}>
+          {tipo === "essay"
+            ? "El alumno escribirá su respuesta libremente. No se corrige automáticamente."
+            : "El alumno escribirá una respuesta corta de texto."}
+        </Typography>
+      )}
 
-            {opcionesPorTipo().map((op, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                {/* Radio correcta */}
-                <input
-                  type="radio"
-                  name="correcta"
-                  checked={op.es_correcta}
-                  onChange={() => handleOpcionCorrecta(idx)}
-                  style={{ accentColor: "#4A6D8C", flexShrink: 0 }}
-                />
-
-                {/* Texto opción */}
-                {form.tipo === 'true_false' ? (
-                  <Typography variant="body2" sx={{ flex: 1, color: "#3d3d3d" }}>
-                    {op.texto}
-                  </Typography>
-                ) : (
-                  <TextField
-                    value={op.texto}
-                    onChange={(e) => handleOpcionTexto(idx, e.target.value)}
-                    placeholder={`Opción ${idx + 1}`}
-                    size="small"
-                    fullWidth
-                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } }}
-                  />
-                )}
-
-                {/* Eliminar opción */}
-                {form.tipo === 'multiple_choice' && opciones.length > 2 && (
-                  <Tooltip title="Eliminar opción">
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEliminarOpcion(idx)}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#ef4444" } }}
-                    >
-                      <DeleteIcon sx={{ fontSize: 16 }} />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </div>
-            ))}
-
-            {/* Agregar opción */}
-            {form.tipo === 'multiple_choice' && (
-              <Button
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={handleAgregarOpcion}
-                sx={{
-                  color: "#8daecb",
-                  alignSelf: "flex-start",
-                  "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" },
-                }}
-              >
-                Agregar opción
-              </Button>
-            )}
-          </div>
-        )}
-
-      </div>
-
-      {/* Botones */}
-      <div className="flex justify-end gap-3 mt-5">
-        <Button
-          onClick={onCreada}
-          variant="text"
-          sx={{ color: "#6793ba", borderRadius: 2 }}
-        >
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleGuardar}
-          variant="contained"
-          disabled={guardando}
-          startIcon={
-            guardando
-              ? <CircularProgress size={14} color="inherit" />
-              : undefined
-          }
-          sx={{
-            bgcolor: "#2d5be3",
-            borderRadius: 2,
-            px: 3,
-            fontWeight: 600,
-            boxShadow: "none",
-            "&:hover": { bgcolor: "#1a3cb0", boxShadow: "none" },
-          }}
-        >
-          {guardando ? "Guardando..." : "Agregar pregunta"}
-        </Button>
-      </div>
+      <Button
+        variant="contained" onClick={handleGuardar} disabled={guardando}
+        sx={{ borderRadius: 2, bgcolor: "#4A6D8C", "&:hover": { bgcolor: "#3a5a7a" }, alignSelf: "flex-end" }}
+      >
+        {guardando ? <CircularProgress size={20} sx={{ color: "white" }} /> : "Guardar pregunta"}
+      </Button>
     </div>
   );
 };

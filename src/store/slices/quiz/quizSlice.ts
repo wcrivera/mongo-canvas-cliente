@@ -4,7 +4,11 @@ export type TipoPregunta =
   | 'multiple_choice'
   | 'true_false'
   | 'short_answer'
-  | 'essay';
+  | 'essay'
+  | 'multiple_answers'
+  | 'matching'
+  | 'numerical'
+  | 'calculated';
 
 export interface ICanvasDeploymentQuiz {
   canvas_curso_id: number;
@@ -22,17 +26,44 @@ export interface IOpcion {
   canvas_id?:  number;
 }
 
+export interface IParCoincidencia {
+  _id:       string;
+  izquierda: string;
+  derecha:   string;
+}
+
+export interface IRespuestaNumerica {
+  tipo:       "exact" | "range" | "precision";
+  exacto?:    number;
+  margen?:    number;
+  minimo?:    number;
+  maximo?:    number;
+  precision?: number;
+}
+
+export interface IVariableFormula {
+  nombre:    string;
+  minimo:    number;
+  maximo:    number;
+  decimales: number;
+}
+
 export interface IPregunta {
-  _id:        string;
-  quiz_id:    string;
-  enunciado:  string;
-  tipo:       TipoPregunta;
-  puntos:     number;
-  position:   number;
-  opciones:   IOpcion[];
-  canvas_ids: { canvas_curso_id: number; canvas_question_id: number }[];
-  createdAt:  string;
-  updatedAt:  string;
+  _id:                 string;
+  quiz_id:             string;
+  enunciado:           string;
+  tipo:                TipoPregunta;
+  puntos:              number;
+  position:            number;
+  opciones:            IOpcion[];
+  pares:               IParCoincidencia[];
+  respuesta_numerica?: IRespuestaNumerica;
+  formula?:            string;
+  variables?:          IVariableFormula[];
+  decimales_resultado?: number;
+  canvas_ids:          { canvas_curso_id: number; canvas_question_id: number }[];
+  createdAt:           string;
+  updatedAt:           string;
 }
 
 export interface IQuiz {

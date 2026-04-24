@@ -27,16 +27,22 @@ interface Props {
 
 const TIPO_LABEL: Record<string, string> = {
   multiple_choice: "Opción múltiple",
+  multiple_answers: "Respuestas múltiples",
   true_false: "Verdadero/Falso",
   short_answer: "Respuesta corta",
   essay: "Ensayo",
+  matching: "Coincidencia",
+  numerical: "Respuesta numérica",
 };
 
 const TIPO_COLOR: Record<string, string> = {
   multiple_choice: "#4A6D8C",
+  multiple_answers: "#2d5be3",
   true_false: "#1a9e5c",
   short_answer: "#f47c3c",
   essay: "#9c27b0",
+  matching: "#e67e22",
+  numerical: "#e74c3c",
 };
 
 const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
@@ -259,6 +265,96 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
                 {pregunta.tipo === "short_answer"
                   ? "El estudiante ingresa una respuesta corta"
                   : "El estudiante redacta un ensayo"}
+              </Typography>
+            </div>
+          )}
+
+          {/* Respuestas múltiples */}
+          {pregunta.tipo === "multiple_answers" && (
+            <div className="flex flex-col gap-1.5">
+              {pregunta.opciones.map((op) => (
+                <div
+                  key={op._id}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2"
+                  style={{
+                    background: op.es_correcta ? "#d1fae5" : "#f9f9f9",
+                    border: `1px solid ${op.es_correcta ? "#6ee7b7" : "#e0e0e0"}`,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 14,
+                      height: 14,
+                      borderRadius: 3,
+                      border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`,
+                      background: op.es_correcta ? "#1a9e5c" : "white",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Typography
+                    variant="caption"
+                    sx={{ color: op.es_correcta ? "#065f46" : "#555" }}
+                  >
+                    <LatexRenderer>{op.texto}</LatexRenderer>
+                  </Typography>
+                  {op.es_correcta && (
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "#1a9e5c", ml: "auto", fontWeight: 600 }}
+                    >
+                      ✓
+                    </Typography>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Coincidencia */}
+          {pregunta.tipo === "matching" && (
+            <div className="flex flex-col gap-1.5">
+              {pregunta.pares?.map((par, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-2 rounded-lg px-3 py-2"
+                  style={{ background: "#f0f4f8", border: "1px solid #d9e4ee" }}
+                >
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "#1f2c38", fontWeight: 500, flex: 1 }}
+                  >
+                    {par.izquierda}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: "#8daecb" }}>
+                    ↔
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "#1f2c38", flex: 1 }}
+                  >
+                    {par.derecha}
+                  </Typography>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Numérica */}
+          {pregunta.tipo === "numerical" && pregunta.respuesta_numerica && (
+            <div
+              className="rounded-lg px-3 py-2"
+              style={{ background: "#fef3c7", border: "1px solid #fde68a" }}
+            >
+              <Typography
+                variant="caption"
+                sx={{ color: "#92400e", fontWeight: 500 }}
+              >
+                {pregunta.respuesta_numerica.tipo === "exact" &&
+                  `Respuesta: ${pregunta.respuesta_numerica.exacto} ± ${pregunta.respuesta_numerica.margen}`}
+                {pregunta.respuesta_numerica.tipo === "range" &&
+                  `Rango: ${pregunta.respuesta_numerica.minimo} — ${pregunta.respuesta_numerica.maximo}`}
+                {pregunta.respuesta_numerica.tipo === "precision" &&
+                  `Exacto: ${pregunta.respuesta_numerica.exacto} (${pregunta.respuesta_numerica.precision} decimales)`}
               </Typography>
             </div>
           )}

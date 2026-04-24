@@ -1,14 +1,14 @@
-import { fetchConToken } from '../../../helpers/fetch';
-import type { AppDispatch } from '../..';
+import { fetchConToken } from "../../../helpers/fetch";
+import type { AppDispatch } from "../..";
 import {
   startLoadingAuth,
   endLoadingAuth,
   setErrorAuth,
   setPerfil,
   setTieneTokenCanvas,
-} from './authSlice';
+} from "./authSlice";
 
-const MSG_ERROR = 'Estamos teniendo problemas, vuelva a intentarlo más tarde';
+const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
 
 // ─── Cargar perfil del usuario autenticado ────────────────────────
 
@@ -16,14 +16,16 @@ export const cargarPerfil = () => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAuth());
     try {
-      const resp = await fetchConToken('api/auth/me');
+      const resp = await fetchConToken("api/auth/me");
       const body = await resp.json();
 
       if (body.ok) {
-        dispatch(setPerfil({
-          nombre:             body.usuario.nombre,
-          tiene_token_canvas: !!body.usuario.canvas_token,
-        }));
+        dispatch(
+          setPerfil({
+            nombre: body.usuario.nombre,
+            tiene_token_canvas: body.usuario.tiene_token_canvas, // <- usar el campo del backend
+          }),
+        );
         dispatch(endLoadingAuth());
         return { ok: true };
       } else {
@@ -40,11 +42,19 @@ export const cargarPerfil = () => {
 
 // ─── Guardar token Canvas ─────────────────────────────────────────
 
-export const guardarTokenCanvas = ({ canvas_token }: { canvas_token: string }) => {
+export const guardarTokenCanvas = ({
+  canvas_token,
+}: {
+  canvas_token: string;
+}) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAuth());
     try {
-      const resp = await fetchConToken('api/auth/canvas-token', { canvas_token }, 'POST');
+      const resp = await fetchConToken(
+        "api/auth/canvas-token",
+        { canvas_token },
+        "POST",
+      );
       const body = await resp.json();
 
       if (body.ok) {
@@ -69,7 +79,7 @@ export const verificarTokenCanvas = () => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAuth());
     try {
-      const resp = await fetchConToken('api/auth/canvas-token/verificar');
+      const resp = await fetchConToken("api/auth/canvas-token/verificar");
       const body = await resp.json();
 
       if (body.ok) {
@@ -95,7 +105,7 @@ export const eliminarTokenCanvas = () => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAuth());
     try {
-      const resp = await fetchConToken('api/auth/canvas-token', {}, 'DELETE');
+      const resp = await fetchConToken("api/auth/canvas-token", {}, "DELETE");
       const body = await resp.json();
 
       if (body.ok) {
