@@ -13,6 +13,7 @@ import {
   agregarPregunta,
   intercambiarPreguntas,
   eliminarPreguntaState,
+  actualizarPreguntaState,
 } from "./quizSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
@@ -247,6 +248,53 @@ export const cambiarPositionPregunta = ({
       const body = await resp.json();
       if (body.ok) {
         dispatch(intercambiarPreguntas(body.data));
+        dispatch(endLoadingQuiz());
+        return { ok: true };
+      } else {
+        dispatch(setErrorQuiz(body.msg));
+        return { ok: false, msg: body.msg };
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorQuiz(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+export const editarPregunta = ({
+  pregunta_id,
+  enunciado,
+  puntos,
+  opciones,
+  pares,
+  respuesta_numerica,
+}: {
+  pregunta_id:         string;
+  enunciado?:          string;
+  puntos?:             number;
+  opciones?:           { texto: string; es_correcta: boolean }[];
+  pares?:              { izquierda: string; derecha: string }[];
+  respuesta_numerica?: {
+    tipo:       "exact" | "range" | "precision";
+    exacto?:    number;
+    margen?:    number;
+    minimo?:    number;
+    maximo?:    number;
+    precision?: number;
+  };
+}) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingQuiz());
+    try {
+      const resp = await fetchConToken(
+        `api/quizzes/preguntas/${pregunta_id}`,
+        { enunciado, puntos, opciones, pares, respuesta_numerica },
+        "PUT"
+      );
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(actualizarPreguntaState(body.data));
         dispatch(endLoadingQuiz());
         return { ok: true };
       } else {

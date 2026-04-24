@@ -1,102 +1,102 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 export type TipoPregunta =
-  | 'multiple_choice'
-  | 'true_false'
-  | 'short_answer'
-  | 'essay'
-  | 'multiple_answers'
-  | 'matching'
-  | 'numerical'
-  | 'calculated';
+  | "multiple_choice"
+  | "true_false"
+  | "short_answer"
+  | "essay"
+  | "multiple_answers"
+  | "matching"
+  | "numerical"
+  | "calculated";
 
 export interface ICanvasDeploymentQuiz {
   canvas_curso_id: number;
-  canvas_quiz_id:  number | null;
-  canvas_item_id:  number | null;
-  status:          'pending' | 'synced' | 'dirty' | 'missing' | 'error';
-  synced_at:       string | null;
-  error_msg:       string;
+  canvas_quiz_id: number | null;
+  canvas_item_id: number | null;
+  status: "pending" | "synced" | "dirty" | "missing" | "error";
+  synced_at: string | null;
+  error_msg: string;
 }
 
 export interface IOpcion {
-  _id:         string;
-  texto:       string;
+  _id: string;
+  texto: string;
   es_correcta: boolean;
-  canvas_id?:  number;
+  canvas_id?: number;
 }
 
 export interface IParCoincidencia {
-  _id:       string;
+  _id: string;
   izquierda: string;
-  derecha:   string;
+  derecha: string;
 }
 
 export interface IRespuestaNumerica {
-  tipo:       "exact" | "range" | "precision";
-  exacto?:    number;
-  margen?:    number;
-  minimo?:    number;
-  maximo?:    number;
+  tipo: "exact" | "range" | "precision";
+  exacto?: number;
+  margen?: number;
+  minimo?: number;
+  maximo?: number;
   precision?: number;
 }
 
 export interface IVariableFormula {
-  nombre:    string;
-  minimo:    number;
-  maximo:    number;
+  nombre: string;
+  minimo: number;
+  maximo: number;
   decimales: number;
 }
 
 export interface IPregunta {
-  _id:                 string;
-  quiz_id:             string;
-  enunciado:           string;
-  tipo:                TipoPregunta;
-  puntos:              number;
-  position:            number;
-  opciones:            IOpcion[];
-  pares:               IParCoincidencia[];
+  _id: string;
+  quiz_id: string;
+  enunciado: string;
+  tipo: TipoPregunta;
+  puntos: number;
+  position: number;
+  opciones: IOpcion[];
+  pares: IParCoincidencia[];
   respuesta_numerica?: IRespuestaNumerica;
-  formula?:            string;
-  variables?:          IVariableFormula[];
+  formula?: string;
+  variables?: IVariableFormula[];
   decimales_resultado?: number;
-  canvas_ids:          { canvas_curso_id: number; canvas_question_id: number }[];
-  createdAt:           string;
-  updatedAt:           string;
+  canvas_ids: { canvas_curso_id: number; canvas_question_id: number }[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IQuiz {
-  _id:                string;
-  recurso_id:         string;
-  tema_id:            string;
-  clase_id:           string;
-  capitulo_id:        string;
-  curso_id:           string;
-  titulo:             string;
-  descripcion:        string;
-  tiempo_limite:      number | null;
-  intentos:           number;
-  publicado:          boolean;
+  _id: string;
+  recurso_id: string;
+  tema_id: string;
+  clase_id: string;
+  capitulo_id: string;
+  curso_id: string;
+  titulo: string;
+  descripcion: string;
+  tiempo_limite: number | null;
+  intentos: number;
+  publicado: boolean;
   canvas_deployments: ICanvasDeploymentQuiz[];
-  createdAt:          string;
-  updatedAt:          string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface QuizState {
-  quizzes:    IQuiz[];
+  quizzes: IQuiz[];
   quizActivo: IQuiz | null;
-  preguntas:  IPregunta[];
-  isLoading:  boolean;
-  error:      string | null;
+  preguntas: IPregunta[];
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: QuizState = {
-  quizzes:    [],
+  quizzes: [],
   quizActivo: null,
-  preguntas:  [],
-  isLoading:  false,
-  error:      null,
+  preguntas: [],
+  isLoading: false,
+  error: null,
 };
 
 export const quizMongoSlice = createSlice({
@@ -108,7 +108,7 @@ export const quizMongoSlice = createSlice({
     },
     agregarQuiz: (state, action) => {
       const idx = state.quizzes.findIndex(
-        q => q.recurso_id === action.payload.recurso_id
+        (q) => q.recurso_id === action.payload.recurso_id,
       );
       if (idx !== -1) {
         state.quizzes[idx] = action.payload;
@@ -118,7 +118,7 @@ export const quizMongoSlice = createSlice({
     },
     actualizarQuiz: (state, action) => {
       state.quizActivo = action.payload;
-      const idx = state.quizzes.findIndex(q => q._id === action.payload._id);
+      const idx = state.quizzes.findIndex((q) => q._id === action.payload._id);
       if (idx !== -1) state.quizzes[idx] = action.payload;
     },
     setQuizActivo: (state, action) => {
@@ -126,12 +126,12 @@ export const quizMongoSlice = createSlice({
     },
     limpiarQuizActivo: (state) => {
       state.quizActivo = null;
-      state.preguntas  = [];
+      state.preguntas = [];
     },
     limpiarQuizzes: (state) => {
-      state.quizzes    = [];
+      state.quizzes = [];
       state.quizActivo = null;
-      state.preguntas  = [];
+      state.preguntas = [];
     },
     setPreguntas: (state, action) => {
       state.preguntas = action.payload;
@@ -139,26 +139,32 @@ export const quizMongoSlice = createSlice({
     agregarPregunta: (state, action) => {
       state.preguntas.push(action.payload);
     },
+    actualizarPreguntaState: (state, action) => {
+      const idx = state.preguntas.findIndex(
+        (p) => p._id === action.payload._id,
+      );
+      if (idx !== -1) state.preguntas[idx] = action.payload;
+    },
     intercambiarPreguntas: (state, action) => {
       action.payload.forEach((p: IPregunta) => {
-        const idx = state.preguntas.findIndex(q => q._id === p._id);
+        const idx = state.preguntas.findIndex((q) => q._id === p._id);
         if (idx !== -1) state.preguntas[idx] = p;
       });
       state.preguntas.sort((a, b) => a.position - b.position);
     },
     eliminarPreguntaState: (state, action) => {
-      state.preguntas = state.preguntas.filter(p => p._id !== action.payload);
+      state.preguntas = state.preguntas.filter((p) => p._id !== action.payload);
     },
     startLoadingQuiz: (state) => {
       state.isLoading = true;
-      state.error     = null;
+      state.error = null;
     },
     endLoadingQuiz: (state) => {
       state.isLoading = false;
     },
     setErrorQuiz: (state, action) => {
       state.isLoading = false;
-      state.error     = action.payload;
+      state.error = action.payload;
     },
   },
 });
@@ -172,6 +178,7 @@ export const {
   limpiarQuizzes,
   setPreguntas,
   agregarPregunta,
+  actualizarPreguntaState,
   intercambiarPreguntas,
   eliminarPreguntaState,
   startLoadingQuiz,

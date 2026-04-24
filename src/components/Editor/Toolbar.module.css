@@ -1,0 +1,76 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 14px;
+  border-bottom: 1px solid #e8e6df;
+  background: #faf9f6;
+  flex-wrap: wrap;
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.sep {
+  width: 1px;
+  height: 20px;
+  background: #ddd;
+  margin: 0 6px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font-family: 'Georgia', serif;
+  font-size: 13px;
+  color: #444;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  user-select: none;
+}
+
+.btn:hover {
+  background: #eeece6;
+  border-color: #d8d5cc;
+  color: #111;
+}
+
+.btn.active {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.bold {
+  font-weight: 700;
+  font-family: 'Georgia', serif;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.mathBtn {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
+
+.mathIcon {
+  font-size: 11px;
+  letter-spacing: -0.02em;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.btn.active .mathIcon {
+  color: #fff;
+}

@@ -1,0 +1,26 @@
+{
+  "name": "tiptap-latex-editor",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@tiptap/extension-mathematics": "^2.22.0",
+    "@tiptap/react": "^2.22.0",
+    "@tiptap/starter-kit": "^2.22.0",
+    "katex": "^0.16.9",
+    "next": "^15.0.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.7",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.6.0"
+  }
+}

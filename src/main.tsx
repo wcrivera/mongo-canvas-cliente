@@ -8,6 +8,7 @@ import App from "./App.tsx";
 
 import "./index.css";
 import "katex/dist/katex.min.css";
+import "./css/ckeditor.css"
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
