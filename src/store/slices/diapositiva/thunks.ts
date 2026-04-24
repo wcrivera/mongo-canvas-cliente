@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
   startLoadingDiapositiva,
@@ -19,7 +19,7 @@ export const obtenerDiapositivasPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingDiapositiva());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/diapositivas/capitulo/${capitulo_id}`
       );
       const body = await resp.json();
@@ -49,7 +49,7 @@ export const crearDiapositiva = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingDiapositiva());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/diapositivas",
         { recurso_id, url },
         "POST"
@@ -81,7 +81,7 @@ export const editarUrlDiapositiva = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingDiapositiva());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/diapositivas/${diapositiva_id}/url`,
         { url },
         "PUT"

@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import type { TipoPregunta } from "./quizSlice";
 import {
@@ -25,7 +25,7 @@ export const obtenerQuizzesPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
-      const resp = await fetchSinToken(`api/quizzes/capitulo/${capitulo_id}`);
+      const resp = await fetchConToken(`api/quizzes/capitulo/${capitulo_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setQuizzes(body.data));
@@ -51,7 +51,7 @@ export const obtenerQuizPorRecurso = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
-      const resp = await fetchSinToken(`api/quizzes/recurso/${recurso_id}`);
+      const resp = await fetchConToken(`api/quizzes/recurso/${recurso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setQuizActivo(body.data));
@@ -85,7 +85,7 @@ export const crearQuiz = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/quizzes",
         { recurso_id, titulo, descripcion, tiempo_limite, intentos },
         "POST"
@@ -125,7 +125,7 @@ export const editarQuiz = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/quizzes/${quiz_id}`,
         { titulo, descripcion, tiempo_limite, intentos, publicado },
         "PUT"
@@ -151,7 +151,7 @@ export const obtenerPreguntas = ({ quiz_id }: { quiz_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
-      const resp = await fetchSinToken(`api/quizzes/${quiz_id}/preguntas`);
+      const resp = await fetchConToken(`api/quizzes/${quiz_id}/preguntas`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setPreguntas(body.data));
@@ -185,7 +185,7 @@ export const crearPregunta = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/quizzes/${quiz_id}/preguntas`,
         { quiz_id, enunciado, tipo, puntos, opciones },
         "POST"
@@ -215,7 +215,7 @@ export const eliminarPregunta = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/quizzes/preguntas/${pregunta_id}`,
         {},
         "DELETE"
@@ -247,7 +247,7 @@ export const cambiarPositionPregunta = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/quizzes/preguntas/${pregunta_id}/position`,
         { direction },
         "PATCH"

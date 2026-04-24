@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
   startLoadingVideo,
@@ -19,7 +19,7 @@ export const obtenerVideosPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingVideo());
     try {
-      const resp = await fetchSinToken(`api/videos/capitulo/${capitulo_id}`);
+      const resp = await fetchConToken(`api/videos/capitulo/${capitulo_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setVideos(body.data));
@@ -47,7 +47,7 @@ export const crearVideo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingVideo());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/videos",
         { recurso_id, url },
         "POST"
@@ -79,7 +79,7 @@ export const editarUrlVideo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingVideo());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/videos/${video_id}/url`,
         { url },
         "PUT"

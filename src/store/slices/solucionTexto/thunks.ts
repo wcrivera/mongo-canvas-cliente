@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
   startLoadingSolucion,
@@ -19,7 +19,7 @@ export const obtenerSolucionesPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingSolucion());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/soluciones-texto/capitulo/${capitulo_id}`
       );
       const body = await resp.json();
@@ -49,7 +49,7 @@ export const crearSolucionTexto = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingSolucion());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/soluciones-texto",
         { ayudantia_id, texto },
         "POST"
@@ -81,7 +81,7 @@ export const editarSolucionTexto = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingSolucion());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/soluciones-texto/${solucion_id}`,
         { texto },
         "PUT"

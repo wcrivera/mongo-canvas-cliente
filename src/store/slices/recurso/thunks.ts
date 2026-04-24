@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import type { TipoRecurso, ContextoRecurso } from "./recursoSlice";
 import {
@@ -24,7 +24,7 @@ export const obtenerRecursosPorCapitulo = ({
     dispatch(startLoadingRecurso());
     try {
       const query = contexto ? `?contexto=${contexto}` : '';
-      const resp  = await fetchSinToken(
+      const resp  = await fetchConToken(
         `api/recursos/capitulo/${capitulo_id}${query}`
       );
       const body = await resp.json();
@@ -52,7 +52,7 @@ export const obtenerRecursosPorClase = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingRecurso());
     try {
-      const resp = await fetchSinToken(`api/recursos/clase/${clase_id}`);
+      const resp = await fetchConToken(`api/recursos/clase/${clase_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(agregarRecursos(body.data));
@@ -78,7 +78,7 @@ export const obtenerRecursosPorAyudantia = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingRecurso());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/recursos/ayudantia/${ayudantia_id}`
       );
       const body = await resp.json();
@@ -102,7 +102,7 @@ export const obtenerRecursos = ({ tema_id }: { tema_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingRecurso());
     try {
-      const resp = await fetchSinToken(`api/recursos/tema/${tema_id}`);
+      const resp = await fetchConToken(`api/recursos/tema/${tema_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(agregarRecursos(body.data));
@@ -140,7 +140,7 @@ export const crearRecurso = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingRecurso());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/recursos",
         { contexto, tipo, titulo, contenido, tema_id, ayudantia_id, ejercicio_id },
         "POST"
@@ -166,7 +166,7 @@ export const eliminarRecurso = ({ recurso_id }: { recurso_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingRecurso());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/recursos/${recurso_id}`,
         {},
         "DELETE"

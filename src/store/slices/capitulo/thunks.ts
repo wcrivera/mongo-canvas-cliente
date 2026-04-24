@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
   startLoadingCapitulo,
@@ -19,7 +19,7 @@ export const obtenerCapitulos = ({ curso_id }: { curso_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
-      const resp = await fetchSinToken(`api/capitulos/curso/${curso_id}`);
+      const resp = await fetchConToken(`api/capitulos/curso/${curso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setCapitulos(body.data));
@@ -51,7 +51,7 @@ export const crearCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/capitulos",
         { curso_id, nombre, published },
         "POST",
@@ -87,7 +87,7 @@ export const editarCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/capitulos/${capitulo_id}`,
         { nombre, published },
         "PUT",
@@ -115,7 +115,7 @@ export const eliminarCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/capitulos/${capitulo_id}`,
         {},
         "DELETE",
@@ -149,7 +149,7 @@ export const reintentarCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/capitulos/${capitulo_id}/reintentar/${canvas_curso_id}`,
         {},
         "POST",
@@ -183,7 +183,7 @@ export const desplegarPendienteCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/capitulos/${capitulo_id}/pendiente/${canvas_curso_id}`,
         {},
         "POST",
@@ -217,7 +217,7 @@ export const cambiarPositionCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/capitulos/${capitulo_id}/position`,
         { direction },
         "PATCH",
@@ -255,7 +255,7 @@ export const desplegarPaginaCapitulos = ({
     try {
       const resultados = await Promise.allSettled(
         canvas_curso_ids.map(async (canvas_curso_id) => {
-          const resp = await fetchSinToken(
+          const resp = await fetchConToken(
             `api/capitulos/deploy-pagina/${canvas_curso_id}`,
             { titulo, body, slug },
             "POST"

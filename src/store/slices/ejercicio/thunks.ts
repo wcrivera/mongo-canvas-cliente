@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import type {
   TipoPreguntaEjercicio,
@@ -25,7 +25,7 @@ export const obtenerEjerciciosPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/ejercicios/capitulo/${capitulo_id}`
       );
       const body = await resp.json();
@@ -53,7 +53,7 @@ export const obtenerEjerciciosPorCurso = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
     try {
-      const resp = await fetchSinToken(`api/ejercicios/curso/${curso_id}`);
+      const resp = await fetchConToken(`api/ejercicios/curso/${curso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setEjercicios(body.data));
@@ -91,7 +91,7 @@ export const crearEjercicio = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/ejercicios",
         { capitulo_id, nombre, enunciado, tipo_pregunta, opciones, puntos, published },
         "POST"
@@ -127,7 +127,7 @@ export const editarEjercicio = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/ejercicios/${ejercicio_id}`,
         { nombre, enunciado, published },
         "PUT"
@@ -157,7 +157,7 @@ export const eliminarEjercicio = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/ejercicios/${ejercicio_id}`,
         {},
         "DELETE"
@@ -189,7 +189,7 @@ export const cambiarPositionEjercicio = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/ejercicios/${ejercicio_id}/position`,
         { direction },
         "PATCH"
@@ -221,7 +221,7 @@ export const reintentarEjercicio = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/ejercicios/${ejercicio_id}/reintentar/${canvas_curso_id}`,
         {},
         "POST"

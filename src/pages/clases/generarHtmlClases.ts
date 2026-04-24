@@ -1,65 +1,65 @@
-import type { IClase }       from "../../store/slices/clase";
-import type { ITema }        from "../../store/slices/tema";
-import type { IRecurso }     from "../../store/slices/recurso";
+import type { IClase } from "../../store/slices/clase";
+import type { ITema } from "../../store/slices/tema";
+import type { IRecurso } from "../../store/slices/recurso";
 import type { IDiapositiva } from "../../store/slices/diapositiva";
-import type { IVideo }       from "../../store/slices/video";
-import type { IQuiz }        from "../../store/slices/quiz";
-import type { IMongoCurso }  from "../../store/slices/mongoCurso";
-import type { ICapitulo }    from "../../store/slices/capitulo";
+import type { IVideo } from "../../store/slices/video";
+import type { IQuiz } from "../../store/slices/quiz";
+import type { IMongoCurso } from "../../store/slices/mongoCurso";
+import type { ICapitulo } from "../../store/slices/capitulo";
 
 interface GenerarHtmlClasesParams {
-  curso:           IMongoCurso;
-  capitulo:        ICapitulo;
-  clases:          IClase[];
-  temas:           ITema[];
-  recursos:        IRecurso[];
-  diapositivas:    IDiapositiva[];
-  videos:          IVideo[];
-  quizzes:         IQuiz[];
+  curso: IMongoCurso;
+  capitulo: ICapitulo;
+  clases: IClase[];
+  temas: ITema[];
+  recursos: IRecurso[];
+  diapositivas: IDiapositiva[];
+  videos: IVideo[];
+  quizzes: IQuiz[];
   canvas_curso_id: number;
 }
 
 const getRecursoUrl = (
-  recurso:         IRecurso,
-  diapositivas:    IDiapositiva[],
-  videos:          IVideo[],
-  quizzes:         IQuiz[],
-  canvas_curso_id: number
+  recurso: IRecurso,
+  diapositivas: IDiapositiva[],
+  videos: IVideo[],
+  quizzes: IQuiz[],
+  canvas_curso_id: number,
 ): string => {
-  if (recurso.tipo === 'diapositiva') {
-    const diap = diapositivas.find(d => d.recurso_id === recurso._id);
-    const dep  = diap?.canvas_deployments.find(
-      d => d.canvas_curso_id === canvas_curso_id
+  if (recurso.tipo === "diapositiva") {
+    const diap = diapositivas.find((d) => d.recurso_id === recurso._id);
+    const dep = diap?.canvas_deployments.find(
+      (d) => d.canvas_curso_id === canvas_curso_id,
     );
     return dep?.canvas_page_url
       ? `/courses/${canvas_curso_id}/pages/${dep.canvas_page_url}`
-      : '#';
+      : "#";
   }
-  if (recurso.tipo === 'video') {
-    const vid = videos.find(v => v.recurso_id === recurso._id);
+  if (recurso.tipo === "video") {
+    const vid = videos.find((v) => v.recurso_id === recurso._id);
     const dep = vid?.canvas_deployments.find(
-      d => d.canvas_curso_id === canvas_curso_id
+      (d) => d.canvas_curso_id === canvas_curso_id,
     );
     return dep?.canvas_page_url
       ? `/courses/${canvas_curso_id}/pages/${dep.canvas_page_url}`
-      : '#';
+      : "#";
   }
-  if (recurso.tipo === 'quiz') {
-    const quiz = quizzes.find(q => q.recurso_id === recurso._id);
-    const dep  = quiz?.canvas_deployments.find(
-      d => d.canvas_curso_id === canvas_curso_id
+  if (recurso.tipo === "quiz") {
+    const quiz = quizzes.find((q) => q.recurso_id === recurso._id);
+    const dep = quiz?.canvas_deployments.find(
+      (d) => d.canvas_curso_id === canvas_curso_id,
     );
     return dep?.canvas_quiz_id
       ? `/courses/${canvas_curso_id}/quizzes/${dep.canvas_quiz_id}`
-      : '#';
+      : "#";
   }
-  return '#';
+  return "#";
 };
 
 const CONFIG_RECURSO = {
-  diapositiva: { color: '#f47c3c', icon: '&#9638;', label: 'Diapositiva' },
-  video:       { color: '#e03030', icon: '&#9654;', label: 'Video'       },
-  quiz:        { color: '#2d5be3', icon: '&#9998;', label: 'Ejercicio'   },
+  diapositiva: { color: "#f47c3c", icon: "&#9638;", label: "Diapositiva" },
+  video: { color: "#e03030", icon: "&#9654;", label: "Video" },
+  quiz: { color: "#2d5be3", icon: "&#9998;", label: "Ejercicio" },
 };
 
 export const generarHtmlClases = ({
@@ -73,26 +73,32 @@ export const generarHtmlClases = ({
   quizzes,
   canvas_curso_id,
 }: GenerarHtmlClasesParams): string => {
-
   const clasesOrdenadas = [...clases].sort((a, b) => a.position - b.position);
 
-  const clasesHtml = clasesOrdenadas.map((clase) => {
-    const temasClase = temas
-      .filter(t => t.clase_id === clase._id)
-      .sort((a, b) => a.position - b.position);
-
-    const temasHtml = temasClase.map((tema) => {
-      const recursosTema = recursos
-        .filter(r => r.tema_id === tema._id)
+  const clasesHtml = clasesOrdenadas
+    .map((clase) => {
+      const temasClase = temas
+        .filter((t) => t.clase_id === clase._id)
         .sort((a, b) => a.position - b.position);
 
-      const recursosHtml = recursosTema.map((recurso) => {
-        const cfg = CONFIG_RECURSO[recurso.tipo];
-        const url = getRecursoUrl(
-          recurso, diapositivas, videos, quizzes, canvas_curso_id
-        );
+      const temasHtml = temasClase
+        .map((tema) => {
+          const recursosTema = recursos
+            .filter((r) => r.tema_id === tema._id)
+            .sort((a, b) => a.position - b.position);
 
-        return `
+          const recursosHtml = recursosTema
+            .map((recurso) => {
+              const cfg = CONFIG_RECURSO[recurso.tipo];
+              const url = getRecursoUrl(
+                recurso,
+                diapositivas,
+                videos,
+                quizzes,
+                canvas_curso_id,
+              );
+
+              return `
           <div style="display: flex; align-items: center; gap: 8px;">
             <a href="${url}" style="
               display: inline-flex;
@@ -114,9 +120,10 @@ export const generarHtmlClases = ({
             ">${cfg.label}</span>
           </div>
         `;
-      }).join("");
+            })
+            .join("");
 
-      return `
+          return `
         <div style="
           border-top: 1px solid #e0e0e0;
           padding: 14px 20px;
@@ -136,9 +143,10 @@ export const generarHtmlClases = ({
           ">${recursosHtml}</div>
         </div>
       `;
-    }).join("");
+        })
+        .join("");
 
-    return `
+      return `
       <div style="
         background-color: white;
         border: 1px solid #e0e0e0;
@@ -186,7 +194,8 @@ export const generarHtmlClases = ({
         ${temasHtml}
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 
   return `
     <div style="

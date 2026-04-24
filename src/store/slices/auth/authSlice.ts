@@ -1,101 +1,109 @@
-// src/store/slices/authSlice.ts
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { canvasAPI } from '../api/canvasAPI';
+import { createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
 
-interface AuthState {
-  token:            string | null;
-  email:            string | null;
-  nombre:           string | null;
-  role:             'admin' | 'profesor' | null;
-  id:               string | null;
+const decodeJWT = (token: string) => {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(""),
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+};
+
+const tokenGuardado = sessionStorage.getItem("auth_token");
+const payloadGuardado = tokenGuardado ? decodeJWT(tokenGuardado) : null;
+
+export interface AuthState {
+  token: string | null;
+  email: string | null;
+  nombre: string | null;
+  role: "admin" | "profesor" | null;
+  id: string | null;
   tiene_token_canvas: boolean;
-  loading:          boolean;
-  error:            string | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
 const initialState: AuthState = {
-  token:              null,
-  email:              null,
-  nombre:             null,
-  role:               null,
-  id:                 null,
+  token: tokenGuardado,
+  email: payloadGuardado?.email || null,
+  nombre: null,
+  role: payloadGuardado?.role || null,
+  id: payloadGuardado?.id || null,
   tiene_token_canvas: false,
-  loading:            false,
-  error:              null,
+  isLoading: false,
+  error: null,
 };
 
-// Thunk: cargar perfil completo desde backend
-export const cargarPerfil = createAsyncThunk(
-  'auth/cargarPerfil',
-  async (_, { getState, rejectWithValue }) => {
-    try {
-      const response = await canvasAPI.get('/auth/me');
-      return response.data.usuario;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.msg || 'Error al cargar perfil');
-    }
-  }
-);
-
-// Thunk: guardar token Canvas
-export const guardarTokenCanvas = createAsyncThunk(
-  'auth/guardarTokenCanvas',
-  async (canvas_token: string, { rejectWithValue }) => {
-    try {
-      await canvasAPI.post('/auth/canvas-token', { canvas_token });
-      return true;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.msg || 'Error al guardar token');
-    }
-  }
-);
-
-const authSlice = createSlice({
-  name: 'auth',
+export const authSlice = createSlice({
+  name: "auth",
   initialState,
   reducers: {
-    setCredenciales: (state, action: PayloadAction<{
-      token: string;
-      email: string;
-      role:  'admin' | 'profesor';
-      id:    string;
-    }>) => {
+    setCredenciales: (
+      state,
+      action: PayloadAction<{
+        token: string;
+        email: string;
+        role: "admin" | "profesor";
+        id: string;
+      }>,
+    ) => {
       state.token = action.payload.token;
       state.email = action.payload.email;
-      state.role  = action.payload.role;
-      state.id    = action.payload.id;
+      state.role = action.payload.role;
+      state.id = action.payload.id;
+    },
+    setPerfil: (
+      state,
+      action: PayloadAction<{
+        nombre: string;
+        tiene_token_canvas: boolean;
+      }>,
+    ) => {
+      state.nombre = action.payload.nombre;
+      state.tiene_token_canvas = action.payload.tiene_token_canvas;
+    },
+    setTieneTokenCanvas: (state, action: PayloadAction<boolean>) => {
+      state.tiene_token_canvas = action.payload;
+    },
+    startLoadingAuth: (state) => {
+      state.isLoading = true;
+      state.error = null;
+    },
+    endLoadingAuth: (state) => {
+      state.isLoading = false;
+    },
+    setErrorAuth: (state, action: PayloadAction<string>) => {
+      state.isLoading = false;
+      state.error = action.payload;
     },
     logout: (state) => {
-      state.token              = null;
-      state.email              = null;
-      state.nombre             = null;
-      state.role               = null;
-      state.id                 = null;
+      sessionStorage.removeItem("auth_token");
+      state.token = null;
+      state.email = null;
+      state.nombre = null;
+      state.role = null;
+      state.id = null;
       state.tiene_token_canvas = false;
+      state.isLoading = false;
+      state.error = null;
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(cargarPerfil.pending, (state) => {
-        state.loading = true;
-        state.error   = null;
-      })
-      .addCase(cargarPerfil.fulfilled, (state, action) => {
-        state.loading            = false;
-        state.nombre             = action.payload.nombre;
-        state.email              = action.payload.email;
-        state.role               = action.payload.role;
-        state.tiene_token_canvas = !!action.payload.canvas_token;
-      })
-      .addCase(cargarPerfil.rejected, (state, action) => {
-        state.loading = false;
-        state.error   = action.payload as string;
-      })
-      .addCase(guardarTokenCanvas.fulfilled, (state) => {
-        state.tiene_token_canvas = true;
-      });
   },
 });
 
-export const { setCredenciales, logout } = authSlice.actions;
-export default authSlice.reducer;
+export const {
+  setCredenciales,
+  setPerfil,
+  setTieneTokenCanvas,
+  startLoadingAuth,
+  endLoadingAuth,
+  setErrorAuth,
+  logout,
+} = authSlice.actions;

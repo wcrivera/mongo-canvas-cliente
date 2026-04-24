@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
   startLoadingAyudantia,
@@ -21,7 +21,7 @@ export const obtenerAyudantiasPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/ayudantias/capitulo/${capitulo_id}`
       );
       const body = await resp.json();
@@ -49,7 +49,7 @@ export const obtenerAyudantiasPorCurso = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchSinToken(`api/ayudantias/curso/${curso_id}`);
+      const resp = await fetchConToken(`api/ayudantias/curso/${curso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setAyudantias(body.data));
@@ -81,7 +81,7 @@ export const crearAyudantia = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/ayudantias",
         { capitulo_id, nombre, enunciado, published },
         "POST"
@@ -117,7 +117,7 @@ export const editarAyudantia = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/ayudantias/${ayudantia_id}`,
         { nombre, enunciado, published },
         "PUT"
@@ -147,7 +147,7 @@ export const eliminarAyudantia = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/ayudantias/${ayudantia_id}`,
         {},
         "DELETE"
@@ -179,7 +179,7 @@ export const cambiarPositionAyudantia = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/ayudantias/${ayudantia_id}/position`,
         { direction },
         "PATCH"

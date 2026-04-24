@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
   startLoadingTema,
@@ -16,7 +16,7 @@ export const obtenerTemas = ({ clase_id }: { clase_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchSinToken(`api/temas/clase/${clase_id}`);
+      const resp = await fetchConToken(`api/temas/clase/${clase_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setTemas(body.data));
@@ -42,7 +42,7 @@ export const obtenerTemasPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchSinToken(`api/temas/capitulo/${capitulo_id}`);
+      const resp = await fetchConToken(`api/temas/capitulo/${capitulo_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setTemas(body.data));
@@ -70,7 +70,7 @@ export const crearTema = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/temas",
         { clase_id, nombre },
         "POST",
@@ -102,7 +102,7 @@ export const editarTema = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/temas/${tema_id}`,
         { nombre },
         "PUT",
@@ -128,7 +128,7 @@ export const eliminarTema = ({ tema_id }: { tema_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchSinToken(`api/temas/${tema_id}`, {}, "DELETE");
+      const resp = await fetchConToken(`api/temas/${tema_id}`, {}, "DELETE");
       const body = await resp.json();
       if (body.ok) {
         dispatch(eliminarTemaState(tema_id));
@@ -150,7 +150,7 @@ export const obtenerTemasPorCurso = ({ curso_id }: { curso_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchSinToken(`api/temas/curso/${curso_id}`);
+      const resp = await fetchConToken(`api/temas/curso/${curso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setTemas(body.data));

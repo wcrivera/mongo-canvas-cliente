@@ -13,8 +13,9 @@ import { quizMongoSlice } from "./slices/quiz/quizSlice";
 import { ayudantiaMongoSlice } from "./slices/ayudantia/ayudantiaSlice";
 import { solucionTextoMongoSlice } from "./slices/solucionTexto/solucionTextoSlice";
 import { ejercicioMongoSlice } from "./slices/ejercicio/ejercicioSlice";
+import { authSlice } from "./slices/auth/authSlice";
 
-import authReducer from './slices/auth/authSlice';
+// import authReducer from './slices/auth/authSlice';
 
 export const store = configureStore({
   reducer: {
@@ -31,7 +32,7 @@ export const store = configureStore({
     ayudantiaMongo: ayudantiaMongoSlice.reducer,
     solucionTextoMongo: solucionTextoMongoSlice.reducer,
     ejercicioMongo: ejercicioMongoSlice.reducer,
-    auth: authReducer
+    auth: authSlice.reducer,
   },
 });
 

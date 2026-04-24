@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
   startLoadingClase,
@@ -17,7 +17,7 @@ export const obtenerClases = ({ capitulo_id }: { capitulo_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchSinToken(`api/clases/capitulo/${capitulo_id}`);
+      const resp = await fetchConToken(`api/clases/capitulo/${capitulo_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setClases(body.data));
@@ -47,7 +47,7 @@ export const crearClase = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/clases",
         { capitulo_id, nombre, published },
         "POST"
@@ -81,7 +81,7 @@ export const editarClase = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/clases/${clase_id}`,
         { nombre, published },
         "PUT"
@@ -107,7 +107,7 @@ export const eliminarClase = ({ clase_id }: { clase_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/clases/${clase_id}`,
         {},
         "DELETE"
@@ -139,7 +139,7 @@ export const cambiarPositionClase = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/clases/${clase_id}/position`,
         { direction },
         "PATCH"
@@ -171,7 +171,7 @@ export const reintentarClase = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/clases/${clase_id}/reintentar/${canvas_curso_id}`,
         {},
         "POST"
@@ -197,7 +197,7 @@ export const obtenerClasesPorCurso = ({ curso_id }: { curso_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchSinToken(`api/clases/curso/${curso_id}`);
+      const resp = await fetchConToken(`api/clases/curso/${curso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setClases(body.data));

@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 
 import {
@@ -17,7 +17,7 @@ export const obtenerCanvasCursos = () => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCanvasCurso());
     try {
-      const resp = await fetchSinToken("api/canvas/cursos");
+      const resp = await fetchConToken("api/canvas/cursos");
       const body = await resp.json();
 
       if (body.ok) {
@@ -46,7 +46,7 @@ export const obtenerCanvasCursosDisponibles = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCanvasCurso());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/canvas/cursos/disponibles/${curso_mongo_id}`
       );
       const body = await resp.json();

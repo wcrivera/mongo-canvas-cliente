@@ -1,4 +1,4 @@
-import { fetchSinToken } from "../../../helpers/fetch";
+import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 
 import {
@@ -19,7 +19,7 @@ export const obtenerMongoCursos = () => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingMongoCurso());
     try {
-      const resp = await fetchSinToken("api/cursos");
+      const resp = await fetchConToken("api/cursos");
       const body = await resp.json();
 
       if (body.ok) {
@@ -44,7 +44,7 @@ export const obtenerMongoCurso = ({ curso_id }: { curso_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingMongoCurso());
     try {
-      const resp = await fetchSinToken(`api/cursos/${curso_id}`);
+      const resp = await fetchConToken(`api/cursos/${curso_id}`);
       const body = await resp.json();
 
       if (body.ok) {
@@ -77,7 +77,7 @@ export const crearMongoCurso = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingMongoCurso());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         "api/cursos",
         { codigo, nombre, descripcion },
         "POST"
@@ -115,7 +115,7 @@ export const asociarCanvasCurso = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingMongoCurso());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/cursos/${curso_id}/canvas-cursos`,
         { canvas_id, nombre },
         "POST"
@@ -150,7 +150,7 @@ export const desactivarCanvasCurso = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingMongoCurso());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/cursos/${curso_id}/canvas-cursos/${canvas_id}/desactivar`,
         {},
         "PATCH"
@@ -185,7 +185,7 @@ export const eliminarCanvasCurso = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingMongoCurso());
     try {
-      const resp = await fetchSinToken(
+      const resp = await fetchConToken(
         `api/cursos/${curso_id}/canvas-cursos/${canvas_id}`,
         {},
         "DELETE"
