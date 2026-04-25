@@ -9,6 +9,8 @@ import Ejercicios from "../pages/ejercicios/Ejercicios";
 import AuthCallback from "../pages/auth/AuthCallback";
 import Login from "../pages/auth/Login";
 import TokenCanvas from "../pages/auth/TokenCanvas";
+import EditorTest from '../pages/editor-test/EditorTest'
+
 
 const Router = () => {
   return (
@@ -90,6 +92,8 @@ const Router = () => {
             </PrivateRoute>
           }
         />
+
+        <Route path="/editor-test" element={<EditorTest />} />
 
         {/* Redirección */}
         <Route path="/*" element={<Navigate to="/inicio" replace />} />

@@ -1,19 +1,30 @@
 import { useState } from "react";
 import {
-  Card, CardContent, Typography, IconButton,
-  Tooltip, CircularProgress, Chip, TextField,
-  Button, Checkbox, FormControl, InputLabel,
-  Select, MenuItem, Divider,
+  Card,
+  CardContent,
+  Typography,
+  IconButton,
+  Tooltip,
+  CircularProgress,
+  Chip,
+  TextField,
+  Button,
+  Checkbox,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Divider,
 } from "@mui/material";
-import KeyboardArrowUpIcon    from "@mui/icons-material/KeyboardArrowUp";
-import KeyboardArrowDownIcon  from "@mui/icons-material/KeyboardArrowDown";
-import DeleteOutlineIcon      from "@mui/icons-material/DeleteOutlineOutlined";
-import EditOutlinedIcon        from "@mui/icons-material/EditOutlined";
-import CheckIcon               from "@mui/icons-material/Check";
-import CloseIcon               from "@mui/icons-material/Close";
-import AddIcon                 from "@mui/icons-material/Add";
-import DeleteIcon              from "@mui/icons-material/Delete";
-import { useAppDispatch }      from "../../store/hooks";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import CheckIcon from "@mui/icons-material/Check";
+import CloseIcon from "@mui/icons-material/Close";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useAppDispatch } from "../../store/hooks";
 import {
   eliminarPregunta,
   cambiarPositionPregunta,
@@ -22,92 +33,129 @@ import {
 import type { IPregunta } from "../../store/slices/quiz";
 import LatexRenderer from "../../components/LaTeX/LatexRenderer";
 
+// import { LatexEditor } from "../../components/Editor";
+// import { toEditorHTML } from "../../components/Editor/editoHTML";
+import Latex from "react-latex-next";
 import { LatexEditor } from "../../components/Editor";
 
 interface Props {
-  pregunta:  IPregunta;
+  pregunta: IPregunta;
   esPrimero: boolean;
-  esUltimo:  boolean;
+  esUltimo: boolean;
 }
 
 const TIPO_LABEL: Record<string, string> = {
-  multiple_choice:  "Opción múltiple",
+  multiple_choice: "Opción múltiple",
   multiple_answers: "Respuestas múltiples",
-  true_false:       "Verdadero/Falso",
-  short_answer:     "Respuesta corta",
-  essay:            "Ensayo",
-  matching:         "Coincidencia",
-  numerical:        "Respuesta numérica",
+  true_false: "Verdadero/Falso",
+  short_answer: "Respuesta corta",
+  essay: "Ensayo",
+  matching: "Coincidencia",
+  numerical: "Respuesta numérica",
 };
 
 const TIPO_COLOR: Record<string, string> = {
-  multiple_choice:  "#4A6D8C",
+  multiple_choice: "#4A6D8C",
   multiple_answers: "#2d5be3",
-  true_false:       "#1a9e5c",
-  short_answer:     "#f47c3c",
-  essay:            "#9c27b0",
-  matching:         "#e67e22",
-  numerical:        "#e74c3c",
+  true_false: "#1a9e5c",
+  short_answer: "#f47c3c",
+  essay: "#9c27b0",
+  matching: "#e67e22",
+  numerical: "#e74c3c",
 };
 
 const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
   const dispatch = useAppDispatch();
 
   const [eliminando, setEliminando] = useState(false);
-  const [editando,   setEditando]   = useState(false);
-  const [guardando,  setGuardando]  = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
   // Form edición
   const [enunciado, setEnunciado] = useState(pregunta.enunciado);
-  const [puntos,    setPuntos]    = useState(pregunta.puntos);
-  const [opciones,  setOpciones]  = useState(
-    pregunta.opciones.map(op => ({ texto: op.texto, es_correcta: op.es_correcta }))
+  const [puntos, setPuntos] = useState(pregunta.puntos);
+  const [opciones, setOpciones] = useState(
+    pregunta.opciones.map((op) => ({
+      texto: op.texto,
+      es_correcta: op.es_correcta,
+    })),
   );
   const [pares, setPares] = useState(
-    (pregunta.pares ?? []).map(p => ({ izquierda: p.izquierda, derecha: p.derecha }))
+    (pregunta.pares ?? []).map((p) => ({
+      izquierda: p.izquierda,
+      derecha: p.derecha,
+    })),
   );
   const [respNum, setRespNum] = useState({
-    tipo:      pregunta.respuesta_numerica?.tipo      ?? "exact" as "exact" | "range" | "precision",
-    exacto:    pregunta.respuesta_numerica?.exacto    ?? 0,
-    margen:    pregunta.respuesta_numerica?.margen    ?? 0,
-    minimo:    pregunta.respuesta_numerica?.minimo    ?? 0,
-    maximo:    pregunta.respuesta_numerica?.maximo    ?? 10,
+    tipo:
+      pregunta.respuesta_numerica?.tipo ??
+      ("exact" as "exact" | "range" | "precision"),
+    exacto: pregunta.respuesta_numerica?.exacto ?? 0,
+    margen: pregunta.respuesta_numerica?.margen ?? 0,
+    minimo: pregunta.respuesta_numerica?.minimo ?? 0,
+    maximo: pregunta.respuesta_numerica?.maximo ?? 10,
     precision: pregunta.respuesta_numerica?.precision ?? 2,
   });
 
   const esMultiple = pregunta.tipo === "multiple_answers";
 
   // ── Handlers opciones ──────────────────────────────────────────
-  const handleOpcionTexto    = (idx: number, texto: string) =>
-    setOpciones(ops => ops.map((op, i) => i === idx ? { ...op, texto } : op));
+  const handleOpcionTexto = (idx: number, texto: string) =>
+    setOpciones((ops) =>
+      ops.map((op, i) => (i === idx ? { ...op, texto } : op)),
+    );
   const handleOpcionCorrecta = (idx: number) => {
     if (esMultiple) {
-      setOpciones(ops => ops.map((op, i) => i === idx ? { ...op, es_correcta: !op.es_correcta } : op));
+      setOpciones((ops) =>
+        ops.map((op, i) =>
+          i === idx ? { ...op, es_correcta: !op.es_correcta } : op,
+        ),
+      );
     } else {
-      setOpciones(ops => ops.map((op, i) => ({ ...op, es_correcta: i === idx })));
+      setOpciones((ops) =>
+        ops.map((op, i) => ({ ...op, es_correcta: i === idx })),
+      );
     }
   };
-  const agregarOpcion  = () => setOpciones(ops => [...ops, { texto: "", es_correcta: false }]);
-  const eliminarOpcion = (idx: number) => setOpciones(ops => ops.filter((_, i) => i !== idx));
+  const agregarOpcion = () =>
+    setOpciones((ops) => [...ops, { texto: "", es_correcta: false }]);
+  const eliminarOpcion = (idx: number) =>
+    setOpciones((ops) => ops.filter((_, i) => i !== idx));
 
   // ── Handlers pares ─────────────────────────────────────────────
-  const handleParIzq = (idx: number, v: string) => setPares(ps => ps.map((p, i) => i === idx ? { ...p, izquierda: v } : p));
-  const handleParDer = (idx: number, v: string) => setPares(ps => ps.map((p, i) => i === idx ? { ...p, derecha: v } : p));
-  const agregarPar   = () => setPares(ps => [...ps, { izquierda: "", derecha: "" }]);
-  const eliminarPar  = (idx: number) => setPares(ps => ps.filter((_, i) => i !== idx));
+  const handleParIzq = (idx: number, v: string) =>
+    setPares((ps) =>
+      ps.map((p, i) => (i === idx ? { ...p, izquierda: v } : p)),
+    );
+  const handleParDer = (idx: number, v: string) =>
+    setPares((ps) => ps.map((p, i) => (i === idx ? { ...p, derecha: v } : p)));
+  const agregarPar = () =>
+    setPares((ps) => [...ps, { izquierda: "", derecha: "" }]);
+  const eliminarPar = (idx: number) =>
+    setPares((ps) => ps.filter((_, i) => i !== idx));
 
   // ── Abrir edición ──────────────────────────────────────────────
   const handleAbrirEdicion = () => {
     setEnunciado(pregunta.enunciado);
     setPuntos(pregunta.puntos);
-    setOpciones(pregunta.opciones.map(op => ({ texto: op.texto, es_correcta: op.es_correcta })));
-    setPares((pregunta.pares ?? []).map(p => ({ izquierda: p.izquierda, derecha: p.derecha })));
+    setOpciones(
+      pregunta.opciones.map((op) => ({
+        texto: op.texto,
+        es_correcta: op.es_correcta,
+      })),
+    );
+    setPares(
+      (pregunta.pares ?? []).map((p) => ({
+        izquierda: p.izquierda,
+        derecha: p.derecha,
+      })),
+    );
     setRespNum({
-      tipo:      pregunta.respuesta_numerica?.tipo      ?? "exact",
-      exacto:    pregunta.respuesta_numerica?.exacto    ?? 0,
-      margen:    pregunta.respuesta_numerica?.margen    ?? 0,
-      minimo:    pregunta.respuesta_numerica?.minimo    ?? 0,
-      maximo:    pregunta.respuesta_numerica?.maximo    ?? 10,
+      tipo: pregunta.respuesta_numerica?.tipo ?? "exact",
+      exacto: pregunta.respuesta_numerica?.exacto ?? 0,
+      margen: pregunta.respuesta_numerica?.margen ?? 0,
+      minimo: pregunta.respuesta_numerica?.minimo ?? 0,
+      maximo: pregunta.respuesta_numerica?.maximo ?? 10,
       precision: pregunta.respuesta_numerica?.precision ?? 2,
     });
     setEditando(true);
@@ -121,7 +169,11 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
       enunciado,
       puntos,
     };
-    if (pregunta.tipo === "multiple_choice" || pregunta.tipo === "multiple_answers" || pregunta.tipo === "true_false") {
+    if (
+      pregunta.tipo === "multiple_choice" ||
+      pregunta.tipo === "multiple_answers" ||
+      pregunta.tipo === "true_false"
+    ) {
       payload.opciones = opciones;
     }
     if (pregunta.tipo === "matching") {
@@ -143,18 +195,53 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
   };
 
   return (
-    <Card elevation={0} className="animate-fadeIn" sx={{ borderRadius: 3, border: "1px solid #d9e4ee", transition: "box-shadow 0.2s", "&:hover": { boxShadow: "0 4px 16px rgba(74,109,140,0.08)" } }}>
+    <Card
+      elevation={0}
+      className="animate-fadeIn"
+      sx={{
+        borderRadius: 3,
+        border: "1px solid #d9e4ee",
+        transition: "box-shadow 0.2s",
+        "&:hover": { boxShadow: "0 4px 16px rgba(74,109,140,0.08)" },
+      }}
+    >
       <CardContent sx={{ p: 0 }}>
-
         {/* ── Header ── */}
-        <div className="flex items-center gap-3 px-5 py-3" style={{ background: "linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)" }}>
-          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#4A6D8C", color: "white", fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div
+          className="flex items-center gap-3 px-5 py-3"
+          style={{
+            background: "linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)",
+          }}
+        >
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              background: "#4A6D8C",
+              color: "white",
+              fontSize: 12,
+              fontWeight: 500,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
             {pregunta.position}
           </div>
 
           <div className="flex items-center gap-2 flex-1">
-            <Chip label={TIPO_LABEL[pregunta.tipo] ?? pregunta.tipo} size="small"
-              sx={{ fontSize: "0.65rem", height: 20, bgcolor: `${TIPO_COLOR[pregunta.tipo]}20`, color: TIPO_COLOR[pregunta.tipo], fontWeight: 600 }}
+            <Chip
+              label={TIPO_LABEL[pregunta.tipo] ?? pregunta.tipo}
+              size="small"
+              sx={{
+                fontSize: "0.65rem",
+                height: 20,
+                bgcolor: `${TIPO_COLOR[pregunta.tipo]}20`,
+                color: TIPO_COLOR[pregunta.tipo],
+                fontWeight: 600,
+              }}
             />
             <Typography variant="caption" sx={{ color: "#8daecb" }}>
               {pregunta.puntos} pt{pregunta.puntos !== 1 ? "s" : ""}
@@ -164,88 +251,183 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
           <div className="flex items-center gap-0.5 shrink-0">
             <Tooltip title="Subir">
               <span>
-                <IconButton size="small" disabled={esPrimero}
-                  onClick={() => dispatch(cambiarPositionPregunta({ pregunta_id: pregunta._id, direction: "up" }))}
-                  sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" }, "&:disabled": { color: "#d9e4ee" } }}>
+                <IconButton
+                  size="small"
+                  disabled={esPrimero}
+                  onClick={() =>
+                    dispatch(
+                      cambiarPositionPregunta({
+                        pregunta_id: pregunta._id,
+                        direction: "up",
+                      }),
+                    )
+                  }
+                  sx={{
+                    color: "#8daecb",
+                    "&:hover": { color: "#4A6D8C" },
+                    "&:disabled": { color: "#d9e4ee" },
+                  }}
+                >
                   <KeyboardArrowUpIcon fontSize="small" />
                 </IconButton>
               </span>
             </Tooltip>
             <Tooltip title="Bajar">
               <span>
-                <IconButton size="small" disabled={esUltimo}
-                  onClick={() => dispatch(cambiarPositionPregunta({ pregunta_id: pregunta._id, direction: "down" }))}
-                  sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" }, "&:disabled": { color: "#d9e4ee" } }}>
+                <IconButton
+                  size="small"
+                  disabled={esUltimo}
+                  onClick={() =>
+                    dispatch(
+                      cambiarPositionPregunta({
+                        pregunta_id: pregunta._id,
+                        direction: "down",
+                      }),
+                    )
+                  }
+                  sx={{
+                    color: "#8daecb",
+                    "&:hover": { color: "#4A6D8C" },
+                    "&:disabled": { color: "#d9e4ee" },
+                  }}
+                >
                   <KeyboardArrowDownIcon fontSize="small" />
                 </IconButton>
               </span>
             </Tooltip>
             <Tooltip title="Editar">
-              <IconButton size="small" onClick={handleAbrirEdicion}
-                sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}>
+              <IconButton
+                size="small"
+                onClick={handleAbrirEdicion}
+                sx={{
+                  color: "#8daecb",
+                  "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" },
+                }}
+              >
                 <EditOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
             <Tooltip title="Eliminar">
               <span>
-                <IconButton size="small" onClick={handleEliminar} disabled={eliminando}
-                  sx={{ color: "#8daecb", "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" } }}>
-                  {eliminando ? <CircularProgress size={14} /> : <DeleteOutlineIcon fontSize="small" />}
+                <IconButton
+                  size="small"
+                  onClick={handleEliminar}
+                  disabled={eliminando}
+                  sx={{
+                    color: "#8daecb",
+                    "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" },
+                  }}
+                >
+                  {eliminando ? (
+                    <CircularProgress size={14} />
+                  ) : (
+                    <DeleteOutlineIcon fontSize="small" />
+                  )}
                 </IconButton>
               </span>
             </Tooltip>
           </div>
         </div>
 
+        <Latex>{enunciado}</Latex>
+
         {/* ── Modo edición ── */}
         {editando ? (
           <div className="px-5 py-4 flex flex-col gap-3">
-            
-            <LatexEditor />
+            {/* <LatexEditor /> */}
+
+            <LatexEditor
+              onChange={setEnunciado}
+              placeholder="Escribe aquí… usa \\( ... \\) para fórmulas inline y \\[ ... \\] para bloques"
+              initialContent={enunciado}
+              minHeight="150px"
+            />
 
             <TextField
-              label="Enunciado" value={enunciado}
-              onChange={e => setEnunciado(e.target.value)}
-              multiline rows={3} fullWidth size="small"
+              label="Enunciado"
+              value={enunciado}
+              onChange={(e) => setEnunciado(e.target.value)}
+              multiline
+              rows={3}
+              fullWidth
+              size="small"
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
             <TextField
-              label="Puntos" type="number" value={puntos}
-              onChange={e => setPuntos(Number(e.target.value))}
-              size="small" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 }, width: 120 }}
+              label="Puntos"
+              type="number"
+              value={puntos}
+              onChange={(e) => setPuntos(Number(e.target.value))}
+              size="small"
+              sx={{
+                "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                width: 120,
+              }}
             />
-
-            
 
             <Divider />
 
             {/* Opciones */}
-            {(pregunta.tipo === "multiple_choice" || pregunta.tipo === "multiple_answers" || pregunta.tipo === "true_false") && (
+            {(pregunta.tipo === "multiple_choice" ||
+              pregunta.tipo === "multiple_answers" ||
+              pregunta.tipo === "true_false") && (
               <div className="flex flex-col gap-2">
-                <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
-                  {esMultiple ? "Opciones — marca todas las correctas" : "Opciones — marca la correcta"}
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#6793ba", fontWeight: 600 }}
+                >
+                  {esMultiple
+                    ? "Opciones — marca todas las correctas"
+                    : "Opciones — marca la correcta"}
                 </Typography>
                 {opciones.map((op, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     {esMultiple ? (
-                      <Checkbox checked={op.es_correcta} onChange={() => handleOpcionCorrecta(idx)} size="small" sx={{ color: "#4A6D8C" }} />
+                      <Checkbox
+                        checked={op.es_correcta}
+                        onChange={() => handleOpcionCorrecta(idx)}
+                        size="small"
+                        sx={{ color: "#4A6D8C" }}
+                      />
                     ) : (
-                      <input type="radio" name={`correcta-${pregunta._id}`} checked={op.es_correcta} onChange={() => handleOpcionCorrecta(idx)} style={{ accentColor: "#4A6D8C", flexShrink: 0 }} />
+                      <input
+                        type="radio"
+                        name={`correcta-${pregunta._id}`}
+                        checked={op.es_correcta}
+                        onChange={() => handleOpcionCorrecta(idx)}
+                        style={{ accentColor: "#4A6D8C", flexShrink: 0 }}
+                      />
                     )}
                     {pregunta.tipo === "true_false" ? (
                       <Typography variant="body2">{op.texto}</Typography>
                     ) : (
-                      <TextField value={op.texto} onChange={e => handleOpcionTexto(idx, e.target.value)} size="small" fullWidth placeholder={`Opción ${idx + 1}`} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+                      <TextField
+                        value={op.texto}
+                        onChange={(e) => handleOpcionTexto(idx, e.target.value)}
+                        size="small"
+                        fullWidth
+                        placeholder={`Opción ${idx + 1}`}
+                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                      />
                     )}
                     {pregunta.tipo !== "true_false" && opciones.length > 2 && (
-                      <IconButton size="small" onClick={() => eliminarOpcion(idx)} sx={{ color: "#ef4444" }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => eliminarOpcion(idx)}
+                        sx={{ color: "#ef4444" }}
+                      >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     )}
                   </div>
                 ))}
                 {pregunta.tipo !== "true_false" && (
-                  <Button size="small" startIcon={<AddIcon />} onClick={agregarOpcion} sx={{ alignSelf: "flex-start", color: "#4A6D8C" }}>
+                  <Button
+                    size="small"
+                    startIcon={<AddIcon />}
+                    onClick={agregarOpcion}
+                    sx={{ alignSelf: "flex-start", color: "#4A6D8C" }}
+                  >
                     Agregar opción
                   </Button>
                 )}
@@ -255,32 +437,75 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
             {/* Pares */}
             {pregunta.tipo === "matching" && (
               <div className="flex flex-col gap-2">
-                <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>Pares de coincidencia</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#6793ba", fontWeight: 600 }}
+                >
+                  Pares de coincidencia
+                </Typography>
                 {pares.map((par, idx) => (
                   <div key={idx} className="flex items-center gap-2">
-                    <TextField value={par.izquierda} onChange={e => handleParIzq(idx, e.target.value)} size="small" fullWidth placeholder="Término" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+                    <TextField
+                      value={par.izquierda}
+                      onChange={(e) => handleParIzq(idx, e.target.value)}
+                      size="small"
+                      fullWidth
+                      placeholder="Término"
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                    />
                     <Typography sx={{ color: "#8daecb" }}>↔</Typography>
-                    <TextField value={par.derecha} onChange={e => handleParDer(idx, e.target.value)} size="small" fullWidth placeholder="Definición" sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+                    <TextField
+                      value={par.derecha}
+                      onChange={(e) => handleParDer(idx, e.target.value)}
+                      size="small"
+                      fullWidth
+                      placeholder="Definición"
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                    />
                     {pares.length > 2 && (
-                      <IconButton size="small" onClick={() => eliminarPar(idx)} sx={{ color: "#ef4444" }}>
+                      <IconButton
+                        size="small"
+                        onClick={() => eliminarPar(idx)}
+                        sx={{ color: "#ef4444" }}
+                      >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
                     )}
                   </div>
                 ))}
-                <Button size="small" startIcon={<AddIcon />} onClick={agregarPar} sx={{ alignSelf: "flex-start", color: "#4A6D8C" }}>Agregar par</Button>
+                <Button
+                  size="small"
+                  startIcon={<AddIcon />}
+                  onClick={agregarPar}
+                  sx={{ alignSelf: "flex-start", color: "#4A6D8C" }}
+                >
+                  Agregar par
+                </Button>
               </div>
             )}
 
             {/* Numérica */}
             {pregunta.tipo === "numerical" && (
               <div className="flex flex-col gap-3">
-                <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>Respuesta numérica</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#6793ba", fontWeight: 600 }}
+                >
+                  Respuesta numérica
+                </Typography>
                 <FormControl size="small" fullWidth>
                   <InputLabel>Tipo</InputLabel>
-                  <Select value={respNum.tipo} label="Tipo"
-                    onChange={e => setRespNum(r => ({ ...r, tipo: e.target.value as "exact" | "range" | "precision" }))}
-                    sx={{ borderRadius: 2 }}>
+                  <Select
+                    value={respNum.tipo}
+                    label="Tipo"
+                    onChange={(e) =>
+                      setRespNum((r) => ({
+                        ...r,
+                        tipo: e.target.value as "exact" | "range" | "precision",
+                      }))
+                    }
+                    sx={{ borderRadius: 2 }}
+                  >
                     <MenuItem value="exact">Valor exacto</MenuItem>
                     <MenuItem value="range">Rango</MenuItem>
                     <MenuItem value="precision">Precisión decimal</MenuItem>
@@ -288,20 +513,92 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
                 </FormControl>
                 {respNum.tipo === "exact" && (
                   <div className="grid grid-cols-2 gap-3">
-                    <TextField label="Respuesta exacta" type="number" size="small" value={respNum.exacto} onChange={e => setRespNum(r => ({ ...r, exacto: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
-                    <TextField label="Margen (±)" type="number" size="small" value={respNum.margen} onChange={e => setRespNum(r => ({ ...r, margen: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+                    <TextField
+                      label="Respuesta exacta"
+                      type="number"
+                      size="small"
+                      value={respNum.exacto}
+                      onChange={(e) =>
+                        setRespNum((r) => ({
+                          ...r,
+                          exacto: Number(e.target.value),
+                        }))
+                      }
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                    />
+                    <TextField
+                      label="Margen (±)"
+                      type="number"
+                      size="small"
+                      value={respNum.margen}
+                      onChange={(e) =>
+                        setRespNum((r) => ({
+                          ...r,
+                          margen: Number(e.target.value),
+                        }))
+                      }
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                    />
                   </div>
                 )}
                 {respNum.tipo === "range" && (
                   <div className="grid grid-cols-2 gap-3">
-                    <TextField label="Mínimo" type="number" size="small" value={respNum.minimo} onChange={e => setRespNum(r => ({ ...r, minimo: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
-                    <TextField label="Máximo" type="number" size="small" value={respNum.maximo} onChange={e => setRespNum(r => ({ ...r, maximo: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+                    <TextField
+                      label="Mínimo"
+                      type="number"
+                      size="small"
+                      value={respNum.minimo}
+                      onChange={(e) =>
+                        setRespNum((r) => ({
+                          ...r,
+                          minimo: Number(e.target.value),
+                        }))
+                      }
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                    />
+                    <TextField
+                      label="Máximo"
+                      type="number"
+                      size="small"
+                      value={respNum.maximo}
+                      onChange={(e) =>
+                        setRespNum((r) => ({
+                          ...r,
+                          maximo: Number(e.target.value),
+                        }))
+                      }
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                    />
                   </div>
                 )}
                 {respNum.tipo === "precision" && (
                   <div className="grid grid-cols-2 gap-3">
-                    <TextField label="Respuesta exacta" type="number" size="small" value={respNum.exacto} onChange={e => setRespNum(r => ({ ...r, exacto: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
-                    <TextField label="Decimales" type="number" size="small" value={respNum.precision} onChange={e => setRespNum(r => ({ ...r, precision: Number(e.target.value) }))} sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+                    <TextField
+                      label="Respuesta exacta"
+                      type="number"
+                      size="small"
+                      value={respNum.exacto}
+                      onChange={(e) =>
+                        setRespNum((r) => ({
+                          ...r,
+                          exacto: Number(e.target.value),
+                        }))
+                      }
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                    />
+                    <TextField
+                      label="Decimales"
+                      type="number"
+                      size="small"
+                      value={respNum.precision}
+                      onChange={(e) =>
+                        setRespNum((r) => ({
+                          ...r,
+                          precision: Number(e.target.value),
+                        }))
+                      }
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                    />
                   </div>
                 )}
               </div>
@@ -309,12 +606,32 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
 
             {/* Botones */}
             <div className="flex justify-end gap-2 mt-1">
-              <Button size="small" startIcon={<CloseIcon />} onClick={() => setEditando(false)} sx={{ color: "#8daecb" }}>
+              <Button
+                size="small"
+                startIcon={<CloseIcon />}
+                onClick={() => setEditando(false)}
+                sx={{ color: "#8daecb" }}
+              >
                 Cancelar
               </Button>
-              <Button size="small" variant="contained" startIcon={guardando ? <CircularProgress size={14} sx={{ color: "white" }} /> : <CheckIcon />}
-                onClick={handleGuardar} disabled={guardando}
-                sx={{ bgcolor: "#4A6D8C", "&:hover": { bgcolor: "#3a5a7a" }, borderRadius: 2 }}>
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={
+                  guardando ? (
+                    <CircularProgress size={14} sx={{ color: "white" }} />
+                  ) : (
+                    <CheckIcon />
+                  )
+                }
+                onClick={handleGuardar}
+                disabled={guardando}
+                sx={{
+                  bgcolor: "#4A6D8C",
+                  "&:hover": { bgcolor: "#3a5a7a" },
+                  borderRadius: 2,
+                }}
+              >
                 Guardar
               </Button>
             </div>
@@ -322,7 +639,10 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
         ) : (
           /* ── Modo visualización ── */
           <div className="px-5 py-3">
-            <Typography variant="body2" sx={{ color: "#1f2c38", fontWeight: 500, mb: 2 }}>
+            <Typography
+              variant="body2"
+              sx={{ color: "#1f2c38", fontWeight: 500, mb: 2 }}
+            >
               <LatexRenderer>{pregunta.enunciado}</LatexRenderer>
             </Typography>
 
@@ -330,13 +650,38 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
             {pregunta.tipo === "multiple_choice" && (
               <div className="flex flex-col gap-1.5">
                 {pregunta.opciones.map((op) => (
-                  <div key={op._id} className="flex items-center gap-2 rounded-lg px-3 py-2"
-                    style={{ background: op.es_correcta ? "#d1fae5" : "#f9f9f9", border: `1px solid ${op.es_correcta ? "#6ee7b7" : "#e0e0e0"}` }}>
-                    <div style={{ width: 14, height: 14, borderRadius: "50%", border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`, background: op.es_correcta ? "#1a9e5c" : "white", flexShrink: 0 }} />
-                    <Typography variant="caption" sx={{ color: op.es_correcta ? "#065f46" : "#555" }}>
+                  <div
+                    key={op._id}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2"
+                    style={{
+                      background: op.es_correcta ? "#d1fae5" : "#f9f9f9",
+                      border: `1px solid ${op.es_correcta ? "#6ee7b7" : "#e0e0e0"}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: "50%",
+                        border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`,
+                        background: op.es_correcta ? "#1a9e5c" : "white",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography
+                      variant="caption"
+                      sx={{ color: op.es_correcta ? "#065f46" : "#555" }}
+                    >
                       <LatexRenderer>{op.texto}</LatexRenderer>
                     </Typography>
-                    {op.es_correcta && <Typography variant="caption" sx={{ color: "#1a9e5c", ml: "auto", fontWeight: 600 }}>✓ Correcta</Typography>}
+                    {op.es_correcta && (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "#1a9e5c", ml: "auto", fontWeight: 600 }}
+                      >
+                        ✓ Correcta
+                      </Typography>
+                    )}
                   </div>
                 ))}
               </div>
@@ -346,13 +691,38 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
             {pregunta.tipo === "multiple_answers" && (
               <div className="flex flex-col gap-1.5">
                 {pregunta.opciones.map((op) => (
-                  <div key={op._id} className="flex items-center gap-2 rounded-lg px-3 py-2"
-                    style={{ background: op.es_correcta ? "#d1fae5" : "#f9f9f9", border: `1px solid ${op.es_correcta ? "#6ee7b7" : "#e0e0e0"}` }}>
-                    <div style={{ width: 14, height: 14, borderRadius: 3, border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`, background: op.es_correcta ? "#1a9e5c" : "white", flexShrink: 0 }} />
-                    <Typography variant="caption" sx={{ color: op.es_correcta ? "#065f46" : "#555" }}>
+                  <div
+                    key={op._id}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2"
+                    style={{
+                      background: op.es_correcta ? "#d1fae5" : "#f9f9f9",
+                      border: `1px solid ${op.es_correcta ? "#6ee7b7" : "#e0e0e0"}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: 3,
+                        border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`,
+                        background: op.es_correcta ? "#1a9e5c" : "white",
+                        flexShrink: 0,
+                      }}
+                    />
+                    <Typography
+                      variant="caption"
+                      sx={{ color: op.es_correcta ? "#065f46" : "#555" }}
+                    >
                       <LatexRenderer>{op.texto}</LatexRenderer>
                     </Typography>
-                    {op.es_correcta && <Typography variant="caption" sx={{ color: "#1a9e5c", ml: "auto", fontWeight: 600 }}>✓</Typography>}
+                    {op.es_correcta && (
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "#1a9e5c", ml: "auto", fontWeight: 600 }}
+                      >
+                        ✓
+                      </Typography>
+                    )}
                   </div>
                 ))}
               </div>
@@ -362,9 +732,21 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
             {pregunta.tipo === "true_false" && (
               <div className="flex gap-3">
                 {pregunta.opciones.map((op) => (
-                  <div key={op._id} className="flex items-center gap-2 rounded-lg px-4 py-2"
-                    style={{ background: op.es_correcta ? "#d1fae5" : "#f9f9f9", border: `1px solid ${op.es_correcta ? "#6ee7b7" : "#e0e0e0"}` }}>
-                    <Typography variant="caption" sx={{ color: op.es_correcta ? "#065f46" : "#555", fontWeight: op.es_correcta ? 600 : 400 }}>
+                  <div
+                    key={op._id}
+                    className="flex items-center gap-2 rounded-lg px-4 py-2"
+                    style={{
+                      background: op.es_correcta ? "#d1fae5" : "#f9f9f9",
+                      border: `1px solid ${op.es_correcta ? "#6ee7b7" : "#e0e0e0"}`,
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: op.es_correcta ? "#065f46" : "#555",
+                        fontWeight: op.es_correcta ? 600 : 400,
+                      }}
+                    >
                       {op.texto} {op.es_correcta && "✓"}
                     </Typography>
                   </div>
@@ -373,10 +755,19 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
             )}
 
             {/* short_answer / essay */}
-            {(pregunta.tipo === "short_answer" || pregunta.tipo === "essay") && (
-              <div className="rounded-lg px-3 py-2" style={{ background: "#f9f9f9", border: "1px solid #e0e0e0" }}>
-                <Typography variant="caption" sx={{ color: "#8daecb", fontStyle: "italic" }}>
-                  {pregunta.tipo === "short_answer" ? "El estudiante ingresa una respuesta corta" : "El estudiante redacta un ensayo"}
+            {(pregunta.tipo === "short_answer" ||
+              pregunta.tipo === "essay") && (
+              <div
+                className="rounded-lg px-3 py-2"
+                style={{ background: "#f9f9f9", border: "1px solid #e0e0e0" }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#8daecb", fontStyle: "italic" }}
+                >
+                  {pregunta.tipo === "short_answer"
+                    ? "El estudiante ingresa una respuesta corta"
+                    : "El estudiante redacta un ensayo"}
                 </Typography>
               </div>
             )}
@@ -385,10 +776,29 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
             {pregunta.tipo === "matching" && (
               <div className="flex flex-col gap-1.5">
                 {pregunta.pares?.map((par, idx) => (
-                  <div key={idx} className="flex items-center gap-2 rounded-lg px-3 py-2" style={{ background: "#f0f4f8", border: "1px solid #d9e4ee" }}>
-                    <Typography variant="caption" sx={{ color: "#1f2c38", fontWeight: 500, flex: 1 }}>{par.izquierda}</Typography>
-                    <Typography variant="caption" sx={{ color: "#8daecb" }}>↔</Typography>
-                    <Typography variant="caption" sx={{ color: "#1f2c38", flex: 1 }}>{par.derecha}</Typography>
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 rounded-lg px-3 py-2"
+                    style={{
+                      background: "#f0f4f8",
+                      border: "1px solid #d9e4ee",
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "#1f2c38", fontWeight: 500, flex: 1 }}
+                    >
+                      {par.izquierda}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: "#8daecb" }}>
+                      ↔
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "#1f2c38", flex: 1 }}
+                    >
+                      {par.derecha}
+                    </Typography>
                   </div>
                 ))}
               </div>
@@ -396,11 +806,20 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
 
             {/* numerical */}
             {pregunta.tipo === "numerical" && pregunta.respuesta_numerica && (
-              <div className="rounded-lg px-3 py-2" style={{ background: "#fef3c7", border: "1px solid #fde68a" }}>
-                <Typography variant="caption" sx={{ color: "#92400e", fontWeight: 500 }}>
-                  {pregunta.respuesta_numerica.tipo === "exact"     && `Respuesta: ${pregunta.respuesta_numerica.exacto} ± ${pregunta.respuesta_numerica.margen}`}
-                  {pregunta.respuesta_numerica.tipo === "range"     && `Rango: ${pregunta.respuesta_numerica.minimo} — ${pregunta.respuesta_numerica.maximo}`}
-                  {pregunta.respuesta_numerica.tipo === "precision" && `Exacto: ${pregunta.respuesta_numerica.exacto} (${pregunta.respuesta_numerica.precision} decimales)`}
+              <div
+                className="rounded-lg px-3 py-2"
+                style={{ background: "#fef3c7", border: "1px solid #fde68a" }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#92400e", fontWeight: 500 }}
+                >
+                  {pregunta.respuesta_numerica.tipo === "exact" &&
+                    `Respuesta: ${pregunta.respuesta_numerica.exacto} ± ${pregunta.respuesta_numerica.margen}`}
+                  {pregunta.respuesta_numerica.tipo === "range" &&
+                    `Rango: ${pregunta.respuesta_numerica.minimo} — ${pregunta.respuesta_numerica.maximo}`}
+                  {pregunta.respuesta_numerica.tipo === "precision" &&
+                    `Exacto: ${pregunta.respuesta_numerica.exacto} (${pregunta.respuesta_numerica.precision} decimales)`}
                 </Typography>
               </div>
             )}

@@ -1,89 +1,78 @@
-# Tiptap LaTeX Editor
+# Actualización del Editor — Instrucciones
 
-Editor de texto enriquecido con soporte para LaTeX renderizado en tiempo real, construido sobre Tiptap + KaTeX.
-
-## Características
-
-- ✏️ Edición WYSIWYG — el LaTeX se renderiza directamente en el editor
-- 🔢 LaTeX **inline** (`$$...$$`) y en **bloque** (botón de toolbar)
-- 🖱️ Click en cualquier fórmula abre un modal de edición con **preview en tiempo real**
-- 🧩 15 snippets rápidos (fracciones, integrales, matrices, griegos...)
-- 🎨 Formato de texto: negrita, itálica, H1/H2/H3, listas
-- ✅ Validación de sintaxis LaTeX con mensajes de error
-
-## Instalación
+## 1. Instalar nuevas dependencias
 
 ```bash
-npm install
-# o
-pnpm install
+npm install \
+  @tiptap/extension-underline \
+  @tiptap/extension-text-align \
+  @tiptap/extension-link \
+  @tiptap/extension-highlight \
+  @tiptap/extension-table \
+  @tiptap/extension-table-row \
+  @tiptap/extension-table-cell \
+  @tiptap/extension-table-header
 ```
 
-## Dependencias clave
+## 2. Reemplazar archivos en src/components/Editor/
 
-```
-@tiptap/react                   # Core del editor
-@tiptap/starter-kit             # Bold, italic, headings, listas
-@tiptap/extension-mathematics   # Nodos InlineMath y BlockMath
-katex                           # Renderer LaTeX
+Copiar los 6 archivos nuevos:
+- LatexEditor.tsx
+- LatexEditor.module.css
+- Toolbar.tsx
+- Toolbar.module.css
+- MathEditModal.tsx
+- MathEditModal.module.css
+- index.ts
+
+## 3. Usar toCanvasHTML al hacer deploy
+
+En `generarHtmlEjercicios.ts` (y cualquier función de deploy), importar y aplicar:
+
+```ts
+import { toCanvasHTML } from '../../components/Editor'
+
+// Dentro de la función que genera el HTML de cada ejercicio:
+const enunciadoCanvas = toCanvasHTML(ej.enunciado)
+
+// Usar enunciadoCanvas en lugar de ej.enunciado en el template HTML
 ```
 
-## Uso
+## 4. Integrar en FormEjercicio (reemplazar textarea)
 
 ```tsx
-import { LatexEditor } from '@/components'
+import { LatexEditor } from '../../components/Editor'
 
+// Reemplazar el bloque textarea+preview por:
 <LatexEditor
-  onChange={(html) => console.log(html)}
-  placeholder="Escribe aquí..."
-  initialContent="<p>Hola $E = mc^2$</p>"
+  initialContent={form.enunciado}
+  onChange={(html) => setForm(f => ({ ...f, enunciado: html }))}
+  placeholder="Escribe el enunciado... usa $$ para LaTeX"
+  minHeight="160px"
 />
 ```
 
-## Flujo de uso
+## 5. Nuevas capacidades del editor
 
-| Acción | Resultado |
-|--------|-----------|
-| Escribir `$$x^2$$` + espacio | Se convierte en nodo LaTeX inline |
-| Botón `$x$` en toolbar | Inserta nodo inline editable |
-| Botón `$$` en toolbar | Inserta bloque matemático centrado |
-| Click en cualquier fórmula | Abre modal con editor + preview |
-| `⌘↵` en el modal | Guarda y cierra |
+| Herramienta | Descripción |
+|---|---|
+| H1 / H2 / H3 | Encabezados con estilos tipográficos |
+| **B** *I* _U_ ~~S~~ | Negrita, itálica, subrayado, tachado |
+| Resaltado | Texto con fondo amarillo |
+| Alineación L/C/R | Alineación de párrafos |
+| Listas y blockquote | Viñetas, numerada, cita |
+| Bloque de código | Con fuente monoespaciada |
+| Enlace | Insertar/quitar URL |
+| Tabla | 3×3 con encabezado editable |
+| f(x) | Fórmula inline (abre modal) |
+| ∑∫∂ | Bloque matemático centrado (abre modal) |
+| ⛶ | Pantalla completa |
 
-## Estructura de archivos
+## 6. Sobre Canvas y LaTeX
 
-```
-src/components/
-├── LatexEditor.tsx         # Componente principal + configuración Tiptap
-├── LatexEditor.module.css  # Estilos del editor y nodos math
-├── Toolbar.tsx             # Barra de herramientas
-├── Toolbar.module.css
-├── MathEditModal.tsx       # Modal con editor LaTeX + preview KaTeX
-├── MathEditModal.module.css
-└── index.ts                # Barrel exports
-```
+Canvas LMS incluye MathJax y reconoce automáticamente:
+- `\( ... \)` → fórmula inline
+- `\[ ... \]` → bloque matemático
 
-## Personalización
-
-### Añadir macros LaTeX
-
-En `LatexEditor.tsx`, en `Mathematics.configure`:
-
-```ts
-katexOptions: {
-  macros: {
-    '\\R': '\\mathbb{R}',
-    '\\E': '\\mathbb{E}', // Esperanza
-    '\\norm': '\\|#1\\|', // Norma
-  }
-}
-```
-
-### Cambiar el trigger de inline math
-
-Por defecto Tiptap usa `$$texto$$` para inline. Puedes cambiarlo en la configuración del nodo si prefieres un solo `$`.
-
-## Notas
-
-- El HTML generado por `editor.getHTML()` incluye los nodos math como elementos HTML personalizados — necesitarás re-renderizar con KaTeX en la vista de lectura.
-- Para serializar a Markdown con LaTeX, considera `@tiptap/extension-markdown`.
+La función `toCanvasHTML()` convierte el HTML interno de Tiptap
+(que usa nodos custom) al formato de texto plano que Canvas entiende.
