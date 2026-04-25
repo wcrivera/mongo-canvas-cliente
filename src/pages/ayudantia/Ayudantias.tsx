@@ -8,8 +8,6 @@ import {
 import AddIcon       from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import GroupsIcon    from "@mui/icons-material/Groups";
-import Latex         from "react-latex-next";
-import "katex/dist/katex.min.css";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   obtenerAyudantiasPorCapitulo,
@@ -35,6 +33,7 @@ import {
 import { obtenerMongoCurso }       from "../../store/slices/mongoCurso";
 import { obtenerCapitulos }        from "../../store/slices/capitulo";
 import { generarHtmlAyudantias }   from "./generarHtmlAyudantias";
+import { LatexEditor }             from "../../components/Editor";
 import AyudantiaCard from "./AyudantiaCard";
 
 const Ayudantias = () => {
@@ -45,8 +44,7 @@ const Ayudantias = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const { ayudantias, isLoading, error } =
-    useAppSelector((s) => s.ayudantiaMongo);
+  const { ayudantias, isLoading, error } = useAppSelector((s) => s.ayudantiaMongo);
   const { capitulos }   = useAppSelector((s) => s.capituloMongo);
   const { cursoActivo } = useAppSelector((s) => s.mongoCurso);
   const { soluciones }  = useAppSelector((s) => s.solucionTextoMongo);
@@ -56,12 +54,11 @@ const Ayudantias = () => {
 
   const capituloActivo = capitulos.find((c) => c._id === capitulo_id);
 
-  const [mostrarForm, setMostrarForm]   = useState(false);
-  const [guardando, setGuardando]       = useState(false);
-  const [previewForm, setPreviewForm]   = useState(false);
-  const [desplegando, setDesplegando]   = useState(false);
-  const [msgDeploy, setMsgDeploy]       = useState<string | null>(null);
-  const [form, setForm]                 = useState({
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [guardando, setGuardando]     = useState(false);
+  const [desplegando, setDesplegando] = useState(false);
+  const [msgDeploy, setMsgDeploy]     = useState<string | null>(null);
+  const [form, setForm]               = useState({
     nombre:    "",
     enunciado: "",
     published: false,
@@ -75,7 +72,7 @@ const Ayudantias = () => {
     dispatch(obtenerSolucionesPorCapitulo({ capitulo_id }));
     dispatch(obtenerVideosPorCapitulo({ capitulo_id }));
     dispatch(obtenerQuizzesPorCapitulo({ capitulo_id }));
-    dispatch(obtenerRecursosPorCapitulo({ capitulo_id, contexto: 'ayudantia' }));
+    dispatch(obtenerRecursosPorCapitulo({ capitulo_id, contexto: "ayudantia" }));
 
     return () => {
       dispatch(limpiarAyudantias());
@@ -94,13 +91,12 @@ const Ayudantias = () => {
     setGuardando(false);
     setForm({ nombre: "", enunciado: "", published: false });
     setMostrarForm(false);
-    setPreviewForm(false);
   };
 
   const handleDesplegarPagina = async () => {
     if (!cursoActivo || !capituloActivo) return;
 
-    const canvas_activos = cursoActivo.canvas_cursos.filter(c => c.activo);
+    const canvas_activos = cursoActivo.canvas_cursos.filter((c) => c.activo);
     if (canvas_activos.length === 0) {
       setMsgDeploy("No hay cursos Canvas activos asociados.");
       return;
@@ -128,12 +124,12 @@ const Ayudantias = () => {
         await fetch(
           `${import.meta.env.VITE_BACKEND_URL}/api/capitulos/deploy-pagina/${canvas_id}`,
           {
-            method: "POST",
+            method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ titulo, slug, body }),
-          }
+            body:    JSON.stringify({ titulo, slug, body }),
+          },
         );
-      })
+      }),
     );
 
     setDesplegando(false);
@@ -154,8 +150,7 @@ const Ayudantias = () => {
             onClick={() => navigate(`/cursos/${curso_id}/capitulos`)}
             size="small"
             sx={{
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "0.75rem",
+              color: "rgba(255,255,255,0.7)", fontSize: "0.75rem",
               p: 0, minWidth: 0,
               "&:hover": { color: "white", bgcolor: "transparent" },
             }}
@@ -164,39 +159,25 @@ const Ayudantias = () => {
           </Button>
         </div>
 
-        <Typography
-          variant="h6"
-          sx={{ color: "white", fontWeight: 500, mb: 2, lineHeight: 1.3 }}
-        >
+        <Typography variant="h6" sx={{ color: "white", fontWeight: 500, mb: 2, lineHeight: 1.3 }}>
           {capituloActivo?.nombre ?? "Cargando..."}
         </Typography>
 
+        {/* ── Tabs de navegación ── */}
         <div className="flex gap-2">
           {[
-            {
-              label: "Clases",
-              ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/clases`,
-              activo: false,
-            },
-            { label: "Ayudantías", ruta: null, activo: true },
-            {
-              label: "Ejercicios",
-              ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/ejercicios`,
-              activo: false,
-            },
+            { label: "Clases",     ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/clases`,     activo: false },
+            { label: "Ayudantías", ruta: null,                                                      activo: true  },
+            { label: "Ejercicios", ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/ejercicios`, activo: false },
           ].map((tab) => (
             <button
               key={tab.label}
               onClick={() => tab.ruta && navigate(tab.ruta)}
               style={{
-                padding: "6px 16px",
-                borderRadius: 20,
-                background: tab.activo
-                  ? "rgba(255,255,255,0.2)"
-                  : "transparent",
+                padding: "6px 16px", borderRadius: 20,
+                background: tab.activo ? "rgba(255,255,255,0.2)" : "transparent",
                 border: "1px solid rgba(255,255,255,0.3)",
-                fontSize: 13,
-                color: "white",
+                fontSize: 13, color: "white",
                 fontWeight: tab.activo ? 500 : 400,
                 opacity: tab.activo ? 1 : 0.7,
                 cursor: tab.ruta ? "pointer" : "default",
@@ -221,18 +202,10 @@ const Ayudantias = () => {
             variant="outlined"
             onClick={handleDesplegarPagina}
             disabled={desplegando || ayudantias.length === 0}
-            startIcon={
-              desplegando
-                ? <CircularProgress size={14} color="inherit" />
-                : undefined
-            }
+            startIcon={desplegando ? <CircularProgress size={14} color="inherit" /> : undefined}
             sx={{
-              borderColor: "#4A6D8C",
-              color:       "#4A6D8C",
-              borderRadius: 2.5,
-              px: 3,
-              fontWeight: 600,
-              boxShadow: "none",
+              borderColor: "#4A6D8C", color: "#4A6D8C",
+              borderRadius: 2.5, px: 3, fontWeight: 600, boxShadow: "none",
               "&:hover": { bgcolor: "#f0f4f8", borderColor: "#3c5770" },
             }}
           >
@@ -245,10 +218,7 @@ const Ayudantias = () => {
             onClick={() => setMostrarForm((v) => !v)}
             sx={{
               bgcolor: mostrarForm ? "#6793ba" : "#4A6D8C",
-              borderRadius: 2.5,
-              px: 3,
-              fontWeight: 600,
-              boxShadow: "none",
+              borderRadius: 2.5, px: 3, fontWeight: 600, boxShadow: "none",
               "&:hover": { bgcolor: "#3c5770", boxShadow: "none" },
             }}
           >
@@ -268,21 +238,18 @@ const Ayudantias = () => {
         </Alert>
       )}
 
-      {/* ── Formulario ── */}
+      {/* ── Formulario de creación ── */}
       {mostrarForm && (
         <form
           onSubmit={handleCrear}
           className="mb-6 rounded-2xl p-5 animate-slideDown"
           style={{
             background: "white",
-            border: "1px solid #d9e4ee",
-            boxShadow: "0 4px 16px rgba(74,109,140,0.08)",
+            border:     "1px solid #d9e4ee",
+            boxShadow:  "0 4px 16px rgba(74,109,140,0.08)",
           }}
         >
-          <Typography
-            variant="subtitle2"
-            sx={{ color: "#2e4154", mb: 2, fontWeight: 600 }}
-          >
+          <Typography variant="subtitle2" sx={{ color: "#2e4154", mb: 2, fontWeight: 600 }}>
             Nueva ayudantía
           </Typography>
 
@@ -291,104 +258,29 @@ const Ayudantias = () => {
               label="Nombre"
               placeholder="ej: Ejercicios de rectas"
               value={form.nombre}
-              onChange={(e) => setForm(f => ({ ...f, nombre: e.target.value }))}
-              required
-              size="small"
-              fullWidth
+              onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+              required size="small" fullWidth
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
 
             <div>
-              <div className="flex gap-2 mb-2">
-                <button
-                  type="button"
-                  onClick={() => setPreviewForm(false)}
-                  style={{
-                    padding: "3px 10px",
-                    borderRadius: 6,
-                    border: "1px solid #d9e4ee",
-                    background: !previewForm ? "#4A6D8C" : "white",
-                    color: !previewForm ? "white" : "#4A6D8C",
-                    fontSize: 11,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                  }}
-                >
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPreviewForm(true)}
-                  style={{
-                    padding: "3px 10px",
-                    borderRadius: 6,
-                    border: "1px solid #d9e4ee",
-                    background: previewForm ? "#4A6D8C" : "white",
-                    color: previewForm ? "white" : "#4A6D8C",
-                    fontSize: 11,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                  }}
-                >
-                  Preview LaTeX
-                </button>
-              </div>
-
-              {!previewForm ? (
-                <textarea
-                  value={form.enunciado}
-                  onChange={(e) => setForm(f => ({ ...f, enunciado: e.target.value }))}
-                  placeholder="Enunciado con LaTeX... ej: Dados los puntos \(A=(1,2)\) y \(B=(3,4)\)..."
-                  style={{
-                    width: "100%",
-                    minHeight: 100,
-                    padding: "10px",
-                    borderRadius: 8,
-                    border: "1px solid #d9e4ee",
-                    fontSize: 13,
-                    fontFamily: "monospace",
-                    resize: "vertical",
-                    outline: "none",
-                  }}
-                />
-              ) : (
-                <div style={{
-                  minHeight: 80,
-                  padding: "12px",
-                  borderRadius: 8,
-                  border: "1px solid #d9e4ee",
-                  fontSize: 14,
-                  lineHeight: 1.8,
-                  background: "#fafafa",
-                }}>
-                  {form.enunciado.trim()
-                    ? <Latex>{form.enunciado}</Latex>
-                    : <span style={{ color: "#8daecb", fontStyle: "italic" }}>
-                        El preview aparecerá aquí...
-                      </span>
-                  }
-                </div>
-              )}
-              <Typography
-                variant="caption"
-                sx={{ color: "#8daecb", mt: 0.5, display: "block" }}
-              >
-                Usa \(...\) para LaTeX inline y \[...\] para bloques
+              <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600, display: "block", mb: 1 }}>
+                Enunciado
               </Typography>
+              <LatexEditor
+                initialContent={form.enunciado}
+                onChange={(html) => setForm((f) => ({ ...f, enunciado: html }))}
+                placeholder="Escribe el enunciado de la ayudantía…"
+                minHeight="120px"
+              />
             </div>
 
             <FormControlLabel
               control={
                 <Switch
                   checked={form.published}
-                  onChange={(e) =>
-                    setForm(f => ({ ...f, published: e.target.checked }))
-                  }
-                  sx={{
-                    "& .MuiSwitch-thumb": {
-                      bgcolor: form.published ? "#4A6D8C" : "#ccc",
-                    },
-                  }}
+                  onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))}
+                  sx={{ "& .MuiSwitch-thumb": { bgcolor: form.published ? "#4A6D8C" : "#ccc" } }}
                 />
               }
               label={
@@ -400,28 +292,15 @@ const Ayudantias = () => {
           </div>
 
           <div className="flex justify-end gap-3 mt-4">
-            <Button
-              variant="text"
-              onClick={() => setMostrarForm(false)}
-              sx={{ color: "#6793ba", borderRadius: 2 }}
-            >
+            <Button variant="text" onClick={() => setMostrarForm(false)}
+              sx={{ color: "#6793ba", borderRadius: 2 }}>
               Cancelar
             </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={guardando}
-              startIcon={
-                guardando
-                  ? <CircularProgress size={14} color="inherit" />
-                  : undefined
-              }
+            <Button type="submit" variant="contained" disabled={guardando}
+              startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : undefined}
               sx={{
-                bgcolor: "#4A6D8C",
-                borderRadius: 2,
-                px: 3,
-                fontWeight: 600,
-                boxShadow: "none",
+                bgcolor: "#4A6D8C", borderRadius: 2, px: 3,
+                fontWeight: 600, boxShadow: "none",
                 "&:hover": { bgcolor: "#3c5770", boxShadow: "none" },
               }}
             >
@@ -437,13 +316,9 @@ const Ayudantias = () => {
           <CircularProgress sx={{ color: "#4A6D8C" }} />
         </div>
       )}
-
       {error && (
-        <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
-          {error}
-        </Alert>
+        <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>{error}</Alert>
       )}
-
       {!isLoading && ayudantias.length === 0 && !error && (
         <div className="flex flex-col items-center gap-3 py-20 animate-fadeIn">
           <GroupsIcon sx={{ fontSize: 56, color: "#b3c9dd" }} />

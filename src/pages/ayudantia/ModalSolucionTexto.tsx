@@ -15,7 +15,7 @@ import {
   editarSolucionTexto,
 } from "../../store/slices/solucionTexto";
 import type { ISolucionTexto } from "../../store/slices/solucionTexto";
-import LatexRenderer from "../../components/LaTeX/LatexRenderer";
+import { LatexEditor, toEditorHTML } from "../../components/Editor";
 
 interface Props {
   ayudantia_id: string;
@@ -23,17 +23,20 @@ interface Props {
   onClose: () => void;
 }
 
+// Detecta si el editor está vacío
+const esVacio = (html: string) =>
+  !html || html.replace(/<[^>]*>/g, "").trim() === "";
+
 const ModalSolucionTexto = ({ ayudantia_id, solucion, onClose }: Props) => {
   const dispatch = useAppDispatch();
-  const [texto, setTexto] = useState(solucion?.texto ?? "");
+  const [texto, setTexto]       = useState(solucion?.texto ?? "");
   const [guardando, setGuardando] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState(false);
+  const [error, setError]         = useState<string | null>(null);
 
   const esEdicion = !!solucion;
 
   const handleGuardar = async () => {
-    if (!texto.trim()) {
+    if (esVacio(texto)) {
       setError("El texto es requerido");
       return;
     }
@@ -80,97 +83,18 @@ const ModalSolucionTexto = ({ ayudantia_id, solucion, onClose }: Props) => {
       </DialogTitle>
 
       <DialogContent sx={{ pt: 3, pb: 1 }}>
-        {/* Tabs texto / preview */}
-        <div className="flex gap-2 mb-3">
-          <button
-            onClick={() => setPreview(false)}
-            style={{
-              padding: "4px 12px",
-              borderRadius: 6,
-              border: "1px solid #d9e4ee",
-              background: !preview ? "#4A6D8C" : "white",
-              color: !preview ? "white" : "#4A6D8C",
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-          >
-            Editar
-          </button>
-          <button
-            onClick={() => setPreview(true)}
-            style={{
-              padding: "4px 12px",
-              borderRadius: 6,
-              border: "1px solid #d9e4ee",
-              background: preview ? "#4A6D8C" : "white",
-              color: preview ? "white" : "#4A6D8C",
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-          >
-            Preview LaTeX
-          </button>
-        </div>
-
-        {!preview ? (
-          <textarea
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            placeholder="Escribe la solución con LaTeX... ej: La solución es $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$"
-            autoFocus
-            style={{
-              width: "100%",
-              minHeight: 260,
-              padding: "12px",
-              borderRadius: 8,
-              border: "1px solid #d9e4ee",
-              fontSize: 14,
-              fontFamily: "monospace",
-              resize: "vertical",
-              outline: "none",
-              lineHeight: 1.6,
-            }}
-          />
-        ) : (
-          <div
-            style={{
-              minHeight: 260,
-              padding: "16px",
-              borderRadius: 8,
-              border: "1px solid #d9e4ee",
-              fontSize: 15,
-              lineHeight: 1.8,
-              color: "#1f2c38",
-              background: "#fafafa",
-            }}
-          >
-            {texto.trim() ? (
-              <LatexRenderer>{texto}</LatexRenderer>
-            ) : (
-              <span style={{ color: "#8daecb", fontStyle: "italic" }}>
-                El preview aparecerá aquí...
-              </span>
-            )}
-          </div>
-        )}
+        <LatexEditor
+          initialContent={texto.trimStart().startsWith("<") ? texto : toEditorHTML(texto)}
+          onChange={setTexto}
+          placeholder="Escribe la solución… usa f(x) para LaTeX inline y ∑ para bloques"
+          minHeight="260px"
+        />
 
         {error && (
-          <Typography
-            variant="caption"
-            sx={{ color: "#ef4444", mt: 1, display: "block" }}
-          >
+          <Typography variant="caption" sx={{ color: "#ef4444", mt: 1, display: "block" }}>
             {error}
           </Typography>
         )}
-
-        <Typography
-          variant="caption"
-          sx={{ color: "#8daecb", mt: 1, display: "block" }}
-        >
-          Usa $...$ para LaTeX inline y $$...$$ para bloques
-        </Typography>
       </DialogContent>
 
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
@@ -184,12 +108,8 @@ const ModalSolucionTexto = ({ ayudantia_id, solucion, onClose }: Props) => {
         <Button
           onClick={handleGuardar}
           variant="contained"
-          disabled={guardando || !texto.trim()}
-          startIcon={
-            guardando ? (
-              <CircularProgress size={14} color="inherit" />
-            ) : undefined
-          }
+          disabled={guardando}
+          startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : undefined}
           sx={{
             bgcolor: "#4A6D8C",
             borderRadius: 2,

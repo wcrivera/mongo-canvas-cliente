@@ -1,6 +1,7 @@
 import type { IEjercicio }  from "../../store/slices/ejercicio";
 import type { IMongoCurso } from "../../store/slices/mongoCurso";
 import type { ICapitulo }   from "../../store/slices/capitulo";
+import { toCanvasHTML } from "../../components/Editor";
 
 interface GenerarHtmlEjerciciosParams {
   curso:           IMongoCurso;
@@ -101,7 +102,7 @@ export const generarHtmlEjercicios = ({
           line-height: 1.8;
           color: #3d3d3d;
         ">
-          ${ej.enunciado}
+          ${toCanvasHTML(ej.enunciado)}
         </div>
       </div>
     `;

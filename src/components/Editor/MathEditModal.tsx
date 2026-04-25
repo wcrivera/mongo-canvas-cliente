@@ -2,61 +2,57 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Dialog, DialogContent } from '@mui/material'
 import katex from 'katex'
 import Latex from 'react-latex-next'
+import { KATEX_MACROS } from './katexMacros'
 
 interface MathEditModalProps {
   latex: string
   type: 'inline' | 'block'
-  onSave: (latex: string) => void
+  onSave: (latex: string, type: 'inline' | 'block') => void
   onClose: () => void
 }
 
 const SNIPPETS = [
-  { label: '\\(\\dfrac{a}{b}\\)',      code: '\\frac{a}{b}' },
-  { label: '\\(\\sqrt{x}\\)',         code: '\\sqrt{x}' },
-  { label: '\\(x^{n}\\)',     code: 'x^{n}' },
-  { label: '\\(x_{n}\\)',    code: 'x_{n}' },
-  { label: '\\(\\displaystyle \\int_{a}^{b} f(x)\\,dx\\)',     code: '\\int_{a}^{b} f(x)\\,dx' },
-  { label: '\\(\\displaystyle \\sum_{n=1}^{\\infty} a_n\\)',       code: '\\sum_{n=1}^{\\infty} a_n' },
-  { label: '\\(\\displaystyle \\lim_{x \\to \\infty}\\)',       code: '\\lim_{x \\to \\infty}' },
-  { label: "\\(f'(x)\\)",         code: "f'(x)" },
-  { label: '\\(\\dfrac{\\partial f}{\\partial x}\\)',    code: '\\frac{\\partial f}{\\partial x}' },
-  { label: '\\(\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}\\)',   code: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}' },
-  { label: '\\(\\begin{cases} f(x) \\\\ g(x) \\end{cases}\\)',      code: '\\begin{cases} f(x) \\\\ g(x) \\end{cases}' },
-  { label: '\\(\\displaystyle \\binom{n}{k}\\)',     code: '\\binom{n}{k}' },
-  { label: '\\(\\mathbb{N}\\)',       code: '\\mathbb{N}' },
-  { label: '\\(\\mathbb{Z}\\)',       code: '\\mathbb{Z}' },
-  { label: '\\(\\mathbb{Q}\\)',       code: '\\mathbb{Q}' },
-  { label: '\\(\\mathbb{R}\\)',       code: '\\mathbb{R}' },
-  { label: '\\(\\alpha\\)',      code: '\\alpha' },
-  { label: '\\(\\beta\\)',      code: '\\beta' },
-  { label: '\\(\\gamma\\)',      code: '\\gamma' },
-  { label: '\\(\\delta\\)',      code: '\\delta' },
-  { label: '\\(\\theta\\)',    code: '\\theta' },
-  { label: '\\(\\phi\\)',    code: '\\phi' },
-  { label: '\\(\\lambda\\)',    code: '\\lambda' },
-  { label: '\\(\\mu\\)',    code: '\\mu' },
-  { label: '\\(\\sigma\\)',    code: '\\sigma' },
-  { label: '\\(\\to \\)',     code: '\\to ' },
-  { label: '\\(\\to\\)',     code: '\\to' },
-  { label: '\\(\\iff\\)',     code: '\\iff' },
-  { label: '\\(\\forall\\)',     code: '\\forall' },
-  { label: '\\(\\exists\\)',     code: '\\exists' },
+  { label: '\\(\\dfrac{a}{b}\\)',                                          code: '\\frac{a}{b}' },
+  { label: '\\(\\sqrt{x}\\)',                                              code: '\\sqrt{x}' },
+  { label: '\\(x^{n}\\)',                                                  code: 'x^{n}' },
+  { label: '\\(x_{n}\\)',                                                  code: 'x_{n}' },
+  { label: '\\(\\displaystyle \\int_{a}^{b} f(x)\\,dx\\)',                code: '\\int_{a}^{b} f(x)\\,dx' },
+  { label: '\\(\\displaystyle \\sum_{n=1}^{\\infty} a_n\\)',              code: '\\sum_{n=1}^{\\infty} a_n' },
+  { label: '\\(\\displaystyle \\lim_{x \\to \\infty}\\)',                 code: '\\lim_{x \\to \\infty}' },
+  { label: "\\(f'(x)\\)",                                                  code: "f'(x)" },
+  { label: '\\(\\dfrac{\\partial f}{\\partial x}\\)',                     code: '\\frac{\\partial f}{\\partial x}' },
+  { label: '\\(\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}\\)',      code: '\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix}' },
+  { label: '\\(\\begin{cases} f(x) \\\\ g(x) \\end{cases}\\)',           code: '\\begin{cases} f(x) \\\\ g(x) \\end{cases}' },
+  { label: '\\(\\displaystyle \\binom{n}{k}\\)',                          code: '\\binom{n}{k}' },
+  { label: '\\(\\mathbb{N}\\)',                                            code: '\\mathbb{N}' },
+  { label: '\\(\\mathbb{Z}\\)',                                            code: '\\mathbb{Z}' },
+  { label: '\\(\\mathbb{Q}\\)',                                            code: '\\mathbb{Q}' },
+  { label: '\\(\\mathbb{R}\\)',                                            code: '\\mathbb{R}' },
+  { label: '\\(\\alpha\\)',                                                code: '\\alpha' },
+  { label: '\\(\\beta\\)',                                                 code: '\\beta' },
+  { label: '\\(\\gamma\\)',                                                code: '\\gamma' },
+  { label: '\\(\\delta\\)',                                                code: '\\delta' },
+  { label: '\\(\\theta\\)',                                                code: '\\theta' },
+  { label: '\\(\\phi\\)',                                                  code: '\\phi' },
+  { label: '\\(\\lambda\\)',                                               code: '\\lambda' },
+  { label: '\\(\\mu\\)',                                                   code: '\\mu' },
+  { label: '\\(\\sigma\\)',                                                code: '\\sigma' },
+  { label: '\\(\\to\\)',                                                   code: '\\to ' },
+  { label: '\\(\\iff\\)',                                                  code: '\\iff' },
+  { label: '\\(\\forall\\)',                                               code: '\\forall' },
+  { label: '\\(\\exists\\)',                                               code: '\\exists' },
 ]
 
-const KATEX_MACROS = {
-  '\\R': '\\mathbb{R}', '\\N': '\\mathbb{N}', '\\Z': '\\mathbb{Z}',
-  '\\C': '\\mathbb{C}', '\\E': '\\mathbb{E}',
-}
-
-export function MathEditModal({ latex, type, onSave, onClose }: MathEditModalProps) {
-  const [value, setValue] = useState(latex)
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+export function MathEditModal({ latex, type: initialType, onSave, onClose }: MathEditModalProps) {
+  const [value, setValue]   = useState(latex)
+  const [type,  setType]    = useState<'inline' | 'block'>(initialType)
+  const textareaRef         = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     setTimeout(() => textareaRef.current?.focus(), 80)
   }, [])
 
-  // useMemo en lugar de useEffect + setState para el preview — evita el render extra
+  // Preview con KaTeX directo para mostrar errores en tiempo real
   const { preview, error } = useMemo(() => {
     if (!value.trim()) return { preview: '', error: '' }
     try {
@@ -79,18 +75,21 @@ export function MathEditModal({ latex, type, onSave, onClose }: MathEditModalPro
   const insertSnippet = useCallback((code: string) => {
     const ta = textareaRef.current
     if (!ta) return
-    const s = ta.selectionStart
+    const s   = ta.selectionStart
     const end = ta.selectionEnd
     setValue(prev => prev.slice(0, s) + code + prev.slice(end))
     setTimeout(() => { ta.focus(); ta.selectionStart = ta.selectionEnd = s + code.length }, 0)
   }, [])
 
   const handleKey = (e: React.KeyboardEvent) => {
-    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); onSave(value) }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); onSave(value, type) }
     if (e.key === 'Escape') onClose()
   }
 
-  const kbdCls = 'bg-chapter-100 border border-chapter-200 rounded px-1.5 py-0.5 text-[10px] text-chapter-500 font-sans'
+  const kbdStyle: React.CSSProperties = {
+    background: '#eef3f8', border: '1px solid #c9dae8', borderRadius: 4,
+    padding: '1px 5px', fontSize: 10, color: '#6793ba', fontFamily: 'sans-serif',
+  }
 
   return (
     <Dialog
@@ -104,82 +103,176 @@ export function MathEditModal({ latex, type, onSave, onClose }: MathEditModalPro
         }
       }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 bg-chapter-500">
-        <div className="flex items-center gap-2.5">
-          <span className="text-[10px] font-bold tracking-widest uppercase bg-white/20 text-white px-2.5 py-0.5 rounded-full">
-            {type === 'block' ? 'Bloque' : 'Inline'}
-          </span>
-          <span className="text-[14px] font-semibold text-white font-serif tracking-wide">
+      {/* ── Header ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 20px', background: '#4A6D8C',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: 14, fontFamily: 'Georgia, serif' }}>
             Editor LaTeX
           </span>
+          {/* Switch inline / bloque */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: type === 'inline' ? 'white' : 'rgba(255,255,255,0.5)', fontSize: 12, transition: 'color 0.2s' }}>
+              Inline
+            </span>
+            <div
+              onClick={() => setType(t => t === 'inline' ? 'block' : 'inline')}
+              style={{
+                width: 36, height: 20, borderRadius: 10, cursor: 'pointer',
+                background: type === 'block' ? 'white' : 'rgba(255,255,255,0.3)',
+                position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+              }}
+            >
+              <div style={{
+                position: 'absolute', top: 2,
+                left: type === 'block' ? 18 : 2,
+                width: 16, height: 16, borderRadius: '50%',
+                background: type === 'block' ? '#4A6D8C' : 'white',
+                transition: 'left 0.2s, background 0.2s',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              }} />
+            </div>
+            <span style={{ color: type === 'block' ? 'white' : 'rgba(255,255,255,0.5)', fontSize: 12, transition: 'color 0.2s' }}>
+              Bloque
+            </span>
+          </div>
         </div>
-        <button onClick={onClose}
-          className="w-7 h-7 rounded-full bg-white/15 border-none text-white cursor-pointer flex items-center justify-center text-sm hover:bg-white/25 transition-colors">
-          ✕
-        </button>
+        <button
+          onClick={onClose}
+          style={{
+            width: 28, height: 28, borderRadius: '50%', border: 'none',
+            background: 'rgba(255,255,255,0.15)', color: 'white',
+            cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >✕</button>
       </div>
 
-      {/* Snippets */}
-      <div className="flex flex-wrap gap-1.5 px-5 py-3 bg-chapter-50 border-b border-chapter-100">
-        {SNIPPETS.map(s => (
-          <button key={s.label} type="button"
+      {/* ── Snippets ── */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: 5,
+        padding: '10px 18px', background: '#f7f9fc',
+        borderBottom: '1px solid #e4edf5',
+      }}>
+        {SNIPPETS.map((s) => (
+          <button
+            key={s.code}
+            type="button"
             onClick={() => insertSnippet(s.code)}
             title={s.code}
-            className="border border-chapter-200 bg-white rounded-md px-2.5 py-1 text-[11px] text-chapter-700 font-serif cursor-pointer hover:bg-chapter-100 hover:border-chapter-400 transition-all">
-            <Latex>{s.label}</Latex>
+            style={{
+              border: '1px solid #c9dae8', background: 'white', borderRadius: 5,
+              padding: '3px 9px', fontSize: 11, color: '#3c5770',
+              cursor: 'pointer', whiteSpace: 'nowrap',
+              fontFamily: 'Georgia, serif', transition: 'all 0.1s',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = '#daeaf6';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#4A6D8C';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'white';
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#c9dae8';
+            }}
+          >
+            <Latex macros={KATEX_MACROS}>{s.label}</Latex>
           </button>
         ))}
       </div>
 
+      {/* ── Body: editor + preview ── */}
       <DialogContent sx={{ p: 0 }}>
-        <div className="grid grid-cols-2 divide-x divide-chapter-100 min-h-[200px]">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 200 }}>
+
           {/* LaTeX */}
-          <div className="flex flex-col p-4 gap-2">
-            <span className="text-[10px] font-bold tracking-widest uppercase text-chapter-300">LaTeX</span>
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '16px 18px', borderRight: '1px solid #e4edf5' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8daecb', marginBottom: 8 }}>
+              LaTeX
+            </span>
             <textarea
               ref={textareaRef}
               value={value}
-              onChange={e => setValue(e.target.value)}
+              onChange={(e) => setValue(e.target.value)}
               onKeyDown={handleKey}
               rows={6}
               spellCheck={false}
               placeholder="\frac{a}{b} + \sqrt{x^2 + 1}"
-              className="flex-1 resize-y font-mono text-[13px] text-chapter-800 bg-chapter-50 border border-chapter-100 rounded-lg p-3 outline-none focus:border-chapter-400 focus:bg-white transition-colors min-h-[130px]"
+              style={{
+                flex: 1, resize: 'vertical',
+                fontFamily: "'Fira Code', Consolas, monospace",
+                fontSize: 13, lineHeight: 1.6, color: '#1f2c38',
+                border: '1.5px solid #d9e4ee', borderRadius: 8,
+                padding: '10px 12px', outline: 'none',
+                background: '#f9fbfd', minHeight: 130,
+                transition: 'border-color 0.15s',
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#4A6D8C'; e.currentTarget.style.background = 'white'; }}
+              onBlur={(e)  => { e.currentTarget.style.borderColor = '#d9e4ee'; e.currentTarget.style.background = '#f9fbfd'; }}
             />
           </div>
 
           {/* Preview */}
-          <div className="flex flex-col p-4 gap-2">
-            <span className="text-[10px] font-bold tracking-widest uppercase text-chapter-300">Preview</span>
-            <div className="flex-1 flex items-center justify-center border border-chapter-100 rounded-lg bg-chapter-50 p-4 min-h-[130px] overflow-auto">
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '16px 18px' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8daecb', marginBottom: 8 }}>
+              Preview
+            </span>
+            <div style={{
+              flex: 1, border: '1.5px solid #d9e4ee', borderRadius: 8,
+              padding: '12px 16px', background: '#f9fbfd',
+              display: 'flex', alignItems: type === 'block' ? 'center' : 'flex-start',
+              justifyContent: type === 'block' ? 'center' : 'flex-start',
+              minHeight: 130, overflow: 'auto',
+            }}>
               {error ? (
-                <p className="text-red-500 font-mono text-[12px] text-center leading-relaxed">{error}</p>
+                <p style={{ color: '#e74c3c', fontFamily: 'monospace', fontSize: 12, textAlign: 'center', lineHeight: 1.5 }}>
+                  {error}
+                </p>
               ) : preview ? (
-                <div dangerouslySetInnerHTML={{ __html: preview }} />
+                <div
+                  dangerouslySetInnerHTML={{ __html: preview }}
+                  style={{ fontSize: type === 'block' ? 18 : 15, width: '100%', textAlign: type === 'block' ? 'center' : 'left' }}
+                />
               ) : (
-                <p className="text-chapter-300 text-[12px] italic text-center">
+                <p style={{ color: '#8daecb', fontSize: 12, fontStyle: 'italic', textAlign: 'center' }}>
                   Escribe LaTeX para ver el preview…
                 </p>
               )}
             </div>
           </div>
+
         </div>
       </DialogContent>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between px-5 py-3 bg-chapter-50 border-t border-chapter-100">
-        <p className="text-[11px] text-chapter-300">
-          <kbd className={kbdCls}>Ctrl</kbd> + <kbd className={kbdCls}>↵</kbd> guardar ·{' '}
-          <kbd className={kbdCls}>Esc</kbd> cancelar
+      {/* ── Footer ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '10px 20px', background: '#f7f9fc', borderTop: '1px solid #e4edf5',
+      }}>
+        <p style={{ fontSize: 11, color: '#8daecb', margin: 0 }}>
+          <kbd style={kbdStyle}>Ctrl</kbd> + <kbd style={kbdStyle}>↵</kbd> guardar ·{' '}
+          <kbd style={kbdStyle}>Esc</kbd> cancelar
         </p>
-        <div className="flex gap-2">
-          <button onClick={onClose}
-            className="border border-chapter-200 bg-white rounded-lg px-4 py-1.5 text-[13px] text-chapter-400 cursor-pointer hover:border-chapter-400 hover:text-chapter-600 transition-colors">
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={onClose}
+            style={{
+              border: '1px solid #d9e4ee', background: 'white', borderRadius: 8,
+              padding: '6px 16px', fontSize: 13, color: '#6793ba', cursor: 'pointer',
+            }}
+          >
             Cancelar
           </button>
-          <button onClick={() => onSave(value)} disabled={!!error}
-            className="bg-chapter-500 border-none rounded-lg px-4 py-1.5 text-[13px] font-semibold text-white cursor-pointer hover:bg-chapter-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          <button
+            onClick={() => onSave(value, type)}
+            disabled={!!error}
+            style={{
+              background: '#4A6D8C', border: 'none', borderRadius: 8,
+              padding: '6px 16px', fontSize: 13, fontWeight: 600,
+              color: 'white', cursor: 'pointer',
+              opacity: error ? 0.4 : 1,
+            }}
+          >
             Insertar fórmula
           </button>
         </div>

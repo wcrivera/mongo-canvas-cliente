@@ -783,6 +783,11 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-code/-/extension-code-3.22.4.tgz#4c7bc2005e35fcd7738969be59c3975a12f64c63"
   integrity sha512-cnbxmVhAcc7X3G81QUYEmKP0ve2hRmvAiFXBuuv9RUtQlBiRnzmhHoJOMgkX0CsMR7+8kMRpTfeDUYq2xp5s5w==
 
+"@tiptap/extension-color@^3.22.4":
+  version "3.22.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-color/-/extension-color-3.22.4.tgz#5dc4b09d2d5fc12f7580a11411250b56d8f669c0"
+  integrity sha512-1vDuVsrOETshe4j4nZhWalbKYcWfNybRCe30h829ExX06XwFryUYLb/LgTIaGCr9beWZUldsK+vOkBWdDTGMTw==
+
 "@tiptap/extension-document@^3.22.4":
   version "3.22.4"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-document/-/extension-document-3.22.4.tgz#cf0aba982f2f330ad52b0146a7786d6d72b694f3"
@@ -822,6 +827,11 @@
   version "3.22.4"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-horizontal-rule/-/extension-horizontal-rule-3.22.4.tgz#f75f7770f7090fd6c1eb610c0308ddc536531cbe"
   integrity sha512-cCI1HekGQwhY/MbgaKQ0R/7HcH5ZM1oFAyI/J72QGLC0XnF403S/OXoHMuBWr1mCu8hNiQWCzeNRJUty0iytNw==
+
+"@tiptap/extension-image@^3.22.4":
+  version "3.22.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-image/-/extension-image-3.22.4.tgz#b8e2e5314f8a6ed8fff91f2edb6d1ef758120079"
+  integrity sha512-ZDc+fLaratTQ4IgnKcJJwfUgUgpcHjbZSBi6UQAILJwkflMy1Zxj8mpbma5P934nLSI+uDnR5ret6ZZLNITKhA==
 
 "@tiptap/extension-italic@^3.22.4":
   version "3.22.4"
@@ -870,6 +880,16 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-strike/-/extension-strike-3.22.4.tgz#ba5f701bdcc67fc47a520ac79621e0585351f11b"
   integrity sha512-aRHWQj42HiailXSC9LkKYM3jWMcSeGwOjbqM4PiuxQZmHVDRFmeHkfJItOdn2cSHaO0vuEVK+TvrWUWsBFi3pg==
 
+"@tiptap/extension-subscript@^3.22.4":
+  version "3.22.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-subscript/-/extension-subscript-3.22.4.tgz#0a0acef6eec4b8bdea800eaeef1ca9b4a9c5d2af"
+  integrity sha512-95Uwi8jEYVr/qil7tGZhG87wR0SNIUBZXSFcDkDeFBzRdccofwD2XL2HU5FqWm2IPNuE21lQWPImVspXR0Kzyw==
+
+"@tiptap/extension-superscript@^3.22.4":
+  version "3.22.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-superscript/-/extension-superscript-3.22.4.tgz#4b47b03b187189a44a8f2e60563d2f617848fada"
+  integrity sha512-VGNR67uTmdTfRC5+1HqtAfA+kK6Lbh9tXitcIs8Scwxlq89PBOUEs11RnzcXfwv5hYq94WjgQJF3A99Jc9Cg2w==
+
 "@tiptap/extension-table-cell@^3.22.4":
   version "3.22.4"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-table-cell/-/extension-table-cell-3.22.4.tgz#7783ab4e4bdb4c7e94e35783f0257ed839fa77ef"
@@ -890,10 +910,25 @@
   resolved "https://registry.yarnpkg.com/@tiptap/extension-table/-/extension-table-3.22.4.tgz#fcebc78f4d41b6b7126ddc5737a7684427caffcc"
   integrity sha512-kjvLv3Z4JI+1tLDqZKa+bKU8VcxY+ZOyMCKWQA7wYmy8nKWkLJ60W+xy8AcXXpHB2goCIgSFLhsTyswx0GXH4w==
 
+"@tiptap/extension-task-item@^3.22.4":
+  version "3.22.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-task-item/-/extension-task-item-3.22.4.tgz#4ec4e9e875fdd745586a03e88b18029a4cd8a650"
+  integrity sha512-PhoiOMatdRXJU1HJz0fMP5N7wv0eYAz/Id/gphby/gdxjYQaMhJ7vQiLTR28EkVBkdntTUb1bwZ4XQn9thFtpw==
+
+"@tiptap/extension-task-list@^3.22.4":
+  version "3.22.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-task-list/-/extension-task-list-3.22.4.tgz#d467e863790821243bb4960c2b8de6955eec0782"
+  integrity sha512-5M3XiZMZJ2mwWSUKPG4mb90g86rpgYw7yf8lBEkaCgke9XxsLg8mXmYRpCc6n/v1TQXryB+WDKuenCzJTx/4/A==
+
 "@tiptap/extension-text-align@^3.22.4":
   version "3.22.4"
   resolved "https://registry.yarnpkg.com/@tiptap/extension-text-align/-/extension-text-align-3.22.4.tgz#c92a51ae91781519810e58149e9dd8e00fdadef2"
   integrity sha512-W7TnXWSyfDXSatGXp5y/CahE8G4btrQPb0/sy+eG+42FxdzYsqvh1ys3OE9j2XSuTrZ1q/tZA/NLPUkc7vw6Kw==
+
+"@tiptap/extension-text-style@^3.22.4":
+  version "3.22.4"
+  resolved "https://registry.yarnpkg.com/@tiptap/extension-text-style/-/extension-text-style-3.22.4.tgz#6e36fa99100f42a57593bed85ac720ecf0d2220b"
+  integrity sha512-24DVBdySNKq3ovY+v9ERVxAyHStDa6ftUlyoHuZv0YXQ2amjUNOmqQtGEHBIULpCbBb1jZ+atHhv9MBZ0Ia9Pw==
 
 "@tiptap/extension-text@^3.22.4":
   version "3.22.4"

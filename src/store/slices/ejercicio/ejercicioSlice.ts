@@ -1,39 +1,60 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+// ─── Tipos ────────────────────────────────────────────────────────────────
 export type TipoPreguntaEjercicio =
-  | 'multiple_choice'
-  | 'true_false'
-  | 'short_answer'
-  | 'essay';
+  | "multiple_choice"
+  | "multiple_answers"
+  | "true_false"
+  | "short_answer"
+  | "essay"
+  | "matching"
+  | "numerical";
 
-export interface ICanvasDeploymentEjercicio {
-  canvas_curso_id: number;
-  canvas_quiz_id:  number | null;
-  canvas_item_id:  number | null;
-  status:          'pending' | 'synced' | 'dirty' | 'missing' | 'error';
-  synced_at:       string | null;
-  error_msg:       string;
-}
-
+// ─── Interfaces ───────────────────────────────────────────────────────────
 export interface IOpcionEjercicio {
   texto:       string;
   es_correcta: boolean;
 }
 
+export interface IParEjercicio {
+  izquierda: string;
+  derecha:   string;
+}
+
+export interface IRespuestaNumericaEjercicio {
+  tipo:       "exact" | "range" | "precision";
+  exacto?:    number;
+  margen?:    number;
+  minimo?:    number;
+  maximo?:    number;
+  precision?: number;
+}
+
+export interface ICanvasDeploymentEjercicio {
+  canvas_curso_id: number;
+  canvas_quiz_id:  number | null;
+  canvas_item_id:  number | null;
+  status:          "pending" | "synced" | "dirty" | "missing" | "error";
+  synced_at:       string | null;
+  error_msg:       string;
+}
+
 export interface IEjercicio {
-  _id:                string;
-  capitulo_id:        string;
-  curso_id:           string;
-  nombre:             string;
-  enunciado:          string;
-  tipo_pregunta:      TipoPreguntaEjercicio;
-  opciones:           IOpcionEjercicio[];
-  puntos:             number;
-  position:           number;
-  published:          boolean;
-  canvas_deployments: ICanvasDeploymentEjercicio[];
-  createdAt:          string;
-  updatedAt:          string;
+  _id:                 string;
+  capitulo_id:         string;
+  curso_id:            string;
+  nombre:              string;
+  enunciado:           string;
+  tipo_pregunta:       TipoPreguntaEjercicio;
+  opciones:            IOpcionEjercicio[];
+  pares:               IParEjercicio[];
+  respuesta_numerica?: IRespuestaNumericaEjercicio;
+  puntos:              number;
+  position:            number;
+  published:           boolean;
+  canvas_deployments:  ICanvasDeploymentEjercicio[];
+  createdAt:           string;
+  updatedAt:           string;
 }
 
 export interface EjercicioState {
@@ -42,6 +63,7 @@ export interface EjercicioState {
   error:      string | null;
 }
 
+// ─── Slice ────────────────────────────────────────────────────────────────
 const initialState: EjercicioState = {
   ejercicios: [],
   isLoading:  false,
@@ -59,9 +81,7 @@ export const ejercicioMongoSlice = createSlice({
       state.ejercicios.push(action.payload);
     },
     actualizarEjercicio: (state, action) => {
-      const idx = state.ejercicios.findIndex(
-        e => e._id === action.payload._id
-      );
+      const idx = state.ejercicios.findIndex(e => e._id === action.payload._id);
       if (idx !== -1) state.ejercicios[idx] = action.payload;
     },
     intercambiarEjercicios: (state, action) => {
@@ -72,9 +92,7 @@ export const ejercicioMongoSlice = createSlice({
       state.ejercicios.sort((a, b) => a.position - b.position);
     },
     eliminarEjercicioState: (state, action) => {
-      state.ejercicios = state.ejercicios.filter(
-        e => e._id !== action.payload
-      );
+      state.ejercicios = state.ejercicios.filter(e => e._id !== action.payload);
     },
     limpiarEjercicios: (state) => {
       state.ejercicios = [];

@@ -5,6 +5,7 @@ import type { IQuiz }         from "../../store/slices/quiz";
 import type { IRecurso }      from "../../store/slices/recurso";
 import type { IMongoCurso }   from "../../store/slices/mongoCurso";
 import type { ICapitulo }     from "../../store/slices/capitulo";
+import { toCanvasHTML } from "../../components/Editor";
 
 interface GenerarHtmlAyudantiasParams {
   curso:           IMongoCurso;
@@ -173,7 +174,7 @@ export const generarHtmlAyudantias = ({
           line-height: 1.8;
           color: #3d3d3d;
         ">
-          ${ay.enunciado}
+          ${toCanvasHTML(ay.enunciado)}
           ${botonesHtml}
         </div>
       </div>

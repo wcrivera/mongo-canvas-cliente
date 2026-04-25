@@ -1,0 +1,35 @@
+/* Protege el contenido renderizado del reset de Tailwind */
+.content figure {
+  display: block !important;
+  margin: 0.6em 0 !important;
+  padding: 0 !important;
+}
+
+.content figure[data-align="left"]   { text-align: left !important; }
+.content figure[data-align="center"] { text-align: center !important; }
+.content figure[data-align="right"]  { text-align: right !important; }
+
+.content figure img {
+  display: inline-block !important;
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 8px;
+}
+
+/* Listas */
+.content ul {
+  list-style-type: disc !important;
+  padding-left: 1.75em !important;
+  margin: 0.5em 0 !important;
+}
+.content ol {
+  list-style-type: decimal !important;
+  padding-left: 1.75em !important;
+  margin: 0.5em 0 !important;
+}
+.content li { margin: 0.2em 0 !important; }
+
+/* Tabla */
+.content table { border-collapse: collapse; width: 100%; margin: 0.8em 0; }
+.content th, .content td { border: 1px solid #d9e4ee; padding: 6px 10px; text-align: left; }
+.content th { background: #f7f9fc; font-weight: 600; color: #4A6D8C; }

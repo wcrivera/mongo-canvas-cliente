@@ -1,28 +1,29 @@
 /**
- * Convierte el HTML interno de Tiptap a HTML compatible con Canvas LMS.
- * Los nodos math se convierten a \(...\) y \[...\] para que Canvas
- * los renderice con su MathJax integrado.
+ * Convierte HTML de Canvas LMS al formato HTML interno de Tiptap.
  *
- * Uso en deploy:
- *   import { toEditorHTML } from '../../components/Editor/editoHTML'
- *   const enunciadoCanvas = toEditorHTML(ej.enunciado)
+ * Canvas almacena las fórmulas como texto plano con \(...\) y \[...\].
+ * Tiptap las representa como nodos custom con atributos data-latex.
+ *
+ * Esta función hace el roundtrip inverso a toCanvasHTML:
+ *   Canvas  →  \( latex \)           →  toEditorHTML  →  <span data-latex="latex" ...>
+ *   Canvas  →  \[ latex \]           →  toEditorHTML  →  <div  data-latex="latex" ...>
+ *
+ * Uso al cargar contenido guardado en Canvas hacia el editor:
+ *   import { toEditorHTML } from '../../components/Editor'
+ *   const contenidoEditor = toEditorHTML(recurso.contenido)
  */
 export function toEditorHTML(html: string): string {
   return html
+    // \( latex \)  →  nodo inline de Tiptap
     .replace(
-      /\\\(((.|\r?\n)*?)\\\)/g,
-      function (match, contents, offset, input_string) {
-        console.log(match, offset, input_string);
-        console.log(`<span data-latex="${contents}" data-type="inline-math"><\\/span>`);
-        return `<span data-latex="${contents+10}" data-type="inline-math"><\\/span>`;
-      },
+      /\\\(([\s\S]*?)\\\)/g,
+      (_, latex) =>
+        `<span data-latex="${latex}" data-type="inline-math"></span>`,
     )
+    // \[ latex \]  →  nodo bloque de Tiptap
     .replace(
-      /\\\[((.|\r?\n)*?)\\\]/g,
-      function (match, contents, offset, input_string) {
-        console.log(match, offset, input_string);
-        console.log(`<div data-latex="${contents}" data-type="block-math"><\\/div>`);
-        return `<div data-latex="${contents+10}" data-type="block-math"><\\/div>`;
-      },
+      /\\\[([\s\S]*?)\\\]/g,
+      (_, latex) =>
+        `<div data-latex="${latex}" data-type="block-math"></div>`,
     );
 }

@@ -29,6 +29,9 @@ ol {
   text-align: center;
 }
 
+/*********************************************
+* Wrapper principal
+*********************************************/
 .wrapper {
   display: flex;
   flex-direction: column;
@@ -63,7 +66,9 @@ ol {
   flex: 1;
 }
 
-/* ── Tipografía del contenido ── */
+/*********************************************
+* Contenido del editor
+*********************************************/
 .editorContent {
   outline: none;
   color: #1f2c38;
@@ -73,6 +78,7 @@ ol {
   min-height: 100%;
 }
 
+/* Placeholder */
 .editorContent p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   color: #8daecb;
@@ -82,6 +88,7 @@ ol {
   font-style: italic;
 }
 
+/* Headings */
 .editorContent h1 {
   font-size: 1.65em; font-weight: 700; color: #4A6D8C;
   margin: 1.2em 0 0.4em; line-height: 1.2;
@@ -91,14 +98,71 @@ ol {
 .editorContent h3 { font-size: 1.1em; font-weight: 600; color: #4d6278; margin: 0.9em 0 0.25em; }
 .editorContent p  { margin: 0.4em 0; }
 
-/* .editorContent ul, .editorContent ol { padding-left: 1.5em; margin: 0.4em 0; } */
-/* .editorContent li { margin: 0.15em 0; } */
+/* ── Listas — fix crítico (Tailwind resetea estos estilos) ── */
+.editorContent ul {
+  list-style-type: disc;
+  padding-left: 1.75em;
+  margin: 0.5em 0;
+}
+.editorContent ul ul {
+  list-style-type: circle;
+  margin: 0.2em 0;
+}
+.editorContent ul ul ul {
+  list-style-type: square;
+}
+.editorContent ol {
+  list-style-type: decimal;
+  padding-left: 1.75em;
+  margin: 0.5em 0;
+}
+.editorContent ol ol {
+  list-style-type: lower-alpha;
+  margin: 0.2em 0;
+}
+.editorContent ol ol ol {
+  list-style-type: lower-roman;
+}
+.editorContent li {
+  margin: 0.25em 0;
+  line-height: 1.7;
+}
+.editorContent ol li::marker {
+  font-weight: 600;
+  color: #4A6D8C;
+}
 
+/* Tipos de lista con listStyleType inline */
+.editorContent ol[style*="lower-alpha"] { list-style-type: lower-alpha; }
+.editorContent ol[style*="upper-alpha"] { list-style-type: upper-alpha; }
+.editorContent ol[style*="lower-roman"] { list-style-type: lower-roman; }
+.editorContent ol[style*="upper-roman"] { list-style-type: upper-roman; }
+
+/* Task list */
+.editorContent ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0.25em;
+}
+.editorContent ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.editorContent ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 0.2em;
+}
+.editorContent ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+/* Blockquote */
 .editorContent blockquote {
   border-left: 3px solid #4A6D8C; margin: 0.8em 0; padding: 0.5em 1em;
   color: #5a7a95; background: #f7f9fc; border-radius: 0 6px 6px 0; font-style: italic;
 }
 
+/* Código */
 .editorContent code {
   background: #f0f4f8; border: 1px solid #d9e4ee; border-radius: 4px;
   padding: 0.1em 0.4em; font-size: 0.88em;
@@ -112,9 +176,31 @@ ol {
   background: none; border: none; color: #e2e8f0; font-size: 0.85em; padding: 0;
 }
 
+/* Otros */
 .editorContent mark { background: #fef08a; border-radius: 2px; padding: 0.05em 0.15em; }
 .editorContent a    { color: #2d5be3; text-decoration: underline; text-underline-offset: 2px; }
 
+/* Imágenes */
+.editorContent figure[data-align] {
+  display: block;
+  margin: 0.6em 0;
+  padding: 0;
+}
+.editorContent figure[data-align="left"]   { text-align: left; }
+.editorContent figure[data-align="center"] { text-align: center; }
+.editorContent figure[data-align="right"]  { text-align: right; }
+.editorContent figure img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+/* Superscript / Subscript */
+.editorContent sup { font-size: 0.75em; vertical-align: super; line-height: 0; }
+.editorContent sub { font-size: 0.75em; vertical-align: sub;   line-height: 0; }
+
+/* Tabla */
 .editorContent table { border-collapse: collapse; width: 100%; margin: 0.8em 0; font-size: 0.92em; }
 .editorContent th, .editorContent td { border: 1px solid #d9e4ee; padding: 7px 12px; text-align: left; }
 .editorContent th { background: #f7f9fc; font-weight: 600; color: #4A6D8C; }
@@ -140,7 +226,7 @@ ol {
   border-color: #4A6D8C;
 }
 
-/* ── Block math — contenedor externo ── */
+/* ── Block math ── */
 .editorContent .tiptap-mathematics-render[data-type="block-math"] {
   cursor: pointer;
   background: #eef3f8;
@@ -154,15 +240,27 @@ ol {
   background: #daeaf6;
   border-color: #4A6D8C;
 }
+.editorContent .block-math-inner { text-align: center; width: 100%; }
+.editorContent .block-math-inner .katex { display: block; text-align: center; }
 
-/* ── block-math-inner — aquí vive el .katex, este es el que centra ── */
-.editorContent .block-math-inner {
-  text-align: center;
-  width: 100%;
+/*********************************************
+* Panel HTML
+*********************************************/
+.htmlPanel {
+  border-top: 1.5px solid #d9e4ee;
+  background: #1e2a38;
 }
-
-/* KaTeX en modo bloque genera display:inline — forzamos block para que respete text-align */
-.editorContent .block-math-inner .katex {
-  display: block;
-  text-align: center;
+.htmlTextarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 14px 16px;
+  background: transparent;
+  color: #e2e8f0;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  border: none;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
 }
