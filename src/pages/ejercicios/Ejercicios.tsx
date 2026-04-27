@@ -1,3 +1,4 @@
+// src/pages/ejercicios/Ejercicios.tsx
 import { useEffect, useState }    from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -6,16 +7,18 @@ import {
 import AddIcon       from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditNoteIcon  from "@mui/icons-material/EditNote";
+import SchoolIcon    from "@mui/icons-material/School";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   obtenerEjerciciosPorCapitulo,
   limpiarEjercicios,
 } from "../../store/slices/ejercicio";
-import { obtenerMongoCurso }      from "../../store/slices/mongoCurso";
-import { obtenerCapitulos }       from "../../store/slices/capitulo";
-import { generarHtmlEjercicios }  from "./generarHtmlEjercicios";
-import EjercicioCard from "./EjercicioCard";
-import FormEjercicio from "./FormEjercicio";
+import { obtenerMongoCurso }     from "../../store/slices/mongoCurso";
+import { obtenerCapitulos }      from "../../store/slices/capitulo";
+import { generarHtmlEjercicios } from "./generarHtmlEjercicios";
+import EjercicioCard             from "./EjercicioCard";
+import FormEjercicio             from "./FormEjercicio";
+import ModalBanco                from "../../components/banco/ModalBanco";
 
 const Ejercicios = () => {
   const { curso_id, capitulo_id } = useParams<{
@@ -25,16 +28,16 @@ const Ejercicios = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const { ejercicios, isLoading, error } =
-    useAppSelector((s) => s.ejercicioMongo);
+  const { ejercicios, isLoading, error } = useAppSelector((s) => s.ejercicioMongo);
   const { capitulos }   = useAppSelector((s) => s.capituloMongo);
   const { cursoActivo } = useAppSelector((s) => s.mongoCurso);
 
   const capituloActivo = capitulos.find((c) => c._id === capitulo_id);
 
-  const [mostrarForm, setMostrarForm]   = useState(false);
-  const [desplegando, setDesplegando]   = useState(false);
-  const [msgDeploy, setMsgDeploy]       = useState<string | null>(null);
+  const [mostrarForm,  setMostrarForm]  = useState(false);
+  const [mostrarBanco, setMostrarBanco] = useState(false);
+  const [desplegando,  setDesplegando]  = useState(false);
+  const [msgDeploy,    setMsgDeploy]    = useState<string | null>(null);
 
   useEffect(() => {
     if (!curso_id || !capitulo_id) return;
@@ -47,7 +50,7 @@ const Ejercicios = () => {
   const handleDesplegarPagina = async () => {
     if (!cursoActivo || !capituloActivo) return;
 
-    const canvas_activos = cursoActivo.canvas_cursos.filter(c => c.activo);
+    const canvas_activos = cursoActivo.canvas_cursos.filter((c) => c.activo);
     if (canvas_activos.length === 0) {
       setMsgDeploy("No hay cursos Canvas activos asociados.");
       return;
@@ -71,12 +74,12 @@ const Ejercicios = () => {
         await fetch(
           `${import.meta.env.VITE_BACKEND_URL}/api/capitulos/deploy-pagina/${canvas_id}`,
           {
-            method: "POST",
+            method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ titulo, slug, body }),
-          }
+            body:    JSON.stringify({ titulo, slug, body }),
+          },
         );
-      })
+      }),
     );
 
     setDesplegando(false);
@@ -118,12 +121,12 @@ const Ejercicios = () => {
           {[
             {
               label: "Clases",
-              ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/clases`,
+              ruta:  `/cursos/${curso_id}/capitulos/${capitulo_id}/clases`,
               activo: false,
             },
             {
               label: "Ayudantías",
-              ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias`,
+              ruta:  `/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias`,
               activo: false,
             },
             { label: "Ejercicios", ruta: null, activo: true },
@@ -132,17 +135,15 @@ const Ejercicios = () => {
               key={tab.label}
               onClick={() => tab.ruta && navigate(tab.ruta)}
               style={{
-                padding: "6px 16px",
+                padding:    "6px 16px",
                 borderRadius: 20,
-                background: tab.activo
-                  ? "rgba(255,255,255,0.2)"
-                  : "transparent",
-                border: "1px solid rgba(255,255,255,0.3)",
-                fontSize: 13,
-                color: "white",
+                background: tab.activo ? "rgba(255,255,255,0.2)" : "transparent",
+                border:     "1px solid rgba(255,255,255,0.3)",
+                fontSize:   13,
+                color:      "white",
                 fontWeight: tab.activo ? 500 : 400,
-                opacity: tab.activo ? 1 : 0.7,
-                cursor: tab.ruta ? "pointer" : "default",
+                opacity:    tab.activo ? 1 : 0.7,
+                cursor:     tab.ruta ? "pointer" : "default",
               }}
             >
               {tab.label}
@@ -159,7 +160,9 @@ const Ejercicios = () => {
             {ejercicios.length} ejercicio{ejercicios.length !== 1 ? "s" : ""}
           </Typography>
         </div>
+
         <div className="flex items-center gap-2">
+          {/* Publicar en Canvas */}
           <Button
             variant="outlined"
             onClick={handleDesplegarPagina}
@@ -182,10 +185,29 @@ const Ejercicios = () => {
             {desplegando ? "Publicando..." : "Publicar en Canvas"}
           </Button>
 
+          {/* Copiar del banco */}
+          <Button
+            variant="outlined"
+            startIcon={<SchoolIcon />}
+            onClick={() => { setMostrarBanco(true); setMostrarForm(false); }}
+            sx={{
+              borderColor: "#6b46c1",
+              color:       "#6b46c1",
+              borderRadius: 2.5,
+              px: 2.5,
+              fontWeight: 600,
+              boxShadow: "none",
+              "&:hover": { bgcolor: "#f5f0ff", borderColor: "#553c9a" },
+            }}
+          >
+            Del banco
+          </Button>
+
+          {/* Nuevo ejercicio */}
           <Button
             variant="contained"
             startIcon={mostrarForm ? undefined : <AddIcon />}
-            onClick={() => setMostrarForm(v => !v)}
+            onClick={() => { setMostrarForm((v) => !v); setMostrarBanco(false); }}
             sx={{
               bgcolor: mostrarForm ? "#6793ba" : "#4A6D8C",
               borderRadius: 2.5,
@@ -211,7 +233,7 @@ const Ejercicios = () => {
         </Alert>
       )}
 
-      {/* ── Formulario ── */}
+      {/* ── Formulario nuevo ejercicio ── */}
       {mostrarForm && capitulo_id && (
         <div className="mb-6">
           <FormEjercicio
@@ -242,7 +264,7 @@ const Ejercicios = () => {
             No hay ejercicios
           </Typography>
           <Typography variant="body2" sx={{ color: "#8daecb" }}>
-            Crea el primero con el botón "Nuevo ejercicio"
+            Crea el primero con "Nuevo ejercicio" o copia desde el banco
           </Typography>
         </div>
       )}
@@ -259,6 +281,17 @@ const Ejercicios = () => {
             />
           ))}
         </div>
+      )}
+
+      {/* ── Modal banco ── */}
+      {mostrarBanco && capitulo_id && curso_id && (
+        <ModalBanco
+          modo="ejercicio"
+          capitulo_id={capitulo_id}
+          curso_id={curso_id}
+          onCopiado={() => dispatch(obtenerEjerciciosPorCapitulo({ capitulo_id }))}
+          onClose={() => setMostrarBanco(false)}
+        />
       )}
 
     </div>

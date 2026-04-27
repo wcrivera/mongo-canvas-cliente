@@ -9,22 +9,24 @@ import {
   CircularProgress,
 } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
-import AddIcon from "@mui/icons-material/Add";
-import { useNavigate } from "react-router-dom";
+import EditOutlinedIcon  from "@mui/icons-material/EditOutlined";
+import CheckIcon         from "@mui/icons-material/Check";
+import CloseIcon         from "@mui/icons-material/Close";
+import AddIcon           from "@mui/icons-material/Add";
+import { useNavigate }   from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { editarTema, eliminarTema } from "../../store/slices/tema";
-import { crearRecurso } from "../../store/slices/recurso";
-import type { ITema } from "../../store/slices/tema";
-import type { TipoRecurso, IRecurso } from "../../store/slices/recurso";
-import type { IQuiz } from "../../store/slices/quiz";
-import RecursoItem from "./RecursoItem";
-import ModalUrlDiapositiva from "./ModalUrlDiapositiva";
-import ModalUrlVideo from "./ModalUrlVideo";
-import ModalCrearQuiz from "./ModalCrearQuiz";
-import LatexRenderer from "../../components/LaTeX/LatexRenderer";
+import { editarTema, eliminarTema }       from "../../store/slices/tema";
+import { crearRecurso }                   from "../../store/slices/recurso";
+import type { ITema }                     from "../../store/slices/tema";
+import type { TipoRecurso, IRecurso }     from "../../store/slices/recurso";
+import type { IQuiz }                     from "../../store/slices/quiz";
+import RecursoItem             from "./RecursoItem";
+import ModalElegirDiapositiva  from "./ModalElegirDiapositiva";
+import ModalUrlDiapositiva     from "./ModalUrlDiapositiva";
+import ModalUrlVideo           from "./ModalUrlVideo";
+import ModalCrearQuiz          from "./ModalCrearQuiz";
+import LatexRenderer           from "../../components/LaTeX/LatexRenderer";
+import { crearDiapositiva }    from "../../store/slices/diapositiva";
 
 interface Props {
   tema: ITema;
@@ -40,26 +42,33 @@ const TemaRow = ({ tema }: Props) => {
     .filter((r) => r.tema_id === tema._id)
     .sort((a, b) => a.position - b.position);
 
-  const [editando, setEditando] = useState(false);
-  const [nombre, setNombre] = useState(tema.nombre);
+  const [editando,  setEditando]  = useState(false);
+  const [nombre,    setNombre]    = useState(tema.nombre);
   const [guardando, setGuardando] = useState(false);
-  const [creando, setCreando] = useState(false);
+  const [creando,   setCreando]   = useState(false);
 
   // Modales
-  const [modalDiapositiva, setModalDiapositiva] = useState<{
-    abierto: boolean;
+  const [modalElegir, setModalElegir] = useState<{
+    abierto:    boolean;
+    recurso_id: string;
+  }>({ abierto: false, recurso_id: "" });
+
+  const [modalUrl, setModalUrl] = useState<{
+    abierto:    boolean;
     recurso_id: string;
   }>({ abierto: false, recurso_id: "" });
 
   const [modalVideo, setModalVideo] = useState<{
-    abierto: boolean;
+    abierto:    boolean;
     recurso_id: string;
   }>({ abierto: false, recurso_id: "" });
 
   const [modalQuiz, setModalQuiz] = useState<{
-    abierto: boolean;
+    abierto:    boolean;
     recurso_id: string;
   }>({ abierto: false, recurso_id: "" });
+
+  // ── Handlers ────────────────────────────────────────────────────────────
 
   const handleGuardar = async () => {
     setGuardando(true);
@@ -77,8 +86,8 @@ const TemaRow = ({ tema }: Props) => {
     setCreando(true);
     const resultado = (await dispatch(
       crearRecurso({
-        contexto: "clase", // ← agregar
-        tema_id: tema._id,
+        contexto: "clase",
+        tema_id:  tema._id,
         tipo,
         titulo: `${tipo.charAt(0).toUpperCase() + tipo.slice(1)} · ${tema.nombre}`,
       }),
@@ -88,7 +97,8 @@ const TemaRow = ({ tema }: Props) => {
     if (!resultado.ok || !resultado.data) return;
 
     if (tipo === "diapositiva") {
-      setModalDiapositiva({ abierto: true, recurso_id: resultado.data._id });
+      // Siempre mostrar modal de elección al crear nueva
+      setModalElegir({ abierto: true, recurso_id: resultado.data._id });
     } else if (tipo === "video") {
       setModalVideo({ abierto: true, recurso_id: resultado.data._id });
     } else if (tipo === "quiz") {
@@ -103,15 +113,42 @@ const TemaRow = ({ tema }: Props) => {
     );
   };
 
+  // Al elegir "URL externa" desde el modal de elección
+  const handleElegirUrl = () => {
+    const recurso_id = modalElegir.recurso_id;
+    setModalElegir({ abierto: false, recurso_id: "" });
+    setModalUrl({ abierto: true, recurso_id });
+  };
+
+  // Al elegir "Crear con editor" desde el modal de elección
+  const handleElegirEditor = async () => {
+    const recurso_id = modalElegir.recurso_id;
+    setModalElegir({ abierto: false, recurso_id: "" });
+
+    const recurso = recursos.find((r) => r._id === recurso_id);
+    if (!recurso) return;
+
+    // Crear el objeto Diapositiva en BD con url vacía antes de ir al editor
+    // Si ya existe (raro pero posible), agregarDiapositiva lo actualiza
+    const resultado = await dispatch(
+      crearDiapositiva({ recurso_id, url: "" }),
+    ) as unknown as { ok: boolean };
+
+    if (!resultado.ok) return; // error al crear, no navegar
+
+    navigate(
+      `/cursos/${recurso.curso_id}/capitulos/${recurso.capitulo_id}/clases/${recurso.clase_id}/diapositiva/${recurso_id}`,
+    );
+  };
+
   const tiposDisponibles: TipoRecurso[] = ["diapositiva", "video", "quiz"];
-  const tiposExistentes = recursosTema.map((r) => r.tipo);
-  const tiposFaltantes = tiposDisponibles.filter(
-    (t) => !tiposExistentes.includes(t),
-  );
+  const tiposExistentes  = recursosTema.map((r) => r.tipo);
+  const tiposFaltantes   = tiposDisponibles.filter((t) => !tiposExistentes.includes(t));
 
   return (
     <>
       <div style={{ borderTop: "1px solid #e0e0e0" }} className="px-5 py-3">
+
         {/* Nombre del tema */}
         <div className="flex items-center gap-2 mb-3">
           {editando ? (
@@ -122,9 +159,7 @@ const TemaRow = ({ tema }: Props) => {
                 size="small"
                 autoFocus
                 fullWidth
-                sx={{
-                  "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 },
-                }}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: 13 } }}
               />
               <Tooltip title="Guardar">
                 <span>
@@ -134,60 +169,45 @@ const TemaRow = ({ tema }: Props) => {
                     disabled={guardando}
                     sx={{ color: "#4A6D8C" }}
                   >
-                    {guardando ? (
-                      <CircularProgress size={14} />
-                    ) : (
-                      <CheckIcon fontSize="small" />
-                    )}
+                    {guardando ? <CircularProgress size={14} /> : <CheckIcon sx={{ fontSize: 16 }} />}
                   </IconButton>
                 </span>
               </Tooltip>
               <Tooltip title="Cancelar">
                 <IconButton
                   size="small"
-                  onClick={() => {
-                    setEditando(false);
-                    setNombre(tema.nombre);
-                  }}
-                  sx={{ color: "#8daecb" }}
+                  onClick={() => { setEditando(false); setNombre(tema.nombre); }}
+                  sx={{ color: "#6793ba" }}
                 >
-                  <CloseIcon fontSize="small" />
+                  <CloseIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
             </div>
           ) : (
             <div className="flex items-center gap-2 flex-1 group">
               <Typography
-                variant="caption"
-                sx={{ color: "#555", fontWeight: 500, flex: 1 }}
+                variant="body2"
+                sx={{ color: "#374151", fontSize: 13, fontWeight: 500, flex: 1 }}
               >
                 <LatexRenderer>{tema.nombre}</LatexRenderer>
               </Typography>
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
-                <Tooltip title="Editar tema">
+                <Tooltip title="Editar nombre">
                   <IconButton
                     size="small"
                     onClick={() => setEditando(true)}
-                    sx={{
-                      color: "#8daecb",
-                      p: 0.3,
-                      "&:hover": { color: "#4A6D8C" },
-                    }}
+                    sx={{ color: "#8daecb", p: 0.3, "&:hover": { color: "#4A6D8C" } }}
                   >
-                    <EditOutlinedIcon sx={{ fontSize: 14 }} />
+                    <EditOutlinedIcon sx={{ fontSize: 13 }} />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Eliminar tema">
                   <IconButton
                     size="small"
                     onClick={handleEliminar}
-                    sx={{
-                      color: "#8daecb",
-                      p: 0.3,
-                      "&:hover": { color: "#ef4444" },
-                    }}
+                    sx={{ color: "#8daecb", p: 0.3, "&:hover": { color: "#ef4444" } }}
                   >
-                    <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+                    <DeleteOutlineIcon sx={{ fontSize: 13 }} />
                   </IconButton>
                 </Tooltip>
               </div>
@@ -195,20 +215,22 @@ const TemaRow = ({ tema }: Props) => {
           )}
         </div>
 
-        {/* Recursos */}
-        <div className="flex items-center gap-6 flex-wrap">
+        {/* Recursos existentes */}
+        <div className="flex flex-col gap-1 mb-2">
           {recursosTema.map((r) => (
             <RecursoItem key={r._id} recurso={r} />
           ))}
+        </div>
 
-          {/* Botones agregar recursos faltantes */}
+        {/* Botones agregar recurso */}
+        <div className="flex gap-1 flex-wrap">
           {tiposFaltantes.map((tipo) => (
             <Tooltip key={tipo} title={`Agregar ${tipo}`}>
               <span>
                 <Button
                   size="small"
-                  onClick={() => handleCrearRecurso(tipo)}
                   disabled={creando}
+                  onClick={() => handleCrearRecurso(tipo)}
                   sx={{
                     fontSize: "0.65rem",
                     color: "#8daecb",
@@ -226,17 +248,24 @@ const TemaRow = ({ tema }: Props) => {
         </div>
       </div>
 
-      {/* Modal diapositiva */}
-      {modalDiapositiva.abierto && (
-        <ModalUrlDiapositiva
-          recurso_id={modalDiapositiva.recurso_id}
-          onClose={() =>
-            setModalDiapositiva({ abierto: false, recurso_id: "" })
-          }
+      {/* ── Modal elegir tipo de diapositiva (primera vez) ── */}
+      {modalElegir.abierto && (
+        <ModalElegirDiapositiva
+          onElegirUrl={handleElegirUrl}
+          onElegirEditor={handleElegirEditor}
+          onClose={() => setModalElegir({ abierto: false, recurso_id: "" })}
         />
       )}
 
-      {/* Modal video */}
+      {/* ── Modal URL diapositiva ── */}
+      {modalUrl.abierto && (
+        <ModalUrlDiapositiva
+          recurso_id={modalUrl.recurso_id}
+          onClose={() => setModalUrl({ abierto: false, recurso_id: "" })}
+        />
+      )}
+
+      {/* ── Modal video ── */}
       {modalVideo.abierto && (
         <ModalUrlVideo
           recurso_id={modalVideo.recurso_id}
@@ -244,7 +273,7 @@ const TemaRow = ({ tema }: Props) => {
         />
       )}
 
-      {/* Modal quiz */}
+      {/* ── Modal quiz ── */}
       {modalQuiz.abierto && (
         <ModalCrearQuiz
           recurso_id={modalQuiz.recurso_id}
