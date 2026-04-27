@@ -1,13 +1,17 @@
-import { useEffect, useState }    from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  Button, TextField, Typography,
-  CircularProgress, Alert, Switch,
+  Button,
+  TextField,
+  Typography,
+  CircularProgress,
+  Alert,
+  Switch,
   FormControlLabel,
 } from "@mui/material";
-import AddIcon       from "@mui/icons-material/Add";
+import AddIcon from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import GroupsIcon    from "@mui/icons-material/Groups";
+import GroupsIcon from "@mui/icons-material/Groups";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   obtenerAyudantiasPorCapitulo,
@@ -30,36 +34,39 @@ import {
   obtenerRecursosPorCapitulo,
   limpiarRecursos,
 } from "../../store/slices/recurso";
-import { obtenerMongoCurso }       from "../../store/slices/mongoCurso";
-import { obtenerCapitulos }        from "../../store/slices/capitulo";
-import { generarHtmlAyudantias }   from "./generarHtmlAyudantias";
-import { LatexEditor }             from "../../components/Editor";
+import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
+import { obtenerCapitulos } from "../../store/slices/capitulo";
+import { generarHtmlAyudantias } from "./generarHtmlAyudantias";
+import { LatexEditor } from "../../components/Editor";
 import AyudantiaCard from "./AyudantiaCard";
+import { fetchConToken } from "../../helpers/fetch";
 
 const Ayudantias = () => {
   const { curso_id, capitulo_id } = useParams<{
-    curso_id:    string;
+    curso_id: string;
     capitulo_id: string;
   }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const { ayudantias, isLoading, error } = useAppSelector((s) => s.ayudantiaMongo);
-  const { capitulos }   = useAppSelector((s) => s.capituloMongo);
+  const { ayudantias, isLoading, error } = useAppSelector(
+    (s) => s.ayudantiaMongo,
+  );
+  const { capitulos } = useAppSelector((s) => s.capituloMongo);
   const { cursoActivo } = useAppSelector((s) => s.mongoCurso);
-  const { soluciones }  = useAppSelector((s) => s.solucionTextoMongo);
-  const { recursos }    = useAppSelector((s) => s.recursoMongo);
-  const { videos }      = useAppSelector((s) => s.videoMongo);
-  const { quizzes }     = useAppSelector((s) => s.quizMongo);
+  const { soluciones } = useAppSelector((s) => s.solucionTextoMongo);
+  const { recursos } = useAppSelector((s) => s.recursoMongo);
+  const { videos } = useAppSelector((s) => s.videoMongo);
+  const { quizzes } = useAppSelector((s) => s.quizMongo);
 
   const capituloActivo = capitulos.find((c) => c._id === capitulo_id);
 
   const [mostrarForm, setMostrarForm] = useState(false);
-  const [guardando, setGuardando]     = useState(false);
+  const [guardando, setGuardando] = useState(false);
   const [desplegando, setDesplegando] = useState(false);
-  const [msgDeploy, setMsgDeploy]     = useState<string | null>(null);
-  const [form, setForm]               = useState({
-    nombre:    "",
+  const [msgDeploy, setMsgDeploy] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    nombre: "",
     enunciado: "",
     published: false,
   });
@@ -72,7 +79,9 @@ const Ayudantias = () => {
     dispatch(obtenerSolucionesPorCapitulo({ capitulo_id }));
     dispatch(obtenerVideosPorCapitulo({ capitulo_id }));
     dispatch(obtenerQuizzesPorCapitulo({ capitulo_id }));
-    dispatch(obtenerRecursosPorCapitulo({ capitulo_id, contexto: "ayudantia" }));
+    dispatch(
+      obtenerRecursosPorCapitulo({ capitulo_id, contexto: "ayudantia" }),
+    );
 
     return () => {
       dispatch(limpiarAyudantias());
@@ -108,8 +117,8 @@ const Ayudantias = () => {
     await Promise.allSettled(
       canvas_activos.map(async ({ canvas_id }) => {
         const body = generarHtmlAyudantias({
-          curso:           cursoActivo,
-          capitulo:        capituloActivo,
+          curso: cursoActivo,
+          capitulo: capituloActivo,
           ayudantias,
           soluciones,
           recursos,
@@ -119,15 +128,12 @@ const Ayudantias = () => {
         });
 
         const titulo = `Capitulo ${capituloActivo.position} Ayudantias`;
-        const slug   = `capitulo-${capituloActivo.position}-ayudantias`;
+        const slug = `capitulo-${capituloActivo.position}-ayudantias`;
 
-        await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/capitulos/deploy-pagina/${canvas_id}`,
-          {
-            method:  "POST",
-            headers: { "Content-Type": "application/json" },
-            body:    JSON.stringify({ titulo, slug, body }),
-          },
+        await fetchConToken(
+          `api/capitulos/deploy-pagina/${canvas_id}`,
+          { titulo, slug, body },
+          "POST",
         );
       }),
     );
@@ -138,7 +144,6 @@ const Ayudantias = () => {
 
   return (
     <div className="min-h-screen bg-[#f0f4f8] p-6">
-
       {/* ── Header azul ── */}
       <div
         className="rounded-2xl px-6 pt-5 pb-4 mb-6 animate-fadeIn"
@@ -150,8 +155,10 @@ const Ayudantias = () => {
             onClick={() => navigate(`/cursos/${curso_id}/capitulos`)}
             size="small"
             sx={{
-              color: "rgba(255,255,255,0.7)", fontSize: "0.75rem",
-              p: 0, minWidth: 0,
+              color: "rgba(255,255,255,0.7)",
+              fontSize: "0.75rem",
+              p: 0,
+              minWidth: 0,
               "&:hover": { color: "white", bgcolor: "transparent" },
             }}
           >
@@ -159,25 +166,40 @@ const Ayudantias = () => {
           </Button>
         </div>
 
-        <Typography variant="h6" sx={{ color: "white", fontWeight: 500, mb: 2, lineHeight: 1.3 }}>
+        <Typography
+          variant="h6"
+          sx={{ color: "white", fontWeight: 500, mb: 2, lineHeight: 1.3 }}
+        >
           {capituloActivo?.nombre ?? "Cargando..."}
         </Typography>
 
         {/* ── Tabs de navegación ── */}
         <div className="flex gap-2">
           {[
-            { label: "Clases",     ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/clases`,     activo: false },
-            { label: "Ayudantías", ruta: null,                                                      activo: true  },
-            { label: "Ejercicios", ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/ejercicios`, activo: false },
+            {
+              label: "Clases",
+              ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/clases`,
+              activo: false,
+            },
+            { label: "Ayudantías", ruta: null, activo: true },
+            {
+              label: "Ejercicios",
+              ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/ejercicios`,
+              activo: false,
+            },
           ].map((tab) => (
             <button
               key={tab.label}
               onClick={() => tab.ruta && navigate(tab.ruta)}
               style={{
-                padding: "6px 16px", borderRadius: 20,
-                background: tab.activo ? "rgba(255,255,255,0.2)" : "transparent",
+                padding: "6px 16px",
+                borderRadius: 20,
+                background: tab.activo
+                  ? "rgba(255,255,255,0.2)"
+                  : "transparent",
                 border: "1px solid rgba(255,255,255,0.3)",
-                fontSize: 13, color: "white",
+                fontSize: 13,
+                color: "white",
                 fontWeight: tab.activo ? 500 : 400,
                 opacity: tab.activo ? 1 : 0.7,
                 cursor: tab.ruta ? "pointer" : "default",
@@ -193,7 +215,10 @@ const Ayudantias = () => {
       <div className="flex justify-between items-center mb-5">
         <div className="flex items-center gap-2">
           <GroupsIcon sx={{ color: "#8daecb", fontSize: 18 }} />
-          <Typography variant="body2" sx={{ color: "#6793ba", fontWeight: 500 }}>
+          <Typography
+            variant="body2"
+            sx={{ color: "#6793ba", fontWeight: 500 }}
+          >
             {ayudantias.length} ayudantía{ayudantias.length !== 1 ? "s" : ""}
           </Typography>
         </div>
@@ -202,10 +227,18 @@ const Ayudantias = () => {
             variant="outlined"
             onClick={handleDesplegarPagina}
             disabled={desplegando || ayudantias.length === 0}
-            startIcon={desplegando ? <CircularProgress size={14} color="inherit" /> : undefined}
+            startIcon={
+              desplegando ? (
+                <CircularProgress size={14} color="inherit" />
+              ) : undefined
+            }
             sx={{
-              borderColor: "#4A6D8C", color: "#4A6D8C",
-              borderRadius: 2.5, px: 3, fontWeight: 600, boxShadow: "none",
+              borderColor: "#4A6D8C",
+              color: "#4A6D8C",
+              borderRadius: 2.5,
+              px: 3,
+              fontWeight: 600,
+              boxShadow: "none",
               "&:hover": { bgcolor: "#f0f4f8", borderColor: "#3c5770" },
             }}
           >
@@ -218,7 +251,10 @@ const Ayudantias = () => {
             onClick={() => setMostrarForm((v) => !v)}
             sx={{
               bgcolor: mostrarForm ? "#6793ba" : "#4A6D8C",
-              borderRadius: 2.5, px: 3, fontWeight: 600, boxShadow: "none",
+              borderRadius: 2.5,
+              px: 3,
+              fontWeight: 600,
+              boxShadow: "none",
               "&:hover": { bgcolor: "#3c5770", boxShadow: "none" },
             }}
           >
@@ -245,11 +281,14 @@ const Ayudantias = () => {
           className="mb-6 rounded-2xl p-5 animate-slideDown"
           style={{
             background: "white",
-            border:     "1px solid #d9e4ee",
-            boxShadow:  "0 4px 16px rgba(74,109,140,0.08)",
+            border: "1px solid #d9e4ee",
+            boxShadow: "0 4px 16px rgba(74,109,140,0.08)",
           }}
         >
-          <Typography variant="subtitle2" sx={{ color: "#2e4154", mb: 2, fontWeight: 600 }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ color: "#2e4154", mb: 2, fontWeight: 600 }}
+          >
             Nueva ayudantía
           </Typography>
 
@@ -258,13 +297,25 @@ const Ayudantias = () => {
               label="Nombre"
               placeholder="ej: Ejercicios de rectas"
               value={form.nombre}
-              onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-              required size="small" fullWidth
+              onChange={(e) =>
+                setForm((f) => ({ ...f, nombre: e.target.value }))
+              }
+              required
+              size="small"
+              fullWidth
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
 
             <div>
-              <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600, display: "block", mb: 1 }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#6793ba",
+                  fontWeight: 600,
+                  display: "block",
+                  mb: 1,
+                }}
+              >
                 Enunciado
               </Typography>
               <LatexEditor
@@ -279,8 +330,14 @@ const Ayudantias = () => {
               control={
                 <Switch
                   checked={form.published}
-                  onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))}
-                  sx={{ "& .MuiSwitch-thumb": { bgcolor: form.published ? "#4A6D8C" : "#ccc" } }}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, published: e.target.checked }))
+                  }
+                  sx={{
+                    "& .MuiSwitch-thumb": {
+                      bgcolor: form.published ? "#4A6D8C" : "#ccc",
+                    },
+                  }}
                 />
               }
               label={
@@ -292,15 +349,28 @@ const Ayudantias = () => {
           </div>
 
           <div className="flex justify-end gap-3 mt-4">
-            <Button variant="text" onClick={() => setMostrarForm(false)}
-              sx={{ color: "#6793ba", borderRadius: 2 }}>
+            <Button
+              variant="text"
+              onClick={() => setMostrarForm(false)}
+              sx={{ color: "#6793ba", borderRadius: 2 }}
+            >
               Cancelar
             </Button>
-            <Button type="submit" variant="contained" disabled={guardando}
-              startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : undefined}
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={guardando}
+              startIcon={
+                guardando ? (
+                  <CircularProgress size={14} color="inherit" />
+                ) : undefined
+              }
               sx={{
-                bgcolor: "#4A6D8C", borderRadius: 2, px: 3,
-                fontWeight: 600, boxShadow: "none",
+                bgcolor: "#4A6D8C",
+                borderRadius: 2,
+                px: 3,
+                fontWeight: 600,
+                boxShadow: "none",
                 "&:hover": { bgcolor: "#3c5770", boxShadow: "none" },
               }}
             >
@@ -317,12 +387,17 @@ const Ayudantias = () => {
         </div>
       )}
       {error && (
-        <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>{error}</Alert>
+        <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
+          {error}
+        </Alert>
       )}
       {!isLoading && ayudantias.length === 0 && !error && (
         <div className="flex flex-col items-center gap-3 py-20 animate-fadeIn">
           <GroupsIcon sx={{ fontSize: 56, color: "#b3c9dd" }} />
-          <Typography variant="body1" sx={{ color: "#6793ba", fontWeight: 500 }}>
+          <Typography
+            variant="body1"
+            sx={{ color: "#6793ba", fontWeight: 500 }}
+          >
             No hay ayudantías
           </Typography>
           <Typography variant="body2" sx={{ color: "#8daecb" }}>
@@ -346,7 +421,6 @@ const Ayudantias = () => {
           ))}
         </div>
       )}
-
     </div>
   );
 };

@@ -24,6 +24,7 @@ import { obtenerTemasPorCurso, limpiarTemas } from "../../store/slices/tema";
 import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
 import { generarHtmlCapitulos } from "./generarHtmlCapitulos";
 import CapituloCard from "./CapituloCard";
+import { fetchConToken } from "../../helpers/fetch";
 
 // interface ResultadoDeploy {
 //   ok: boolean;
@@ -83,47 +84,41 @@ const Capitulos = () => {
   };
 
   const handleDesplegarPagina = async () => {
-  if (!cursoActivo) return;
+    if (!cursoActivo || capitulos.length === 0) return;
 
-  const canvas_activos = cursoActivo.canvas_cursos.filter((c) => c.activo);
+    const canvas_activos = cursoActivo.canvas_cursos.filter((c) => c.activo);
+    if (canvas_activos.length === 0) {
+      setMsgDeploy("No hay cursos Canvas activos asociados.");
+      return;
+    }
 
-  if (canvas_activos.length === 0) {
-    setMsgDeploy("No hay cursos Canvas activos asociados.");
-    return;
-  }
+    setDesplegando(true);
+    setMsgDeploy(null);
 
-  setDesplegando(true);
-  setMsgDeploy(null);
+    await Promise.allSettled(
+      canvas_activos.map(async ({ canvas_id }) => {
+        const body = generarHtmlCapitulos({
+          curso: cursoActivo,
+          capitulos,
+          clases,
+          temas,
+          canvas_curso_id: canvas_id,
+        });
 
-  await Promise.allSettled(
-    canvas_activos.map(async ({ canvas_id }) => {
-      const body = generarHtmlCapitulos({
-        curso:           cursoActivo,
-        capitulos,
-        clases,
-        temas,
-        canvas_curso_id: canvas_id,
-      });
+        const titulo = `${cursoActivo.codigo} Capitulos`;
+        const slug = `${cursoActivo.codigo.toLowerCase()}-capitulos`;
 
-      // Título sin caracteres especiales → Canvas genera slug predecible
-      const titulo = `${cursoActivo.codigo} Capitulos`;
-      // Canvas generará: {codigo}-capitulos  ej: mat1000-capitulos
-      const slug   = `${cursoActivo.codigo.toLowerCase()}-capitulos`;
+        await fetchConToken(
+          `api/capitulos/deploy-pagina/${canvas_id}`,
+          { titulo, slug, body },
+          "POST",
+        );
+      }),
+    );
 
-      await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/capitulos/deploy-pagina/${canvas_id}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ titulo, slug, body }),
-        }
-      );
-    })
-  );
-
-  setDesplegando(false);
-  setMsgDeploy("✓ Página publicada en todos los cursos Canvas");
-};
+    setDesplegando(false);
+    setMsgDeploy("✓ Página publicada en todos los cursos Canvas");
+  };
 
   return (
     <div className="min-h-screen bg-[#f0f4f8] p-6">

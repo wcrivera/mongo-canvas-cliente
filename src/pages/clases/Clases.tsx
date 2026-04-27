@@ -39,6 +39,7 @@ import { obtenerMongoCurso }  from "../../store/slices/mongoCurso";
 import { obtenerCapitulos }   from "../../store/slices/capitulo";
 import { generarHtmlClases }  from "./generarHtmlClases";
 import ClaseCard from "./ClaseCard";
+import { fetchConToken } from "../../helpers/fetch";
 
 const Clases = () => {
   const { curso_id, capitulo_id } = useParams<{
@@ -98,17 +99,16 @@ const Clases = () => {
 
   const handleDesplegarPagina = async () => {
     if (!cursoActivo || !capituloActivo) return;
-
+ 
     const canvas_activos = cursoActivo.canvas_cursos.filter((c) => c.activo);
-
     if (canvas_activos.length === 0) {
       setMsgDeploy("No hay cursos Canvas activos asociados.");
       return;
     }
-
+ 
     setDesplegando(true);
     setMsgDeploy(null);
-
+ 
     await Promise.allSettled(
       canvas_activos.map(async ({ canvas_id }) => {
         const body = generarHtmlClases({
@@ -122,21 +122,18 @@ const Clases = () => {
           quizzes,
           canvas_curso_id: canvas_id,
         });
-
+ 
         const titulo = `Capitulo ${capituloActivo.position} Clases`;
         const slug   = `capitulo-${capituloActivo.position}-clases`;
-
-        await fetch(
-          `${import.meta.env.VITE_BACKEND_URL}/api/capitulos/deploy-pagina/${canvas_id}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ titulo, slug, body }),
-          }
+ 
+        await fetchConToken(
+          `api/capitulos/deploy-pagina/${canvas_id}`,
+          { titulo, slug, body },
+          "POST",
         );
-      })
+      }),
     );
-
+ 
     setDesplegando(false);
     setMsgDeploy("✓ Página de clases publicada en todos los cursos Canvas");
   };

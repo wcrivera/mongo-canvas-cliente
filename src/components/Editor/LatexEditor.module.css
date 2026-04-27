@@ -3,7 +3,6 @@
 *********************************************/
 
 li {
-  /* line-height: 2; */
   margin-bottom: 0.7em !important;
   margin-top: 0.7em !important;
 }
@@ -17,13 +16,6 @@ ol {
   margin-top: 1em;
   margin-bottom: 1em;
 }
-
-/* Solo selectores descendentes — Tailwind no puede hacer h1 { ... } en runtime */
-
-/* ── Wrapper ── */
-/* div {
-  text-align: center;
-} */
 
 .editorContent div[data-type*="block-math"] {
   text-align: center;
@@ -98,41 +90,27 @@ ol {
 .editorContent h3 { font-size: 1.1em; font-weight: 600; color: #4d6278; margin: 0.9em 0 0.25em; }
 .editorContent p  { margin: 0.4em 0; }
 
-/* ── Listas — fix crítico (Tailwind resetea estos estilos) ── */
+/* ── Listas ── */
 .editorContent ul {
   list-style-type: disc;
   padding-left: 1.75em;
   margin: 0.5em 0;
 }
-.editorContent ul ul {
-  list-style-type: circle;
-  margin: 0.2em 0;
-}
-.editorContent ul ul ul {
-  list-style-type: square;
-}
+.editorContent ul ul  { list-style-type: circle; margin: 0.2em 0; }
+.editorContent ul ul ul { list-style-type: square; }
 .editorContent ol {
   list-style-type: decimal;
   padding-left: 1.75em;
   margin: 0.5em 0;
 }
-.editorContent ol ol {
-  list-style-type: lower-alpha;
-  margin: 0.2em 0;
-}
-.editorContent ol ol ol {
-  list-style-type: lower-roman;
-}
+.editorContent ol ol   { list-style-type: lower-alpha; margin: 0.2em 0; }
+.editorContent ol ol ol { list-style-type: lower-roman; }
 .editorContent li {
   margin: 0.25em 0;
   line-height: 1.7;
 }
-.editorContent ol li::marker {
-  font-weight: 600;
-  color: #4A6D8C;
-}
+.editorContent ol li::marker { font-weight: 600; color: #4A6D8C; }
 
-/* Tipos de lista con listStyleType inline */
 .editorContent ol[style*="lower-alpha"] { list-style-type: lower-alpha; }
 .editorContent ol[style*="upper-alpha"] { list-style-type: upper-alpha; }
 .editorContent ol[style*="lower-roman"] { list-style-type: lower-roman; }
@@ -148,13 +126,8 @@ ol {
   align-items: flex-start;
   gap: 0.5em;
 }
-.editorContent ul[data-type="taskList"] li > label {
-  flex-shrink: 0;
-  margin-top: 0.2em;
-}
-.editorContent ul[data-type="taskList"] li > div {
-  flex: 1;
-}
+.editorContent ul[data-type="taskList"] li > label { flex-shrink: 0; margin-top: 0.2em; }
+.editorContent ul[data-type="taskList"] li > div   { flex: 1; }
 
 /* Blockquote */
 .editorContent blockquote {
@@ -181,20 +154,11 @@ ol {
 .editorContent a    { color: #2d5be3; text-decoration: underline; text-underline-offset: 2px; }
 
 /* Imágenes */
-.editorContent figure[data-align] {
-  display: block;
-  margin: 0.6em 0;
-  padding: 0;
-}
+.editorContent figure[data-align]          { display: block; margin: 0.6em 0; padding: 0; }
 .editorContent figure[data-align="left"]   { text-align: left; }
 .editorContent figure[data-align="center"] { text-align: center; }
 .editorContent figure[data-align="right"]  { text-align: right; }
-.editorContent figure img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  display: inline-block;
-}
+.editorContent figure img { max-width: 100%; height: auto; border-radius: 8px; display: inline-block; }
 
 /* Superscript / Subscript */
 .editorContent sup { font-size: 0.75em; vertical-align: super; line-height: 0; }
@@ -209,39 +173,103 @@ ol {
 
 /* ── Inline math ── */
 .editorContent .tiptap-mathematics-render[data-type="inline-math"] {
-  display: inline-flex;
-  align-items: center;
-  cursor: pointer;
-  background: #eef3f8;
-  color: #1a3a52;
-  border-radius: 4px;
-  padding: 0 5px;
-  margin: 0 2px;
-  vertical-align: middle;
-  border: 1px solid #c9dae8;
-  transition: background 0.15s, border-color 0.15s;
+  display: inline-flex; align-items: center; cursor: pointer;
+  background: #eef3f8; color: #1a3a52; border-radius: 4px;
+  padding: 0 5px; margin: 0 2px; vertical-align: middle;
+  border: 1px solid #c9dae8; transition: background 0.15s, border-color 0.15s;
 }
 .editorContent .tiptap-mathematics-render[data-type="inline-math"]:hover {
-  background: #daeaf6;
-  border-color: #4A6D8C;
+  background: #daeaf6; border-color: #4A6D8C;
 }
 
 /* ── Block math ── */
 .editorContent .tiptap-mathematics-render[data-type="block-math"] {
-  cursor: pointer;
-  background: #eef3f8;
-  border: 1px solid #c9dae8;
-  border-radius: 8px;
-  padding: 14px 20px;
-  margin: 0.8em 0;
+  cursor: pointer; background: #eef3f8; border: 1px solid #c9dae8;
+  border-radius: 8px; padding: 14px 20px; margin: 0.8em 0;
   transition: background 0.15s, border-color 0.15s;
 }
 .editorContent .tiptap-mathematics-render[data-type="block-math"]:hover {
-  background: #daeaf6;
-  border-color: #4A6D8C;
+  background: #daeaf6; border-color: #4A6D8C;
 }
 .editorContent .block-math-inner { text-align: center; width: 100%; }
 .editorContent .block-math-inner .katex { display: block; text-align: center; }
+
+/*********************************************
+* Componentes matemáticos (MathBlock custom)
+* Se ven igual en el editor que en Reveal.js
+*********************************************/
+
+/* Cuerpo del bloque */
+.editorContent [data-math-block] {
+  margin: 10px 0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 0.95em;
+  line-height: 1.65;
+}
+.editorContent [data-math-block] p {
+  margin: 0.3em 0;
+}
+
+/* Título del bloque (renderizado por NodeView — no editable) */
+.editorContent [data-math-block] .math-block-title-display {
+  font-weight: 700;
+  font-size: 0.82em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  font-style: normal;
+}
+
+/* Colores por tipo */
+.editorContent [data-tipo="definicion"]   { background: rgba(37,99,180,0.07);   border-left: 4px solid #2563b4; }
+.editorContent [data-tipo="teorema"]      { background: rgba(21,128,61,0.07);   border-left: 4px solid #15803d; }
+.editorContent [data-tipo="proposicion"]  { background: rgba(109,40,217,0.07);  border-left: 4px solid #7c3aed; }
+.editorContent [data-tipo="corolario"]    { background: rgba(2,132,199,0.07);   border-left: 4px solid #0284c7; }
+.editorContent [data-tipo="lema"]         { background: rgba(13,148,136,0.07);  border-left: 4px solid #0d9488; }
+.editorContent [data-tipo="ejemplo"]      { background: rgba(234,88,12,0.07);   border-left: 4px solid #ea580c; }
+.editorContent [data-tipo="demostracion"] { background: rgba(100,116,139,0.06); border-left: 4px solid #94a3b8; }
+.editorContent [data-tipo="observacion"]  { background: rgba(202,138,4,0.08);   border-left: 4px solid #ca8a04; }
+
+/*********************************************
+* Dos columnas (TwoColumns custom)
+*********************************************/
+.editorContent [data-two-columns] {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 columnas iguales */
+  gap: 1.5em;
+  margin: 10px 0;
+  border: 1.5px dashed #e2e8f0;
+  border-radius: 8px;
+  padding: 18px 12px 10px;
+  background: #fafafa;
+  position: relative;
+}
+.editorContent [data-column] {
+  min-height: 60px;
+  border-right: 10px solid #e2e8f0;
+  padding-right: 0.8em;
+  color: red;
+}
+.editorContent [data-column]:last-child {
+  border-right: none;
+  padding-right: 0;
+  color: blue;
+}
+
+.ProseMirror .column-block {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
+.ProseMirror .column {
+  /* Additional styling for individual columns */
+  border: 1px dashed #ccc; 
+  padding: 8px;
+}
 
 /*********************************************
 * Panel HTML

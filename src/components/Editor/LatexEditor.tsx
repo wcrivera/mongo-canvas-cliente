@@ -1,24 +1,35 @@
+// src/components/Editor/LatexEditor.tsx
+import "katex/dist/katex.min.css";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import { Mathematics } from "@tiptap/extension-mathematics";
-import Underline from "@tiptap/extension-underline";
-import TextAlign from "@tiptap/extension-text-align";
-import Link from "@tiptap/extension-link";
-import Highlight from "@tiptap/extension-highlight";
-import { Table } from "@tiptap/extension-table";
-import TableRow from "@tiptap/extension-table-row";
-import TableCell from "@tiptap/extension-table-cell";
-import TableHeader from "@tiptap/extension-table-header";
-import Superscript from "@tiptap/extension-superscript";
-import Subscript from "@tiptap/extension-subscript";
-import { Color } from "@tiptap/extension-color";
-import { TextStyle } from "@tiptap/extension-text-style";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import { OrderedList } from "@tiptap/extension-list";
-import Image from "@tiptap/extension-image";
+import StarterKit        from "@tiptap/starter-kit";
+import { Mathematics }   from "@tiptap/extension-mathematics";
+import Underline         from "@tiptap/extension-underline";
+import TextAlign         from "@tiptap/extension-text-align";
+import Link              from "@tiptap/extension-link";
+import Highlight         from "@tiptap/extension-highlight";
+import { Table }         from "@tiptap/extension-table";
+import TableRow          from "@tiptap/extension-table-row";
+import TableCell         from "@tiptap/extension-table-cell";
+import TableHeader       from "@tiptap/extension-table-header";
+import Superscript       from "@tiptap/extension-superscript";
+import Subscript         from "@tiptap/extension-subscript";
+import { Color }         from "@tiptap/extension-color";
+import { TextStyle }     from "@tiptap/extension-text-style";
+import TaskList          from "@tiptap/extension-task-list";
+import TaskItem          from "@tiptap/extension-task-item";
+import { OrderedList }   from "@tiptap/extension-list";
+import Image             from "@tiptap/extension-image";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
+
+// ── Extensiones custom ────────────────────────────────────────────────────
+import { MathBlockExtension }                 from "./extensions/MathBlock.extension";
+import { TwoColumnsExtension, ColumnContent } from "./extensions/TwoColumns.extension";
+
+import { MathEditModal } from "./MathEditModal";
+import { Toolbar }       from "./Toolbar";
+import styles            from "./LatexEditor.module.css";
 
 // ── NodeView React para imagen ────────────────────────────────────────────
 const ImageNodeView = ({ node, selected }: NodeViewProps) => {
@@ -36,24 +47,14 @@ const ImageNodeView = ({ node, selected }: NodeViewProps) => {
   return (
     <NodeViewWrapper
       as="figure"
-      style={{
-        display: "block",
-        margin: "0.6em 0",
-        padding: 0,
-        ...alignStyle[align ?? "left"],
-      }}
+      style={{ display: "block", margin: "0.6em 0", padding: 0, ...alignStyle[align ?? "left"] }}
       data-align={align ?? "left"}
     >
       <img
-        src={src}
-        alt={alt ?? ""}
-        title={title ?? ""}
+        src={src} alt={alt ?? ""} title={title ?? ""}
         style={{
-          maxWidth: "100%",
-          height: "auto",
-          width: width ?? undefined,
-          borderRadius: 8,
-          outline: selected ? "3px solid #4A6D8C" : "none",
+          maxWidth: "100%", height: "auto", width: width ?? undefined,
+          borderRadius: 8, outline: selected ? "3px solid #4A6D8C" : "none",
           display: "inline-block",
         }}
       />
@@ -63,7 +64,6 @@ const ImageNodeView = ({ node, selected }: NodeViewProps) => {
 
 // ── Extensión Image con figure + align + width ────────────────────────────
 const CustomImage = Image.extend({
-  // Renderiza como figure en el HTML exportado
   renderHTML({ HTMLAttributes }) {
     const align = (HTMLAttributes.align as string) ?? "left";
     const width = HTMLAttributes.width as string | undefined;
@@ -73,12 +73,13 @@ const CustomImage = Image.extend({
       right:  "text-align: right;",
     };
     const figureStyle = alignStyle[align] ?? alignStyle.left;
-    const imgStyle = width ? `width: ${width}; max-width: 100%; height: auto;` : "max-width: 100%; height: auto;";
+    const imgStyle    = width
+      ? `width: ${width}; max-width: 100%; height: auto;`
+      : "max-width: 100%; height: auto;";
 
-    // Excluir align/width del img y ponerlos en el figure
     const imgAttrs = Object.fromEntries(
       Object.entries(HTMLAttributes as Record<string, unknown>)
-        .filter(([k]) => k !== "align" && k !== "width")
+        .filter(([k]) => k !== "align" && k !== "width"),
     );
     return [
       "figure",
@@ -93,23 +94,19 @@ const CustomImage = Image.extend({
         tag: "figure[data-align]",
         getAttrs: (el) => {
           const figure = el as HTMLElement;
-          const img = figure.querySelector("img");
+          const img    = figure.querySelector("img");
           if (!img) return false;
-
-          // Extrae el width del style: "width: 350px; max-width: 100%..."
           const styleWidth = img.style.width;
           const width = (styleWidth && styleWidth !== "100%") ? styleWidth : (img.getAttribute("width") || null);
-
           return {
             src:   img.getAttribute("src"),
-            alt:   img.getAttribute("alt") ?? "",
+            alt:   img.getAttribute("alt")   ?? "",
             title: img.getAttribute("title") ?? "",
             width,
             align: figure.getAttribute("data-align") ?? "left",
           };
         },
       },
-      // Compatibilidad con <img> suelto legacy
       { tag: "img[src]" },
     ];
   },
@@ -120,7 +117,6 @@ const CustomImage = Image.extend({
       width: {
         default: null,
         parseHTML: (el: HTMLElement) => {
-          // Intenta leer del style inline primero (ej: "width: 350px;")
           const sw = el.style.width;
           if (sw && sw !== "100%" && !sw.startsWith("max")) return sw;
           return el.getAttribute("width") || null;
@@ -141,22 +137,19 @@ const CustomImage = Image.extend({
     return ReactNodeViewRenderer(ImageNodeView);
   },
 });
-import "katex/dist/katex.min.css";
-import { useState, useCallback, useRef, useEffect } from "react";
-import { MathEditModal } from "./MathEditModal";
-import { Toolbar } from "./Toolbar";
-import styles from "./LatexEditor.module.css";
 
+// ── Props ─────────────────────────────────────────────────────────────────
 interface LatexEditorProps {
   initialContent?: string;
-  placeholder?: string;
-  onChange?: (html: string) => void;
-  minHeight?: string;
+  placeholder?:    string;
+  onChange?:       (html: string) => void;
+  minHeight?:      string;
 }
 
+// ── Componente ────────────────────────────────────────────────────────────
 export function LatexEditor({
   initialContent = "",
-  placeholder = "Escribe aquí… usa f(x) para LaTeX inline y ∑ para bloques",
+  placeholder    = "Escribe aquí… usa f(x) para LaTeX inline y ∑ para bloques",
   onChange,
   minHeight = "180px",
 }: LatexEditorProps) {
@@ -167,6 +160,7 @@ export function LatexEditor({
   const [fullscreen,   setFullscreen]   = useState(false);
   const [showHtml,     setShowHtml]     = useState(false);
   const [htmlDraft,    setHtmlDraft]    = useState("");
+
   const showHtmlRef = useRef(false);
   useEffect(() => { showHtmlRef.current = showHtml; }, [showHtml]);
 
@@ -176,8 +170,8 @@ export function LatexEditor({
       return {
         ...this.parent?.(),
         listStyleType: {
-          default: "decimal",
-          parseHTML: (el: HTMLElement) => el.style.listStyleType || "decimal",
+          default:    "decimal",
+          parseHTML:  (el: HTMLElement) => el.style.listStyleType || "decimal",
           renderHTML: (attrs: Record<string, string>) =>
             attrs.listStyleType && attrs.listStyleType !== "decimal"
               ? { style: `list-style-type: ${attrs.listStyleType}` }
@@ -187,6 +181,7 @@ export function LatexEditor({
     },
   });
 
+  // ── Editor ───────────────────────────────────────────────────────────────
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ orderedList: false }),
@@ -234,20 +229,22 @@ export function LatexEditor({
           },
         },
       }),
+      // ── Extensiones custom de diapositivas ───────────────────────────────
+      MathBlockExtension,
+      TwoColumnsExtension,
+      ColumnContent,
     ],
     content: initialContent || "",
     editorProps: {
       attributes: {
-        class: styles.editorContent,
+        class:            styles.editorContent,
         "data-placeholder": placeholder,
       },
     },
     onUpdate: ({ editor: e }) => {
       const html = e.getHTML();
       onChange?.(html);
-      if (showHtmlRef.current) {
-        setHtmlDraft(html);
-      }
+      if (showHtmlRef.current) setHtmlDraft(html);
     },
   });
 
@@ -310,6 +307,7 @@ export function LatexEditor({
     setModalOpen(true);
   }, []);
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className={`${styles.wrapper} ${fullscreen ? styles.fullscreen : ""}`}>
       <Toolbar
@@ -325,7 +323,7 @@ export function LatexEditor({
         <EditorContent editor={editor} />
       </div>
 
-      {/* ── Panel HTML editable ── */}
+      {/* Panel HTML editable */}
       {showHtml && (
         <div className={styles.htmlPanel}>
           <textarea
@@ -342,10 +340,7 @@ export function LatexEditor({
           latex={editingLatex}
           type={editingType}
           onSave={handleSaveMath}
-          onClose={() => {
-            setModalOpen(false);
-            setEditingPos(null);
-          }}
+          onClose={() => { setModalOpen(false); setEditingPos(null); }}
         />
       )}
     </div>
