@@ -232,11 +232,35 @@ ol {
 .editorContent [data-tipo="observacion"]  { background: rgba(202,138,4,0.08);   border-left: 4px solid #ca8a04; }
 
 /*********************************************
-* Dos columnas (TwoColumns custom)
+* Dos columnas (@tiptap-extend/columns)
+* Clases: .column-block y .column
+*********************************************/
+.editorContent :global(.column-block) {
+  width: 100%;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 1.5em;
+  padding: 8px 0;
+  margin: 10px 0;
+}
+.editorContent :global(.column) {
+  overflow: hidden;
+  padding: 8px;
+  border: 1px dashed #e2e8f0;
+  border-radius: 8px;
+  min-height: 60px;
+}
+.editorContent :global(.ProseMirror-focused .column) {
+  border-color: #4A6D8C;
+}
+
+/*********************************************
+* Dos columnas en Reveal (clases propias)
 *********************************************/
 .editorContent [data-two-columns] {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 2 columnas iguales */
+  grid-template-columns: 1fr 1fr;
   gap: 1.5em;
   margin: 10px 0;
   border: 1.5px dashed #e2e8f0;
@@ -247,28 +271,12 @@ ol {
 }
 .editorContent [data-column] {
   min-height: 60px;
-  border-right: 10px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
   padding-right: 0.8em;
-  color: red;
 }
 .editorContent [data-column]:last-child {
   border-right: none;
   padding-right: 0;
-  color: blue;
-}
-
-.ProseMirror .column-block {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 1fr;
-  gap: 24px;
-  width: 100%;
-}
-
-.ProseMirror .column {
-  /* Additional styling for individual columns */
-  border: 1px dashed #ccc; 
-  padding: 8px;
 }
 
 /*********************************************

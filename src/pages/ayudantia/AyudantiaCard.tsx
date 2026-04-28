@@ -50,7 +50,6 @@ const AyudantiaCard = ({
   const { soluciones } = useAppSelector((s) => s.solucionTextoMongo);
   const { recursos }   = useAppSelector((s) => s.recursoMongo);
   const { videos }     = useAppSelector((s) => s.videoMongo);
-  const { quizzes }    = useAppSelector((s) => s.quizMongo);
 
   const recursosAyudantia = recursos.filter((r) => r.ayudantia_id === ayudantia._id);
   const recursoVideo = recursosAyudantia.find((r) => r.tipo === "video");
@@ -58,7 +57,6 @@ const AyudantiaCard = ({
 
   const solucion = soluciones.find((s) => s.ayudantia_id === ayudantia._id);
   const video    = videos.find((v) => recursoVideo && v.recurso_id === recursoVideo._id);
-  const quiz     = quizzes.find((q) => recursoQuiz && q.recurso_id === recursoQuiz._id);
 
   const [editando,   setEditando]   = useState(false);
   const [guardando,  setGuardando]  = useState(false);
@@ -125,8 +123,12 @@ const AyudantiaCard = ({
     }
   };
 
+  // ── FIX: basta con que recursoQuiz exista para navegar al editor ──────────
+  // Antes la condición era (recursoQuiz && quiz), lo que fallaba cuando
+  // el quiz ya existía en BD pero no estaba cargado en el store Redux.
+  // Eso provocaba que se creara un recurso duplicado sin quiz asociado.
   const handleCrearQuiz = async () => {
-    if (recursoQuiz && quiz) {
+    if (recursoQuiz) {
       navigate(
         `/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${recursoQuiz._id}`,
       );
@@ -260,6 +262,7 @@ const AyudantiaCard = ({
             {editando ? (
               <div className="flex flex-col gap-3">
 
+                {/* Nombre */}
                 <TextField
                   label="Nombre"
                   value={form.nombre}
@@ -268,6 +271,7 @@ const AyudantiaCard = ({
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
 
+                {/* Enunciado con LatexEditor */}
                 <div>
                   <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600, display: "block", mb: 1 }}>
                     Enunciado
@@ -275,32 +279,29 @@ const AyudantiaCard = ({
                   <LatexEditor
                     initialContent={toEditorHTML(form.enunciado)}
                     onChange={(html) => setForm((f) => ({ ...f, enunciado: html }))}
-                    placeholder="Escribe el enunciado de la ayudantía…"
+                    placeholder="Escribe el enunciado…"
                     minHeight="120px"
                   />
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Switch
-                    size="small" checked={form.published}
-                    onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))}
-                    sx={{ "& .MuiSwitch-thumb": { bgcolor: form.published ? "#4A6D8C" : "#ccc" } }}
-                  />
-                  <Typography variant="caption" sx={{ color: "#6793ba" }}>
-                    {form.published ? "Publicada" : "No publicada"}
-                  </Typography>
-                </div>
+                {/* Published */}
+                <Switch
+                  checked={form.published}
+                  onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))}
+                  size="small"
+                  sx={{ "& .MuiSwitch-thumb": { bgcolor: form.published ? "#4A6D8C" : "#ccc" } }}
+                />
 
                 <div className="flex justify-end gap-2">
                   <Button
-                    size="small" variant="text"
+                    variant="text" size="small"
                     onClick={() => setEditando(false)}
-                    sx={{ color: "#6793ba", borderRadius: 2 }}
+                    sx={{ color: "#8daecb", borderRadius: 2 }}
                   >
                     Cancelar
                   </Button>
                   <Button
-                    size="small" variant="contained"
+                    variant="contained" size="small"
                     onClick={handleGuardar} disabled={guardando}
                     startIcon={guardando ? <CircularProgress size={12} color="inherit" /> : <CheckIcon />}
                     sx={{ bgcolor: "#4A6D8C", borderRadius: 2, boxShadow: "none", "&:hover": { bgcolor: "#3c5770", boxShadow: "none" } }}
@@ -375,22 +376,22 @@ const AyudantiaCard = ({
             <div className="flex items-center gap-2">
               <div style={{
                 width: 30, height: 30, borderRadius: 6,
-                background: quiz ? "#2d5be3" : "#f0f4f8",
+                background: recursoQuiz ? "#2d5be3" : "#f0f4f8",
                 display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <QuizIcon sx={{ fontSize: 16, color: quiz ? "white" : "#8daecb" }} />
+                <QuizIcon sx={{ fontSize: 16, color: recursoQuiz ? "white" : "#8daecb" }} />
               </div>
               <Button
                 size="small"
                 onClick={handleCrearQuiz}
                 sx={{
                   fontSize: "0.7rem",
-                  color:    quiz ? "#2d5be3" : "#8daecb",
+                  color:    recursoQuiz ? "#2d5be3" : "#8daecb",
                   p:        "2px 6px",
                   "&:hover": { bgcolor: "#f0f4f8" },
                 }}
               >
-                {quiz ? "Editar preguntas" : "+ Quiz"}
+                {recursoQuiz ? "Editar preguntas" : "+ Quiz"}
               </Button>
             </div>
 

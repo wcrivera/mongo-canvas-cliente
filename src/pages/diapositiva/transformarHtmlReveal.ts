@@ -152,6 +152,15 @@ export const transformarHtmlParaReveal = (html: string): string => {
 
   transformarMathBlocks(doc);
   transformarTwoColumns(doc);
+  // Transformar clases de @tiptap-extend/columns al formato Reveal
+  doc.querySelectorAll(".column-block").forEach((el) => {
+    el.className = "two-col";
+    (el as HTMLElement).removeAttribute("data-type");
+  });
+  doc.querySelectorAll(".column").forEach((el) => {
+    el.className = "col";
+    (el as HTMLElement).removeAttribute("data-type");
+  });
   limpiarAtributosResiduals(doc);
 
   // Retornar solo el contenido del body (sin <html><head><body> wrapper)

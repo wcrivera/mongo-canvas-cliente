@@ -23,7 +23,7 @@ import { useAppDispatch }     from "../../store/hooks";
 import { agregarDiapositiva, actualizarDiapositiva } from "../../store/slices/diapositiva";
 import { fetchConToken }      from "../../helpers/fetch";
 import { LatexEditor }        from "../../components/Editor";
-import { compilarHtmlReveal } from "./compilarHtmlReveal";
+import { compilarHtmlMiniatura } from "./compilarHtmlReveal";
 import {
   COMPONENTES_LABELS,
   COMPONENTES_COLORS,
@@ -260,7 +260,7 @@ const EditorDiapositiva = () => {
 
   // ── HTML de una sola slide para miniatura ─────────────────────────────────
   const htmlSlide = (idx: number) =>
-    compilarHtmlReveal([{ ...slides[idx], pagina: 1 }], config);
+    compilarHtmlMiniatura([{ ...slides[idx], pagina: 1 }], config);
 
   return (
     <div className="flex flex-col h-screen bg-[#f0f4f8] overflow-hidden">
@@ -382,7 +382,7 @@ const EditorDiapositiva = () => {
                       transformOrigin: "top left",
                       pointerEvents: "none",
                     }}
-                    sandbox="allow-scripts allow-same-origin"
+                    sandbox="allow-scripts"
                     title={`Slide ${idx + 1}`}
                   />
                 </div>
@@ -718,7 +718,7 @@ const EditorDiapositiva = () => {
             <iframe
               srcDoc={htmlSlide(modalPreview)}
               style={{ width: "100%", height: "540px", border: "none", borderRadius: 8 }}
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-scripts"
               title={`Preview slide ${modalPreview + 1}`}
             />
           </div>

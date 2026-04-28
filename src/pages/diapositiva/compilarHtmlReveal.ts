@@ -209,6 +209,13 @@ export const compilarHtmlReveal = (
 </html>`;
 };
 
-// Re-export para uso en otros módulos
-export { htmlComponente, COMPONENTES_LABELS, COMPONENTES_COLORS } from "./revealStyles";
-export type { ComponenteMatematico } from "./revealStyles";
+// ── Para miniaturas: versión sin hash ni history ─────────────────────────────
+export const compilarHtmlMiniatura = (
+  slides: ISlide[],
+  config: IConfigReveal,
+): string => {
+  return compilarHtmlReveal(slides, config)
+    .replace("hash:true,",    "hash:false,")
+    .replace("hash: true,",   "hash: false,")
+    .replace("plugins:",      "history:false,disableLayout:false,plugins:");
+};

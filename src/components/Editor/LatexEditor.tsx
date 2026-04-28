@@ -22,16 +22,12 @@ import { OrderedList }   from "@tiptap/extension-list";
 import Image             from "@tiptap/extension-image";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import type { NodeViewProps } from "@tiptap/react";
+import { MathBlockExtension } from "./extensions/MathBlock.extension";
+import { MathEditModal }      from "./MathEditModal";
+import { Toolbar }            from "./Toolbar";
+import styles                 from "./LatexEditor.module.css";
 
-// ── Extensiones custom ────────────────────────────────────────────────────
-import { MathBlockExtension }                 from "./extensions/MathBlock.extension";
-import { TwoColumnsExtension, ColumnContent } from "./extensions/TwoColumns.extension";
-
-import { MathEditModal } from "./MathEditModal";
-import { Toolbar }       from "./Toolbar";
-import styles            from "./LatexEditor.module.css";
-
-// ── NodeView React para imagen ────────────────────────────────────────────
+// ── NodeView React para imagen ────────────────────────────────────────────────
 const ImageNodeView = ({ node, selected }: NodeViewProps) => {
   const { src, alt, title, width, align } = node.attrs as {
     src: string; alt?: string; title?: string;
@@ -62,7 +58,7 @@ const ImageNodeView = ({ node, selected }: NodeViewProps) => {
   );
 };
 
-// ── Extensión Image con figure + align + width ────────────────────────────
+// ── Extensión Image con figure + align + width ────────────────────────────────
 const CustomImage = Image.extend({
   renderHTML({ HTMLAttributes }) {
     const align = (HTMLAttributes.align as string) ?? "left";
@@ -138,7 +134,7 @@ const CustomImage = Image.extend({
   },
 });
 
-// ── Props ─────────────────────────────────────────────────────────────────
+// ── Props ─────────────────────────────────────────────────────────────────────
 interface LatexEditorProps {
   initialContent?: string;
   placeholder?:    string;
@@ -146,10 +142,10 @@ interface LatexEditorProps {
   minHeight?:      string;
 }
 
-// ── Componente ────────────────────────────────────────────────────────────
+// ── Componente ────────────────────────────────────────────────────────────────
 export function LatexEditor({
   initialContent = "",
-  placeholder    = "Escribe aquí… usa f(x) para LaTeX inline y ∑ para bloques",
+  placeholder    = "Escribe aquí… usa f(x) para LaTeX inline",
   onChange,
   minHeight = "180px",
 }: LatexEditorProps) {
@@ -164,7 +160,7 @@ export function LatexEditor({
   const showHtmlRef = useRef(false);
   useEffect(() => { showHtmlRef.current = showHtml; }, [showHtml]);
 
-  // ── OrderedList extendido con listStyleType ──────────────────────────────
+  // ── OrderedList extendido con listStyleType ──────────────────────────────────
   const CustomOrderedList = OrderedList.extend({
     addAttributes() {
       return {
@@ -181,7 +177,7 @@ export function LatexEditor({
     },
   });
 
-  // ── Editor ───────────────────────────────────────────────────────────────
+  // ── Editor ───────────────────────────────────────────────────────────────────
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ orderedList: false }),
@@ -229,15 +225,13 @@ export function LatexEditor({
           },
         },
       }),
-      // ── Extensiones custom de diapositivas ───────────────────────────────
+      // ── Componentes matemáticos custom ───────────────────────────────────────
       MathBlockExtension,
-      TwoColumnsExtension,
-      ColumnContent,
     ],
     content: initialContent || "",
     editorProps: {
       attributes: {
-        class:            styles.editorContent,
+        class:              styles.editorContent,
         "data-placeholder": placeholder,
       },
     },
@@ -248,7 +242,7 @@ export function LatexEditor({
     },
   });
 
-  // ── Guardar fórmula ──────────────────────────────────────────────────────
+  // ── Guardar fórmula ──────────────────────────────────────────────────────────
   const handleSaveMath = useCallback(
     (latex: string, type: "inline" | "block") => {
       if (!editor) return;
@@ -278,7 +272,7 @@ export function LatexEditor({
     [editor, editingPos],
   );
 
-  // ── Toggle HTML ──────────────────────────────────────────────────────────
+  // ── Toggle HTML ──────────────────────────────────────────────────────────────
   const handleToggleHtml = useCallback(() => {
     if (!editor) return;
     if (!showHtml) {
@@ -299,7 +293,7 @@ export function LatexEditor({
     [editor, onChange],
   );
 
-  // ── Abrir modal LaTeX ────────────────────────────────────────────────────
+  // ── Abrir modal LaTeX ────────────────────────────────────────────────────────
   const openMathModal = useCallback((defaultType: "inline" | "block" = "inline") => {
     setEditingLatex("");
     setEditingPos(null);
@@ -307,7 +301,7 @@ export function LatexEditor({
     setModalOpen(true);
   }, []);
 
-  // ── Render ───────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className={`${styles.wrapper} ${fullscreen ? styles.fullscreen : ""}`}>
       <Toolbar
@@ -323,7 +317,6 @@ export function LatexEditor({
         <EditorContent editor={editor} />
       </div>
 
-      {/* Panel HTML editable */}
       {showHtml && (
         <div className={styles.htmlPanel}>
           <textarea
