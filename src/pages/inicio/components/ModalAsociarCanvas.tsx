@@ -12,12 +12,12 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import {
   obtenerCanvasCursosDisponibles,
   limpiarDisponibles,
-} from "../../store/slices/canvasCurso";
-import { asociarCanvasCurso } from "../../store/slices/mongoCurso";
+} from "../../../store/slices/canvasCurso";
+import { asociarCanvasCurso } from "../../../store/slices/mongoCurso";
 
 interface Props {
   curso_id: string;
@@ -88,7 +88,7 @@ const ModalAsociarCanvas = ({ curso_id, onClose }: Props) => {
           </div>
         ) : (
           <>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ my: 2 }}>
               Selecciona el curso Canvas que deseas asociar:
             </Typography>
             <RadioGroup

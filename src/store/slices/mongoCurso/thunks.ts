@@ -9,11 +9,12 @@ import {
   setCursoActivo,
   agregarCurso,
   actualizarCurso,
+  eliminarCursoState,
 } from "./mongoCursoSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
 
-// ─── Obtener todos los cursos Mongo ──────────────────────────────
+// ─── Obtener todos los cursos ─────────────────────────────────────
 
 export const obtenerMongoCursos = () => {
   return async (dispatch: AppDispatch) => {
@@ -21,11 +22,10 @@ export const obtenerMongoCursos = () => {
     try {
       const resp = await fetchConToken("api/cursos");
       const body = await resp.json();
-
       if (body.ok) {
         dispatch(setCursos(body.data));
         dispatch(endLoadingMongoCurso());
-        return { ok: true, msg: "Cursos cargados" };
+        return { ok: true };
       } else {
         dispatch(setErrorMongoCurso(body.msg));
         return { ok: false, msg: body.msg };
@@ -46,11 +46,10 @@ export const obtenerMongoCurso = ({ curso_id }: { curso_id: string }) => {
     try {
       const resp = await fetchConToken(`api/cursos/${curso_id}`);
       const body = await resp.json();
-
       if (body.ok) {
         dispatch(setCursoActivo(body.data));
         dispatch(endLoadingMongoCurso());
-        return { ok: true, msg: "Curso cargado" };
+        return { ok: true };
       } else {
         dispatch(setErrorMongoCurso(body.msg));
         return { ok: false, msg: body.msg };
@@ -63,15 +62,15 @@ export const obtenerMongoCurso = ({ curso_id }: { curso_id: string }) => {
   };
 };
 
-// ─── Crear curso en Mongo ─────────────────────────────────────────
+// ─── Crear curso ──────────────────────────────────────────────────
 
 export const crearMongoCurso = ({
   codigo,
   nombre,
   descripcion,
 }: {
-  codigo: string;
-  nombre: string;
+  codigo:       string;
+  nombre:       string;
   descripcion?: string;
 }) => {
   return async (dispatch: AppDispatch) => {
@@ -80,15 +79,14 @@ export const crearMongoCurso = ({
       const resp = await fetchConToken(
         "api/cursos",
         { codigo, nombre, descripcion },
-        "POST"
+        "POST",
       );
       const body = await resp.json();
-
       if (body.ok) {
         dispatch(agregarCurso(body.data));
         dispatch(setCursoActivo(body.data));
         dispatch(endLoadingMongoCurso());
-        return { ok: true, msg: "Curso creado", data: body.data };
+        return { ok: true, data: body.data };
       } else {
         dispatch(setErrorMongoCurso(body.msg));
         return { ok: false, msg: body.msg };
@@ -101,16 +99,80 @@ export const crearMongoCurso = ({
   };
 };
 
-// ─── Asociar curso Canvas al curso Mongo ─────────────────────────
+// ─── Editar datos base del curso ──────────────────────────────────
+
+export const editarMongoCurso = ({
+  curso_id,
+  nombre,
+  descripcion,
+}: {
+  curso_id:     string;
+  nombre?:      string;
+  descripcion?: string;
+}) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingMongoCurso());
+    try {
+      const resp = await fetchConToken(
+        `api/cursos/${curso_id}`,
+        { nombre, descripcion },
+        "PUT",
+      );
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(actualizarCurso(body.data));
+        dispatch(endLoadingMongoCurso());
+        return { ok: true, data: body.data };
+      } else {
+        dispatch(setErrorMongoCurso(body.msg));
+        return { ok: false, msg: body.msg };
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorMongoCurso(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+// ─── Eliminar curso (cascade) ─────────────────────────────────────
+
+export const eliminarMongoCurso = ({ curso_id }: { curso_id: string }) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingMongoCurso());
+    try {
+      const resp = await fetchConToken(
+        `api/cursos/${curso_id}`,
+        {},
+        "DELETE",
+      );
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(eliminarCursoState(curso_id));
+        dispatch(endLoadingMongoCurso());
+        return { ok: true, resumen: body.resumen };
+      } else {
+        dispatch(setErrorMongoCurso(body.msg));
+        return { ok: false, msg: body.msg };
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorMongoCurso(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+// ─── Asociar curso Canvas ─────────────────────────────────────────
 
 export const asociarCanvasCurso = ({
   curso_id,
   canvas_id,
   nombre,
 }: {
-  curso_id: string;
+  curso_id:  string;
   canvas_id: number;
-  nombre: string;
+  nombre:    string;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingMongoCurso());
@@ -118,14 +180,13 @@ export const asociarCanvasCurso = ({
       const resp = await fetchConToken(
         `api/cursos/${curso_id}/canvas-cursos`,
         { canvas_id, nombre },
-        "POST"
+        "POST",
       );
       const body = await resp.json();
-
       if (body.ok) {
         dispatch(actualizarCurso(body.data));
         dispatch(endLoadingMongoCurso());
-        return { ok: true, msg: "Curso Canvas asociado" };
+        return { ok: true };
       } else {
         dispatch(setErrorMongoCurso(body.msg));
         return { ok: false, msg: body.msg };
@@ -144,7 +205,7 @@ export const desactivarCanvasCurso = ({
   curso_id,
   canvas_id,
 }: {
-  curso_id: string;
+  curso_id:  string;
   canvas_id: number;
 }) => {
   return async (dispatch: AppDispatch) => {
@@ -153,14 +214,13 @@ export const desactivarCanvasCurso = ({
       const resp = await fetchConToken(
         `api/cursos/${curso_id}/canvas-cursos/${canvas_id}/desactivar`,
         {},
-        "PATCH"
+        "PATCH",
       );
       const body = await resp.json();
-
       if (body.ok) {
         dispatch(actualizarCurso(body.data));
         dispatch(endLoadingMongoCurso());
-        return { ok: true, msg: "Curso Canvas desactivado" };
+        return { ok: true };
       } else {
         dispatch(setErrorMongoCurso(body.msg));
         return { ok: false, msg: body.msg };
@@ -179,7 +239,7 @@ export const eliminarCanvasCurso = ({
   curso_id,
   canvas_id,
 }: {
-  curso_id: string;
+  curso_id:  string;
   canvas_id: number;
 }) => {
   return async (dispatch: AppDispatch) => {
@@ -188,14 +248,13 @@ export const eliminarCanvasCurso = ({
       const resp = await fetchConToken(
         `api/cursos/${curso_id}/canvas-cursos/${canvas_id}`,
         {},
-        "DELETE"
+        "DELETE",
       );
       const body = await resp.json();
-
       if (body.ok) {
         dispatch(actualizarCurso(body.data));
         dispatch(endLoadingMongoCurso());
-        return { ok: true, msg: "Curso Canvas eliminado" };
+        return { ok: true };
       } else {
         dispatch(setErrorMongoCurso(body.msg));
         return { ok: false, msg: body.msg };

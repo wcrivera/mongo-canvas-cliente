@@ -6,23 +6,32 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
+import AddIcon      from "@mui/icons-material/Add";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
+
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   obtenerMongoCursos,
   crearMongoCurso,
   type IMongoCurso,
 } from "../../store/slices/mongoCurso";
-import MongoCursoCard from "./MongoCursoCard";
+import MongoCursoCard from "./components/MongoCursoCard";
+
+import { ModalEditarCurso } from "./components/ModalEditarCurso";
+import { ModalEliminarCurso } from "./components/ModalEliminarCurso";
+
+// ─── Página principal ─────────────────────────────────────────────────────────
 
 const Inicio = () => {
   const dispatch = useAppDispatch();
   const { cursos, isLoading, error } = useAppSelector((s) => s.mongoCurso);
 
   const [mostrarForm, setMostrarForm] = useState(false);
-  const [form, setForm] = useState({ codigo: "", nombre: "", descripcion: "" });
-  const [guardando, setGuardando] = useState(false);
+  const [form, setForm]               = useState({ codigo: "", nombre: "", descripcion: "" });
+  const [guardando, setGuardando]     = useState(false);
+
+  const [modalEditar,   setModalEditar]   = useState<IMongoCurso | null>(null);
+  const [modalEliminar, setModalEliminar] = useState<IMongoCurso | null>(null);
 
   useEffect(() => {
     dispatch(obtenerMongoCursos());
@@ -38,22 +47,16 @@ const Inicio = () => {
     setMostrarForm(false);
   };
 
-  const handleEditar = (curso: IMongoCurso) => {
-    console.log("Editar", curso._id); // TODO
-  };
-
-  const handleEliminar = (curso_id: string) => {
-    console.log("Eliminar", curso_id); // TODO
-  };
-
   return (
     <div className="min-h-screen bg-[#f0f4f8] p-6">
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl"
-            style={{ backgroundColor: "#4A6D8C" }}>
+          <div
+            className="flex items-center justify-center w-10 h-10 rounded-xl"
+            style={{ backgroundColor: "#4A6D8C" }}
+          >
             <MenuBookIcon sx={{ color: "white", fontSize: 22 }} />
           </div>
           <div>
@@ -87,60 +90,46 @@ const Inicio = () => {
       {mostrarForm && (
         <form
           onSubmit={handleCrear}
-          className="mb-8 rounded-2xl p-6 animate-slideDown"
-          style={{
-            background: "white",
-            border: "1px solid #d9e4ee",
-            boxShadow: "0 4px 16px rgba(74,109,140,0.08)",
-          }}
+          className="bg-white rounded-2xl border border-[#d9e4ee] p-5 mb-6 animate-fadeIn"
         >
-          <Typography variant="subtitle1" sx={{ color: "#2e4154", mb: 3, fontWeight: 600 }}>
+          <Typography variant="subtitle2" sx={{ color: "#4A6D8C", fontWeight: 600, mb: 2 }}>
             Nuevo curso
           </Typography>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
             <TextField
-              label="Código"
-              placeholder="MAT1220"
+              label="Código *"
               value={form.codigo}
               onChange={(e) => setForm((f) => ({ ...f, codigo: e.target.value }))}
-              required
               size="small"
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              fullWidth
+              placeholder="MAT1220"
             />
             <TextField
-              label="Nombre"
-              placeholder="Cálculo 2"
+              label="Nombre *"
               value={form.nombre}
               onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-              required
               size="small"
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              fullWidth
+              className="sm:col-span-2"
+              placeholder="Cálculo II"
             />
           </div>
-
           <TextField
-            label="Descripción (opcional)"
-            placeholder="Descripción breve del curso"
+            label="Descripción"
             value={form.descripcion}
             onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
-            fullWidth
             size="small"
-            sx={{ mb: 4, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+            fullWidth
+            multiline
+            rows={2}
+            sx={{ mb: 3 }}
+            placeholder="Descripción opcional del curso"
           />
-
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="text"
-              onClick={() => setMostrarForm(false)}
-              sx={{ color: "#6793ba", borderRadius: 2 }}
-            >
-              Cancelar
-            </Button>
+          <div className="flex justify-end">
             <Button
               type="submit"
               variant="contained"
-              disabled={guardando}
+              disabled={guardando || !form.codigo.trim() || !form.nombre.trim()}
               startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : undefined}
               sx={{
                 bgcolor: "#4A6D8C",
@@ -185,17 +174,32 @@ const Inicio = () => {
 
       {/* ── Grid de cards ── */}
       {!isLoading && cursos.length > 0 && (
-        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 animate-fadeIn">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 animate-fadeIn">
           {cursos.map((curso) => (
-            <li key={curso._id}>
+            <div key={curso._id}>
               <MongoCursoCard
                 curso={curso}
-                onEditar={handleEditar}
-                onEliminar={handleEliminar}
+                onEditar={(c) => setModalEditar(c)}
+                onEliminar={(c) => setModalEliminar(c)}
               />
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
+      )}
+
+      {/* ── Modales ── */}
+      {modalEditar && (
+        <ModalEditarCurso
+          curso={modalEditar}
+          onClose={() => setModalEditar(null)}
+        />
+      )}
+
+      {modalEliminar && (
+        <ModalEliminarCurso
+          curso={modalEliminar}
+          onClose={() => setModalEliminar(null)}
+        />
       )}
     </div>
   );

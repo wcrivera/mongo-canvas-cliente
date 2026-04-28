@@ -5,28 +5,28 @@ import {
   Card, CardContent, IconButton,
   Tooltip, Typography, Divider, Button,
 } from "@mui/material";
-import EditOutlinedIcon          from "@mui/icons-material/EditOutlined";
-import ArrowForwardIcon          from "@mui/icons-material/ArrowForward";
-import SchoolIcon                from "@mui/icons-material/School";
-import SyncIcon                  from "@mui/icons-material/Sync";
+import EditOutlinedIcon              from "@mui/icons-material/EditOutlined";
+import ArrowForwardIcon              from "@mui/icons-material/ArrowForward";
+import SchoolIcon                    from "@mui/icons-material/School";
+import SyncIcon                      from "@mui/icons-material/Sync";
 import { AddCircleOutlineOutlined, DeleteOutlineOutlined } from "@mui/icons-material";
-import type { IMongoCurso }      from "../../store/slices/mongoCurso";
-import CanvasCursoChip           from "./CanvasCursoChip";
-import ModalAsociarCanvas        from "./ModalAsociarCanvas";
-import ModalSincronizar          from "./ModalSincronizar";
+import type { IMongoCurso }          from "../../../store/slices/mongoCurso";
+import CanvasCursoChip               from "./CanvasCursoChip";
+import ModalAsociarCanvas            from "./ModalAsociarCanvas";
+import ModalSincronizar              from "./ModalSincronizar";
 
 interface Props {
   curso:      IMongoCurso;
   onEditar:   (curso: IMongoCurso) => void;
-  onEliminar: (curso_id: string) => void;
+  onEliminar: (curso: IMongoCurso) => void; // ← ahora recibe el curso completo
 }
 
 const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
   const navigate = useNavigate();
 
-  const [modalAsociar, setModalAsociar]   = useState(false);
-  const [verInactivos, setVerInactivos]   = useState(false);
-  const [modalSync, setModalSync]         = useState<{
+  const [modalAsociar, setModalAsociar] = useState(false);
+  const [verInactivos, setVerInactivos] = useState(false);
+  const [modalSync, setModalSync]       = useState<{
     abierto:         boolean;
     canvas_curso_id: number;
     canvas_nombre:   string;
@@ -105,7 +105,7 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
               <Tooltip title="Eliminar curso">
                 <IconButton
                   size="small"
-                  onClick={() => onEliminar(curso._id)}
+                  onClick={() => onEliminar(curso)} // ← pasa el curso completo
                   sx={{
                     color: "#8daecb",
                     "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" },
@@ -180,19 +180,18 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
               {canvasActivos.map((cc) => (
                 <div key={cc.canvas_id} className="flex items-center gap-2">
                   <div className="flex-1 min-w-0">
-                    <CanvasCursoChip
-                      curso_id={curso._id}
-                      canvasCurso={cc}
-                    />
+                    <CanvasCursoChip curso_id={curso._id} canvasCurso={cc} />
                   </div>
                   <Tooltip title="Sincronizar contenido">
                     <IconButton
                       size="small"
-                      onClick={() => setModalSync({
-                        abierto:         true,
-                        canvas_curso_id: cc.canvas_id,
-                        canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
-                      })}
+                      onClick={() =>
+                        setModalSync({
+                          abierto:         true,
+                          canvas_curso_id: cc.canvas_id,
+                          canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
+                        })
+                      }
                       sx={{
                         color: "#8daecb",
                         flexShrink: 0,
@@ -221,19 +220,18 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
                     {canvasInactivos.map((cc) => (
                       <div key={cc.canvas_id} className="flex items-center gap-2">
                         <div className="flex-1 min-w-0">
-                          <CanvasCursoChip
-                            curso_id={curso._id}
-                            canvasCurso={cc}
-                          />
+                          <CanvasCursoChip curso_id={curso._id} canvasCurso={cc} />
                         </div>
                         <Tooltip title="Sincronizar contenido">
                           <IconButton
                             size="small"
-                            onClick={() => setModalSync({
-                              abierto:         true,
-                              canvas_curso_id: cc.canvas_id,
-                              canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
-                            })}
+                            onClick={() =>
+                              setModalSync({
+                                abierto:         true,
+                                canvas_curso_id: cc.canvas_id,
+                                canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
+                              })
+                            }
                             sx={{
                               color: "#8daecb",
                               flexShrink: 0,

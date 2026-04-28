@@ -6,12 +6,12 @@ import {
 } from "@mui/material";
 // import PauseCircleOutlineIcon from "@mui/icons-material/PauseCircleOutline";
 // import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import { useAppDispatch } from "../../store/hooks";
+import { useAppDispatch } from "../../../store/hooks";
 import {
   desactivarCanvasCurso,
   eliminarCanvasCurso,
-} from "../../store/slices/mongoCurso";
-import type { ICanvasCursoAsociado } from "../../store/slices/mongoCurso";
+} from "../../../store/slices/mongoCurso";
+import type { ICanvasCursoAsociado } from "../../../store/slices/mongoCurso";
 import { DeleteOutlineOutlined, PauseCircleFilledOutlined } from "@mui/icons-material";
 
 interface Props {

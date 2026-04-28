@@ -215,6 +215,7 @@ export const cambiarPositionCapitulo = ({
   direction: "up" | "down";
 }) => {
   return async (dispatch: AppDispatch) => {
+    console.log('hola')
     dispatch(startLoadingCapitulo());
     try {
       const resp = await fetchConToken(

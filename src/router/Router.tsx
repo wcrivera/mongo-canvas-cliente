@@ -11,15 +11,14 @@ import EditorDiapositiva from "../pages/diapositiva/EditorDiapositiva";
 import AuthCallback      from "../pages/auth/AuthCallback";
 import Login             from "../pages/auth/Login";
 import TokenCanvas       from "../pages/auth/TokenCanvas";
-import EditorTest        from "../pages/editor-test/EditorTest";
 
 const Router = () => {
   return (
     <BrowserRouter>
       <Routes>
         {/* Rutas públicas */}
-        <Route path="/login"          element={<Login />} />
-        <Route path="/auth/callback"  element={<AuthCallback />} />
+        <Route path="/login"         element={<Login />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
 
         <Route
           path="/token-canvas"
@@ -74,9 +73,7 @@ const Router = () => {
           element={<PrivateRoute><Ejercicios /></PrivateRoute>}
         />
 
-        <Route path="/editor-test" element={<EditorTest />} />
-
-        {/* Redirección */}
+        {/* Redirección por defecto */}
         <Route path="/*" element={<Navigate to="/inicio" replace />} />
       </Routes>
     </BrowserRouter>
