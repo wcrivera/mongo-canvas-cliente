@@ -9,7 +9,8 @@ import {
 } from "@mui/material";
 import AddIcon    from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { CKEditorField } from "../CKEditor";
+import { useAppSelector } from "../../store/hooks";
+import MathTextEditor from "../CKEditor/MathTextEditor";
 
 export interface IOpcionEditor {
   texto:       string;
@@ -66,7 +67,8 @@ const PreguntaEditor = ({
   respNum,
   onRespNumChange,
 }: Props) => {
-  const esMultiple      = tipo === "multiple_answers";
+  const siglaCurso  = useAppSelector(s => s.mongoCurso.cursoActivo?.codigo ?? "");
+  const esMultiple  = tipo === "multiple_answers";
   const mostrarOpciones =
     tipo === "multiple_choice" ||
     tipo === "multiple_answers" ||
@@ -104,67 +106,77 @@ const PreguntaEditor = ({
     <div className="flex flex-col gap-4">
 
       {/* ── Enunciado ── */}
-      <CKEditorField
-        initialContent={enunciado}
+      <MathTextEditor
+        initialData={enunciado}
         onChange={onEnunciadoChange}
-        placeholder="Escribe el enunciado de la pregunta..."
-        minHeight="160px"
+        siglaCurso={siglaCurso}
       />
 
       {/* ── Puntos ── */}
       <div className="flex items-center gap-2">
         <TextField
-          label="Puntos"
-          type="number"
-          value={puntos}
+          label="Puntos" type="number" value={puntos}
           onChange={(e) => onPuntosChange(Number(e.target.value))}
           size="small"
           sx={{ width: 100, "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
         />
       </div>
 
-      {/* ── Opciones (multiple_choice, multiple_answers, true_false) ── */}
+      {/* ── Opciones ── */}
       {mostrarOpciones && (
         <>
           <Divider sx={{ borderColor: "#f0f0f0" }} />
           <div className="flex flex-col gap-2">
             <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              {esMultiple ? "Respuestas correctas (puede haber varias)" : "Opciones (marca la correcta)"}
+              {esMultiple ? "Opciones — marca todas las correctas" : "Opciones — marca la correcta"}
             </Typography>
-            {opciones.map((op, idx) => (
+
+            {(esTrueFalse
+              ? [
+                  { texto: "Verdadero", es_correcta: opciones[0]?.es_correcta ?? false },
+                  { texto: "Falso",     es_correcta: opciones[1]?.es_correcta ?? false },
+                ]
+              : opciones
+            ).map((op, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                <Checkbox
-                  size="small"
-                  checked={op.es_correcta}
-                  onChange={() => handleOpcionCorrecta(idx)}
-                  sx={{ color: "#8daecb", "&.Mui-checked": { color: "#4A6D8C" }, p: 0.5 }}
-                />
-                <TextField
-                  value={op.texto}
-                  onChange={(e) => handleOpcionTexto(idx, e.target.value)}
-                  size="small"
-                  fullWidth
-                  placeholder={`Opción ${idx + 1}`}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: "0.875rem" } }}
-                />
-                {!esTrueFalse && opciones.length > 2 && (
-                  <IconButton
-                    size="small"
-                    onClick={() => eliminarOpcion(idx)}
-                    sx={{ color: "#8daecb", "&:hover": { color: "#ef4444" } }}
-                  >
+                {esMultiple ? (
+                  <Checkbox
+                    checked={op.es_correcta}
+                    onChange={() => handleOpcionCorrecta(idx)}
+                    size="small" sx={{ color: "#4A6D8C" }}
+                  />
+                ) : (
+                  <input
+                    type="radio" name="correcta-editor" checked={op.es_correcta}
+                    onChange={() => handleOpcionCorrecta(idx)}
+                    style={{ accentColor: "#4A6D8C", flexShrink: 0 }}
+                  />
+                )}
+
+                {esTrueFalse ? (
+                  <Typography variant="body2" sx={{ color: "#3c5770" }}>{op.texto}</Typography>
+                ) : (
+                  <TextField
+                    value={op.texto}
+                    onChange={(e) => handleOpcionTexto(idx, e.target.value)}
+                    placeholder={`Opción ${idx + 1}`}
+                    size="small" fullWidth
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+                  />
+                )}
+
+                {!esTrueFalse && (
+                  <IconButton size="small" onClick={() => eliminarOpcion(idx)}
+                    sx={{ color: "#c9dae8", "&:hover": { color: "#ef4444" } }}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 )}
               </div>
             ))}
+
             {!esTrueFalse && (
-              <Button
-                size="small"
-                startIcon={<AddIcon />}
-                onClick={agregarOpcion}
-                sx={{ color: "#8daecb", alignSelf: "flex-start", "&:hover": { color: "#4A6D8C" } }}
-              >
+              <Button size="small" startIcon={<AddIcon />} onClick={agregarOpcion}
+                sx={{ color: "#4A6D8C", alignSelf: "flex-start", mt: 1 }}>
                 Agregar opción
               </Button>
             )}
@@ -172,55 +184,40 @@ const PreguntaEditor = ({
         </>
       )}
 
-      {/* ── Matching ── */}
+      {/* ── Pares ── */}
       {tipo === "matching" && (
         <>
           <Divider sx={{ borderColor: "#f0f0f0" }} />
           <div className="flex flex-col gap-2">
             <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Pares de coincidencia
+              Pares — término / definición
             </Typography>
             {pares.map((par, idx) => (
               <div key={idx} className="flex items-center gap-2">
-                <TextField
-                  value={par.izquierda}
-                  onChange={(e) => handleParIzq(idx, e.target.value)}
-                  size="small"
-                  placeholder="Término"
-                  sx={{ flex: 1, "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: "0.875rem" } }}
-                />
-                <span style={{ color: "#8daecb", fontSize: 18 }}>↔</span>
-                <TextField
-                  value={par.derecha}
-                  onChange={(e) => handleParDer(idx, e.target.value)}
-                  size="small"
-                  placeholder="Definición"
-                  sx={{ flex: 1, "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: "0.875rem" } }}
-                />
+                <TextField value={par.izquierda} onChange={e => handleParIzq(idx, e.target.value)}
+                  placeholder="Término" size="small" fullWidth
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+                <Typography sx={{ color: "#8daecb", flexShrink: 0 }}>↔</Typography>
+                <TextField value={par.derecha} onChange={e => handleParDer(idx, e.target.value)}
+                  placeholder="Definición" size="small" fullWidth
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
                 {pares.length > 2 && (
-                  <IconButton
-                    size="small"
-                    onClick={() => eliminarPar(idx)}
-                    sx={{ color: "#8daecb", "&:hover": { color: "#ef4444" } }}
-                  >
+                  <IconButton size="small" onClick={() => eliminarPar(idx)}
+                    sx={{ color: "#c9dae8", "&:hover": { color: "#ef4444" } }}>
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 )}
               </div>
             ))}
-            <Button
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={agregarPar}
-              sx={{ color: "#8daecb", alignSelf: "flex-start", "&:hover": { color: "#4A6D8C" } }}
-            >
+            <Button size="small" startIcon={<AddIcon />} onClick={agregarPar}
+              sx={{ color: "#4A6D8C", alignSelf: "flex-start", mt: 1 }}>
               Agregar par
             </Button>
           </div>
         </>
       )}
 
-      {/* ── Numérica ── */}
+      {/* ── Respuesta numérica ── */}
       {tipo === "numerical" && (
         <>
           <Divider sx={{ borderColor: "#f0f0f0" }} />
@@ -228,15 +225,12 @@ const PreguntaEditor = ({
             <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
               Respuesta numérica
             </Typography>
-            <FormControl size="small" sx={{ maxWidth: 200 }}>
-              <InputLabel>Tipo de respuesta</InputLabel>
-              <Select
-                value={respNum.tipo}
-                label="Tipo de respuesta"
-                onChange={(e) => onRespNumChange({ ...respNum, tipo: e.target.value as "exact" | "range" | "precision" })}
-                sx={{ borderRadius: 2 }}
-              >
-                <MenuItem value="exact">Exacto con margen</MenuItem>
+            <FormControl size="small" fullWidth>
+              <InputLabel>Tipo</InputLabel>
+              <Select value={respNum.tipo} label="Tipo"
+                onChange={e => onRespNumChange({ ...respNum, tipo: e.target.value as IRespuestaNumEditor["tipo"] })}
+                sx={{ borderRadius: 2 }}>
+                <MenuItem value="exact">Exacto (con margen)</MenuItem>
                 <MenuItem value="range">Rango</MenuItem>
                 <MenuItem value="precision">Precisión decimal</MenuItem>
               </Select>
@@ -244,83 +238,29 @@ const PreguntaEditor = ({
 
             {respNum.tipo === "exact" && (
               <div className="grid grid-cols-2 gap-3">
-                <TextField
-                  label="Respuesta exacta"
-                  type="number"
-                  value={respNum.exacto}
-                  onChange={(e) => onRespNumChange({ ...respNum, exacto: Number(e.target.value) })}
-                  size="small"
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                />
-                <TextField
-                  label="Margen de error ±"
-                  type="number"
-                  value={respNum.margen}
-                  onChange={(e) => onRespNumChange({ ...respNum, margen: Number(e.target.value) })}
-                  size="small"
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                />
+                <TextField label="Valor exacto" type="number" size="small" value={respNum.exacto}
+                  onChange={e => onRespNumChange({ ...respNum, exacto: Number(e.target.value) })}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+                <TextField label="Margen ±" type="number" size="small" value={respNum.margen}
+                  onChange={e => onRespNumChange({ ...respNum, margen: Number(e.target.value) })}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
               </div>
             )}
-
             {respNum.tipo === "range" && (
               <div className="grid grid-cols-2 gap-3">
-                <TextField
-                  label="Mínimo"
-                  type="number"
-                  value={respNum.minimo}
-                  onChange={(e) => onRespNumChange({ ...respNum, minimo: Number(e.target.value) })}
-                  size="small"
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                />
-                <TextField
-                  label="Máximo"
-                  type="number"
-                  value={respNum.maximo}
-                  onChange={(e) => onRespNumChange({ ...respNum, maximo: Number(e.target.value) })}
-                  size="small"
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                />
+                <TextField label="Mínimo" type="number" size="small" value={respNum.minimo}
+                  onChange={e => onRespNumChange({ ...respNum, minimo: Number(e.target.value) })}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
+                <TextField label="Máximo" type="number" size="small" value={respNum.maximo}
+                  onChange={e => onRespNumChange({ ...respNum, maximo: Number(e.target.value) })}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
               </div>
             )}
-
             {respNum.tipo === "precision" && (
-              <div className="grid grid-cols-2 gap-3">
-                <TextField
-                  label="Respuesta exacta"
-                  type="number"
-                  value={respNum.exacto}
-                  onChange={(e) => onRespNumChange({ ...respNum, exacto: Number(e.target.value) })}
-                  size="small"
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                />
-                <TextField
-                  label="Decimales requeridos"
-                  type="number"
-                  value={respNum.precision}
-                  onChange={(e) => onRespNumChange({ ...respNum, precision: Number(e.target.value) })}
-                  size="small"
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                />
-              </div>
+              <TextField label="Decimales de precisión" type="number" size="small" value={respNum.precision}
+                onChange={e => onRespNumChange({ ...respNum, precision: Number(e.target.value) })}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
             )}
-          </div>
-        </>
-      )}
-
-      {/* ── Short answer / Essay — sin campos adicionales ── */}
-      {(tipo === "short_answer" || tipo === "essay") && (
-        <>
-          <Divider sx={{ borderColor: "#f0f0f0" }} />
-          <div
-            className="rounded-xl px-4 py-3"
-            style={{ background: "#f0f4f8", border: "1px solid #d9e4ee" }}
-          >
-            <Typography variant="caption" sx={{ color: "#6793ba", fontStyle: "italic" }}>
-              {tipo === "short_answer"
-                ? "El estudiante ingresará una respuesta corta de texto libre"
-                : "El estudiante redactará un ensayo o desarrollo largo"}
-            </Typography>
           </div>
         </>
       )}

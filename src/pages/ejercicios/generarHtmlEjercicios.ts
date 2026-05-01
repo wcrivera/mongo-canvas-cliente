@@ -1,7 +1,7 @@
 import type { IEjercicio }  from "../../store/slices/ejercicio";
 import type { IMongoCurso } from "../../store/slices/mongoCurso";
 import type { ICapitulo }   from "../../store/slices/capitulo";
-import { toCanvasHTML } from "../../components/Editor";
+import { toCanvasHTML } from "../../components/CKEditor/canvasHTML";
 
 interface GenerarHtmlEjerciciosParams {
   curso:           IMongoCurso;

@@ -9,13 +9,13 @@ import {
   CircularProgress,
 } from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { useAppDispatch } from "../../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import {
   crearSolucionTexto,
   editarSolucionTexto,
 } from "../../../store/slices/solucionTexto";
 import type { ISolucionTexto } from "../../../store/slices/solucionTexto";
-import { LatexEditor, toEditorHTML } from "../../../components/Editor";
+import MathTextEditor from "../../../components/CKEditor/MathTextEditor";
 
 interface Props {
   ayudantia_id: string;
@@ -28,10 +28,12 @@ const esVacio = (html: string) =>
   !html || html.replace(/<[^>]*>/g, "").trim() === "";
 
 const ModalSolucionTexto = ({ ayudantia_id, solucion, onClose }: Props) => {
-  const dispatch = useAppDispatch();
-  const [texto, setTexto]       = useState(solucion?.texto ?? "");
+  const dispatch   = useAppDispatch();
+  const siglaCurso = useAppSelector(s => s.mongoCurso.cursoActivo?.codigo ?? "");
+
+  const [texto,    setTexto]    = useState(solucion?.texto ?? "");
   const [guardando, setGuardando] = useState(false);
-  const [error, setError]         = useState<string | null>(null);
+  const [error,    setError]    = useState<string | null>(null);
 
   const esEdicion = !!solucion;
 
@@ -83,11 +85,10 @@ const ModalSolucionTexto = ({ ayudantia_id, solucion, onClose }: Props) => {
       </DialogTitle>
 
       <DialogContent sx={{ pt: 3, pb: 1 }}>
-        <LatexEditor
-          initialContent={texto.trimStart().startsWith("<") ? texto : toEditorHTML(texto)}
+        <MathTextEditor
+          initialData={texto}
           onChange={setTexto}
-          placeholder="Escribe la solución… usa f(x) para LaTeX inline y ∑ para bloques"
-          minHeight="260px"
+          siglaCurso={siglaCurso}
         />
 
         {error && (

@@ -17,17 +17,16 @@ import {
 import AddIcon    from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import { useAppDispatch } from "../../store/hooks";
-import { crearEjercicio }  from "../../store/slices/ejercicio";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { crearEjercicio } from "../../store/slices/ejercicio";
 import type {
   TipoPreguntaEjercicio,
   IOpcionEjercicio,
   IParEjercicio,
   IRespuestaNumericaEjercicio,
 } from "../../store/slices/ejercicio";
-import { LatexEditor } from "../../components/Editor";
+import MathTextEditor from "../../components/CKEditor/MathTextEditor";
 
-// El editor devuelve "<p></p>" cuando está vacío
 const enunciadoVacio = (html: string) =>
   !html || html.replace(/<[^>]*>/g, "").trim() === "";
 
@@ -48,7 +47,8 @@ interface Props {
 }
 
 const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
-  const dispatch = useAppDispatch();
+  const dispatch   = useAppDispatch();
+  const siglaCurso = useAppSelector(s => s.mongoCurso.cursoActivo?.codigo ?? "");
 
   const [form, setForm] = useState({
     nombre:        "",
@@ -71,9 +71,9 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
   });
 
   const [guardando, setGuardando] = useState(false);
-  const [error, setError]         = useState<string | null>(null);
+  const [error,     setError]     = useState<string | null>(null);
 
-  // ── Cambio de tipo ───────────────────────────────────────────────────────
+  // ── Cambio de tipo ────────────────────────────────────────────────────────
   const handleTipoChange = (tipo: TipoPreguntaEjercicio) => {
     setForm((f) => ({ ...f, tipo_pregunta: tipo }));
     if (tipo === "true_false") {
@@ -89,7 +89,7 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
     }
   };
 
-  // ── Handlers opciones ────────────────────────────────────────────────────
+  // ── Handlers opciones ─────────────────────────────────────────────────────
   const handleOpcionCorrecta = (idx: number, multiple: boolean) => {
     if (multiple) {
       setOpciones((ops) =>
@@ -102,13 +102,13 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
     }
   };
 
-  // ── Handlers pares ───────────────────────────────────────────────────────
+  // ── Handlers pares ────────────────────────────────────────────────────────
   const handleParIzq = (idx: number, v: string) =>
     setPares((ps) => ps.map((p, i) => i === idx ? { ...p, izquierda: v } : p));
   const handleParDer = (idx: number, v: string) =>
     setPares((ps) => ps.map((p, i) => i === idx ? { ...p, derecha: v } : p));
 
-  // ── Validación y guardado ────────────────────────────────────────────────
+  // ── Validación y guardado ─────────────────────────────────────────────────
   const handleGuardar = async () => {
     if (!form.nombre.trim() || enunciadoVacio(form.enunciado)) {
       setError("Nombre y enunciado son requeridos");
@@ -158,7 +158,7 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
     onCreado();
   };
 
-  const esMultiple    = form.tipo_pregunta === "multiple_answers";
+  const esMultiple     = form.tipo_pregunta === "multiple_answers";
   const mostrarOpciones =
     form.tipo_pregunta === "multiple_choice"  ||
     form.tipo_pregunta === "multiple_answers" ||
@@ -167,11 +167,7 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
   return (
     <div
       className="rounded-2xl p-5 animate-slideDown"
-      style={{
-        background: "white",
-        border:     "1px solid #d9e4ee",
-        boxShadow:  "0 4px 16px rgba(74,109,140,0.08)",
-      }}
+      style={{ background: "white", border: "1px solid #d9e4ee", boxShadow: "0 4px 16px rgba(74,109,140,0.08)" }}
     >
       <Typography variant="subtitle2" sx={{ color: "#2e4154", mb: 3, fontWeight: 600 }}>
         Nuevo ejercicio
@@ -185,8 +181,7 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
           placeholder="ej: Ejercicio 1"
           value={form.nombre}
           onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-          size="small"
-          fullWidth
+          size="small" fullWidth
           sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
         />
 
@@ -205,11 +200,8 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
               ))}
             </Select>
           </FormControl>
-
           <TextField
-            label="Puntos"
-            type="number"
-            value={form.puntos}
+            label="Puntos" type="number" value={form.puntos}
             onChange={(e) => setForm((f) => ({ ...f, puntos: Number(e.target.value) }))}
             size="small"
             sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
@@ -218,54 +210,54 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
 
         {/* Enunciado */}
         <div>
-          <Typography
-            variant="caption"
-            sx={{ color: "#6793ba", fontWeight: 600, display: "block", mb: 1 }}
-          >
+          <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600, display: "block", mb: 1 }}>
             Enunciado
           </Typography>
-          <LatexEditor
-            initialContent={form.enunciado}
+          <MathTextEditor
+            initialData={form.enunciado}
             onChange={(html) => setForm((f) => ({ ...f, enunciado: html }))}
-            placeholder="Escribe el enunciado…"
-            minHeight="140px"
+            siglaCurso={siglaCurso}
           />
+          {error && (
+            <Typography variant="caption" sx={{ color: "#ef4444", mt: 0.5, display: "block" }}>
+              {error}
+            </Typography>
+          )}
         </div>
 
         <Divider />
 
-        {/* ── Opciones (multiple_choice, multiple_answers, true_false) ── */}
+        {/* ── Opciones ── */}
         {mostrarOpciones && (
           <div className="flex flex-col gap-2">
             <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
-              {esMultiple
-                ? "Opciones — marca todas las correctas"
-                : "Opciones — marca la correcta"}
+              {esMultiple ? "Opciones — marca todas las correctas" : "Opciones — marca la correcta"}
             </Typography>
 
-            {opciones.map((op, idx) => (
+            {(form.tipo_pregunta === "true_false"
+              ? [
+                  { texto: "Verdadero", es_correcta: opciones[0]?.es_correcta ?? false },
+                  { texto: "Falso",     es_correcta: opciones[1]?.es_correcta ?? false },
+                ]
+              : opciones
+            ).map((op, idx) => (
               <div key={idx} className="flex items-center gap-2">
                 {esMultiple ? (
                   <Checkbox
                     checked={op.es_correcta}
                     onChange={() => handleOpcionCorrecta(idx, true)}
-                    size="small"
-                    sx={{ color: "#4A6D8C" }}
+                    size="small" sx={{ color: "#4A6D8C" }}
                   />
                 ) : (
                   <input
-                    type="radio"
-                    name="correcta"
-                    checked={op.es_correcta}
+                    type="radio" name="correcta" checked={op.es_correcta}
                     onChange={() => handleOpcionCorrecta(idx, false)}
                     style={{ accentColor: "#4A6D8C", flexShrink: 0 }}
                   />
                 )}
 
                 {form.tipo_pregunta === "true_false" ? (
-                  <Typography variant="body2" sx={{ color: "#3c5770" }}>
-                    {op.texto}
-                  </Typography>
+                  <Typography variant="body2" sx={{ color: "#3c5770" }}>{op.texto}</Typography>
                 ) : (
                   <TextField
                     value={op.texto}
@@ -275,8 +267,7 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
                       )
                     }
                     placeholder={`Opción ${idx + 1}`}
-                    size="small"
-                    fullWidth
+                    size="small" fullWidth
                     sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                   />
                 )}
@@ -295,8 +286,7 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
 
             {(form.tipo_pregunta === "multiple_choice" || form.tipo_pregunta === "multiple_answers") && (
               <Button
-                size="small"
-                startIcon={<AddIcon />}
+                size="small" startIcon={<AddIcon />}
                 onClick={() => setOpciones((ops) => [...ops, { texto: "", es_correcta: false }])}
                 sx={{ color: "#4A6D8C", alignSelf: "flex-start", mt: 1 }}
               >
@@ -306,7 +296,7 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
           </div>
         )}
 
-        {/* ── Pares de coincidencia (matching) ── */}
+        {/* ── Pares ── */}
         {form.tipo_pregunta === "matching" && (
           <div className="flex flex-col gap-2">
             <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
@@ -317,18 +307,14 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
                 <TextField
                   value={par.izquierda}
                   onChange={(e) => handleParIzq(idx, e.target.value)}
-                  placeholder="Término"
-                  size="small"
-                  fullWidth
+                  placeholder="Término" size="small" fullWidth
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
                 <Typography sx={{ color: "#8daecb", flexShrink: 0 }}>↔</Typography>
                 <TextField
                   value={par.derecha}
                   onChange={(e) => handleParDer(idx, e.target.value)}
-                  placeholder="Definición"
-                  size="small"
-                  fullWidth
+                  placeholder="Definición" size="small" fullWidth
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
                 {pares.length > 2 && (
@@ -343,8 +329,7 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
               </div>
             ))}
             <Button
-              size="small"
-              startIcon={<AddIcon />}
+              size="small" startIcon={<AddIcon />}
               onClick={() => setPares((ps) => [...ps, { izquierda: "", derecha: "" }])}
               sx={{ color: "#4A6D8C", alignSelf: "flex-start", mt: 1 }}
             >
@@ -353,25 +338,21 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
           </div>
         )}
 
-        {/* ── Respuesta numérica (numerical) ── */}
+        {/* ── Respuesta numérica ── */}
         {form.tipo_pregunta === "numerical" && (
           <div className="flex flex-col gap-3">
             <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
               Configuración de respuesta numérica
             </Typography>
-
             <FormControl size="small" fullWidth>
               <InputLabel>Tipo de respuesta</InputLabel>
               <Select
-                value={respNum.tipo}
-                label="Tipo de respuesta"
-                onChange={(e) =>
-                  setRespNum((r) => ({ ...r, tipo: e.target.value as "exact" | "range" | "precision" }))
-                }
+                value={respNum.tipo} label="Tipo de respuesta"
+                onChange={(e) => setRespNum((r) => ({ ...r, tipo: e.target.value as IRespuestaNumericaEjercicio["tipo"] }))}
                 sx={{ borderRadius: 2 }}
               >
-                <MenuItem value="exact">Valor exacto (con margen)</MenuItem>
-                <MenuItem value="range">Rango (mínimo — máximo)</MenuItem>
+                <MenuItem value="exact">Exacto (con margen)</MenuItem>
+                <MenuItem value="range">Rango</MenuItem>
                 <MenuItem value="precision">Precisión decimal</MenuItem>
               </Select>
             </FormControl>
@@ -379,124 +360,79 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
             {respNum.tipo === "exact" && (
               <div className="grid grid-cols-2 gap-3">
                 <TextField
-                  label="Respuesta exacta"
-                  type="number"
-                  size="small"
-                  value={respNum.exacto}
+                  label="Valor exacto" type="number" size="small" value={respNum.exacto}
                   onChange={(e) => setRespNum((r) => ({ ...r, exacto: Number(e.target.value) }))}
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
                 <TextField
-                  label="Margen de error (±)"
-                  type="number"
-                  size="small"
-                  value={respNum.margen}
+                  label="Margen ±" type="number" size="small" value={respNum.margen}
                   onChange={(e) => setRespNum((r) => ({ ...r, margen: Number(e.target.value) }))}
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
               </div>
             )}
-
             {respNum.tipo === "range" && (
               <div className="grid grid-cols-2 gap-3">
                 <TextField
-                  label="Valor mínimo"
-                  type="number"
-                  size="small"
-                  value={respNum.minimo}
+                  label="Mínimo" type="number" size="small" value={respNum.minimo}
                   onChange={(e) => setRespNum((r) => ({ ...r, minimo: Number(e.target.value) }))}
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
                 <TextField
-                  label="Valor máximo"
-                  type="number"
-                  size="small"
-                  value={respNum.maximo}
+                  label="Máximo" type="number" size="small" value={respNum.maximo}
                   onChange={(e) => setRespNum((r) => ({ ...r, maximo: Number(e.target.value) }))}
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
                 />
               </div>
             )}
-
             {respNum.tipo === "precision" && (
-              <div className="grid grid-cols-2 gap-3">
-                <TextField
-                  label="Respuesta exacta"
-                  type="number"
-                  size="small"
-                  value={respNum.exacto}
-                  onChange={(e) => setRespNum((r) => ({ ...r, exacto: Number(e.target.value) }))}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                />
-                <TextField
-                  label="Decimales requeridos"
-                  type="number"
-                  size="small"
-                  value={respNum.precision}
-                  onChange={(e) => setRespNum((r) => ({ ...r, precision: Number(e.target.value) }))}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                />
-              </div>
+              <TextField
+                label="Decimales de precisión" type="number" size="small" value={respNum.precision}
+                onChange={(e) => setRespNum((r) => ({ ...r, precision: Number(e.target.value) }))}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
+              />
             )}
           </div>
         )}
 
-        {/* ── Info tipos sin corrección automática ── */}
-        {(form.tipo_pregunta === "essay" || form.tipo_pregunta === "short_answer") && (
-          <Typography variant="caption" sx={{ color: "#8daecb" }}>
-            {form.tipo_pregunta === "essay"
-              ? "El alumno escribirá su respuesta libremente. No se corrige automáticamente."
-              : "El alumno escribirá una respuesta corta de texto."}
-          </Typography>
-        )}
-
-        {/* Publicado */}
+        {/* ── Publicar ── */}
         <FormControlLabel
           control={
             <Switch
               checked={form.published}
               onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))}
-              sx={{ "& .MuiSwitch-thumb": { bgcolor: form.published ? "#4A6D8C" : "#ccc" } }}
+              sx={{ "& .MuiSwitch-switchBase.Mui-checked": { color: "#4A6D8C" } }}
             />
           }
           label={
-            <Typography variant="body2" sx={{ color: "#3c5770" }}>
-              {form.published ? "Publicado" : "No publicado"}
+            <Typography variant="body2" sx={{ color: "#6793ba" }}>
+              Publicar inmediatamente
             </Typography>
           }
         />
 
-        {error && (
-          <Typography variant="caption" sx={{ color: "#ef4444" }}>
-            {error}
-          </Typography>
-        )}
-      </div>
+        <Divider />
 
-      <div className="flex justify-end gap-3 mt-4">
-        <Button
-          variant="text"
-          onClick={onCancelar}
-          sx={{ color: "#6793ba", borderRadius: 2 }}
-        >
-          Cancelar
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleGuardar}
-          disabled={guardando}
-          startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : undefined}
-          sx={{
-            bgcolor:    "#4A6D8C",
-            borderRadius: 2,
-            px:         3,
-            fontWeight: 600,
-            boxShadow:  "none",
-            "&:hover":  { bgcolor: "#3c5770", boxShadow: "none" },
-          }}
-        >
-          {guardando ? "Creando..." : "Crear ejercicio"}
-        </Button>
+        {/* ── Acciones ── */}
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={onCancelar} variant="text"
+            sx={{ color: "#6793ba", borderRadius: 2 }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleGuardar} variant="contained" disabled={guardando}
+            startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : undefined}
+            sx={{
+              bgcolor: "#4A6D8C", borderRadius: 2, px: 3, fontWeight: 600,
+              boxShadow: "none", "&:hover": { bgcolor: "#3c5770", boxShadow: "none" },
+            }}
+          >
+            {guardando ? "Guardando..." : "Guardar ejercicio"}
+          </Button>
+        </div>
+
       </div>
     </div>
   );

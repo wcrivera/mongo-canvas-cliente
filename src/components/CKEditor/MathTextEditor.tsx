@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useCallback } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
   ClassicEditor,
@@ -12,213 +12,243 @@ import {
   Link,
   List,
   BlockQuote,
-  // Undo,
   Alignment,
   FontSize,
   FontColor,
-  // Table,
-  TableToolbar,
-  // HorizontalLine,
   Code,
+  Table,
+  TableToolbar,
+  SourceEditing,
+  Image,
+  ImageToolbar,
+  ImageUpload,
+  ImageResize,
+  ImageResizeEditing,
+  ImageResizeHandles,
+  ImageInsert,
   type EditorConfig,
   type ViewDowncastWriter,
   type Editor,
 } from "ckeditor5";
 
 import "ckeditor5/ckeditor5.css";
-import { TimestampPlugin } from "./plugins/TimestampPlugin";
+
+import { MathPlugin, type MathPluginConfig } from "./plugins/MathPlugin";
+import { InlineTablePlugin } from "./plugins/InlineTablePlugin";
+import { ImageUploadPlugin, type ImageUploadPluginConfig } from "./plugins/ImageUploadPlugin";
+import { InlineStylesPlugin } from "./plugins/InlineStylesPlugin";
+import { InlineHeadingPlugin } from "./plugins/InlineHeadingPlugin";
+import { InsertImageUrlPlugin, type InsertImageUrlPluginConfig } from "./plugins/InsertImageUrlPlugin";
+import { InsertImageUrlModal } from "./components/InsertImageUrlModal";
 import { MathEditModal } from "./components/MathEditModal";
 
 interface EditorProps {
   initialData?: string;
   onChange?: (data: string) => void;
+  siglaCurso?: string;
 }
 
-const editorConfig: EditorConfig = {
-  licenseKey: "GPL",
-  plugins: [
-    Essentials,
-    Paragraph,
-    Bold,
-    Italic,
-    Underline,
-    Strikethrough,
-    Paragraph,
-    Heading,
-    Link,
-    List,
-    BlockQuote,
-    // Undo,
-    Alignment,
-    FontSize,
-    FontColor,
-    // Table,
-    TableToolbar,
-    // HorizontalLine,
-    Code,
-    TimestampPlugin,
-  ],
-  toolbar: {
-    items: [
-      "undo",
-      "redo",
-      "|",
-      "heading",
-      "|",
-      "bold",
-      "italic",
-      "underline",
-      "strikethrough",
-      "code",
-      "|",
-      "fontSize",
-      "fontColor",
-      "|",
-      "alignment",
-      "|",
-      "link",
-      "bulletedList",
-      "numberedList",
-      "blockQuote",
-      "|",
-      "insertTable",
-      // "horizontalLine",
-      "|",
-      "timestamp",
-    ],
-    shouldNotGroupWhenFull: true,
-  },
-  // table: {
-  //   contentToolbar: ["tableColumn", "tableRow", "mergeTableCells"],
-  // },
-  heading: {
-    options: [
-      {
-        model: "paragraph",
-        title: "Paragraph",
-        class: "ck-heading_paragraph",
-      },
-      {
-        model: "heading1",
-        view: "h1",
-        title: "Heading 1",
-        class: "ck-heading_heading1",
-      },
-      {
-        model: "heading2",
-        view: "h2",
-        title: "Heading 2",
-        class: "ck-heading_heading2",
-      },
-      {
-        model: "heading3",
-        view: "h3",
-        title: "Heading 3",
-        class: "ck-heading_heading3",
-      },
-    ],
-  },
-  // placeholder: "Start writing your document here...",
+interface ModalState {
+  open: boolean;
+  latex: string;
+  type: "inline" | "block";
+  onSave: ((latex: string, type: "inline" | "block") => void) | null;
+}
+
+interface UrlModalState {
+  open: boolean;
+  tab?: 0 | 1;
+}
+
+const MODAL_CLOSED: ModalState = {
+  open: false,
+  latex: "",
+  type: "inline",
+  onSave: null,
 };
 
+const BASE_PLUGINS = [
+  Essentials,
+  Paragraph,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  Heading,
+  Link,
+  List,
+  BlockQuote,
+  Alignment,
+  FontSize,
+  FontColor,
+  Code,
+  Table,
+  TableToolbar,
+  SourceEditing,
+  Image,
+  ImageToolbar,
+  ImageUpload,
+  ImageResize,
+  ImageResizeEditing,
+  ImageResizeHandles,
+  ImageInsert,
+  InlineTablePlugin,
+  ImageUploadPlugin,
+  InsertImageUrlPlugin,
+  MathPlugin,
+  InlineStylesPlugin,
+  InlineHeadingPlugin,
+];
+
+const TOOLBAR_ITEMS = [
+  "undo", "redo", "|",
+  "heading", "|",
+  "bold", "italic", "underline", "strikethrough", "code", "|",
+  "fontSize", "fontColor", "|",
+  "alignment", "|",
+  "link", "bulletedList", "numberedList", "blockQuote", "|",
+  "insertTable",
+  "insertImageMenu",
+  "insertMath",
+  "|",
+  "sourceEditing",
+];
+
 const MathTextEditor: React.FC<EditorProps> = ({
-  initialData = "<p>Welcome to the <strong>CKEditor 5</strong> rich text editor with the <em>Timestamp Plugin</em>. Click the <strong>Insert Timestamp</strong> button in the toolbar to add the current date and time.</p>",
+  initialData = "",
   onChange,
+  siglaCurso = "",
 }) => {
-  const [editorData, setEditorData] = useState<string>(initialData);
-  const [isFocused, setIsFocused] = useState<boolean>(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [modal, setModal] = useState<ModalState>(MODAL_CLOSED);
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
 
-  const handleChange = (_event: unknown, editor: Editor) => {
-    const data = editor.getData();
-    setEditorData(data);
-    onChange?.(data);
+  const [urlModal, setUrlModal] = useState<UrlModalState>({ open: false });
+
+  const handleInsertUrl = useCallback(() => {
+    setUrlModal({ open: true, tab: 0 });
+  }, []);
+
+  const handleInsertGaleria = useCallback(() => {
+    setUrlModal({ open: true, tab: 1 });
+  }, []);
+
+  const handleImageUrlInsert = useCallback((url: string, alt: string) => {
+    if (editorInstance) {
+      editorInstance.execute("insertImageFromUrl", { url, alt });
+      editorInstance.editing.view.focus();
+    }
+    setUrlModal({ open: false });
+  }, [editorInstance]);
+
+  const handleInsert = useCallback(() => {
+    setModal({ open: true, latex: "", type: "inline", onSave: null });
+  }, []);
+
+  const handleEdit = useCallback((
+    latex: string,
+    type: "inline" | "block",
+    onSave: (newLatex: string, newType: "inline" | "block") => void
+  ) => {
+    setModal({ open: true, latex, type, onSave });
+  }, []);
+
+  const handleModalSave = useCallback((latex: string, type: "inline" | "block") => {
+    if (modal.onSave) {
+      modal.onSave(latex, type);
+    } else if (editorInstance) {
+      const command = type === "inline" ? "insertMathInline" : "insertMathBlock";
+      editorInstance.execute(command, { latex });
+      editorInstance.editing.view.focus();
+    }
+    setModal(MODAL_CLOSED);
+  }, [modal, editorInstance]);
+
+  const handleModalClose = useCallback(() => {
+    setModal(MODAL_CLOSED);
+  }, []);
+
+  const editorConfig: EditorConfig & { math: MathPluginConfig; imageUpload: ImageUploadPluginConfig; insertImageUrl: InsertImageUrlPluginConfig } = {
+    licenseKey: "GPL",
+    plugins: BASE_PLUGINS,
+    toolbar: {
+      items: TOOLBAR_ITEMS,
+      shouldNotGroupWhenFull: true,
+    },
+    heading: {
+      options: [
+        { model: "paragraph", title: "Párrafo", class: "ck-heading_paragraph" },
+        { model: "heading1", view: "h1", title: "Título 1", class: "ck-heading_heading1" },
+        { model: "heading2", view: "h2", title: "Título 2", class: "ck-heading_heading2" },
+        { model: "heading3", view: "h3", title: "Título 3", class: "ck-heading_heading3" },
+      ],
+    },
+    table: {
+      contentToolbar: ["tableColumn", "tableRow", "mergeTableCells"],
+    },
+    image: {
+      toolbar: ["imageTextAlternative"],
+      resizeUnit: "px",
+      insert: {
+        type: "auto",
+        integrations: ["insertImageViaUrl", "upload"],
+      },
+    },
+    imageUpload: {
+      siglaCurso,
+      backendUrl: import.meta.env.VITE_BACKEND_URL as string,
+      token: sessionStorage.getItem("auth_token") ?? "",
+    } satisfies ImageUploadPluginConfig,
+    insertImageUrl: {
+      onInsertUrl:     handleInsertUrl,
+      onInsertGaleria: handleInsertGaleria,
+    } satisfies InsertImageUrlPluginConfig,
+    math: {
+      onInsert: handleInsert,
+      onEdit: handleEdit,
+    },
   };
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingLatex, setEditingLatex] = useState("");
-  const [editingPos, setEditingPos] = useState<number | null>(null);
-  const [editingType, setEditingType] = useState<"inline" | "block">("inline");
-
-  // const editorConfig: EditorConfig = {
-  //   plugins: [ TimestampPlugin],
-  //   toolbar: { items: ["timestamp"] },
-  //   timestamp: {
-  //     onOpen: () => setModalOpen(true),
-  //   },
-  // };
-
-  const handleSaveMath = (latex: string) => {
-    if (editingPos === null) return;
-
-    const mathHTML = `<span class="math-inline" data-latex="${latex}">[${latex}]</span>`;
-
-    // Insertar el HTML en la posición correcta
-    setEditorData((prev) => {
-      const before = prev.slice(0, editingPos);
-      const after = prev.slice(editingPos);
-      return before + mathHTML + after;
-    });
-
-    setModalOpen(false);
-    setEditingPos(null);
-  }
 
   return (
     <div className={`editor-wrapper ${isFocused ? "focused" : ""}`}>
       <div className="p-3">
         <CKEditor
           editor={ClassicEditor}
-          config={
-            {
-              ...editorConfig,
-              root: {
-                initialData: editorData,
-              },
-              timestamp: {
-                onOpen: () => setModalOpen(true),
-              },
-            } as EditorConfig & { timestamp: { onOpen: () => void } }
-          }
-          onChange={handleChange}
+          config={editorConfig}
+          data={initialData}
           onReady={(editor) => {
-            // editor.isReadOnly = true
-
-            // editor.enableReadOnlyMode("feature-id");
-
+            setEditorInstance(editor);
             const root = editor.editing.view.document.getRoot();
             if (root) {
               editor.editing.view.change((writer: ViewDowncastWriter) => {
-                writer.setStyle(
-                  //use max-height(for scroll) or min-height(static)
-                  "height",
-                  "50vh",
-                  root,
-                );
-              });
-              editor.editing.view.change((writer: ViewDowncastWriter) => {
-                writer.setStyle(
-                  //use max-height(for scroll) or min-height(static)
-                  "font-size",
-                  "18px",
-                  root,
-                );
+                writer.setStyle("min-height", "50vh", root);
+                writer.setStyle("font-size", "16px", root);
               });
             }
+          }}
+          onChange={(_event, editor) => {
+            onChange?.(editor.getData());
           }}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
         />
       </div>
 
-      {modalOpen && (
+      {urlModal.open && (
+        <InsertImageUrlModal
+          siglaCurso={siglaCurso}
+          initialTab={urlModal.tab ?? 0}
+          onInsert={handleImageUrlInsert}
+          onClose={() => setUrlModal({ open: false, tab: 0 })}
+        />
+      )}
+
+      {modal.open && (
         <MathEditModal
-          latex={editingLatex}
-          type={editingType}
-          onSave={handleSaveMath}
-          onClose={() => {
-            setModalOpen(false);
-            setEditingPos(null);
-          }}
+          latex={modal.latex}
+          type={modal.type}
+          onSave={handleModalSave}
+          onClose={handleModalClose}
         />
       )}
     </div>

@@ -28,11 +28,12 @@ import { crearQuiz }       from "../../store/slices/quiz";
 import type { IAyudantia } from "../../store/slices/ayudantia";
 import type { IRecurso }   from "../../store/slices/recurso";
 import type { IQuiz }      from "../../store/slices/quiz";
-import { CKEditorField } from "../../components/CKEditor";
-import TiptapRenderer     from "../../components/Editor/TiptapRenderer";
-import ModalSolucionTexto from "./components/ModalSolucionTexto";
-import ModalUrlVideo      from "../clases/ModalUrlVideo";
+import MathTextEditor      from "../../components/CKEditor/MathTextEditor";
+import ModalSolucionTexto  from "./components/ModalSolucionTexto";
+import ModalUrlVideo       from "../clases/ModalUrlVideo";
 import ModalCrearQuizAyudantia from "./components/ModalCrearQuizAyudantia";
+import katex               from "katex";
+import "katex/dist/katex.min.css";
 
 interface Props {
   ayudantia:   IAyudantia;
@@ -41,6 +42,32 @@ interface Props {
   esPrimero:   boolean;
   esUltimo:    boolean;
 }
+
+// ── Renderer para el enunciado (HTML de CKEditor con LaTeX) ───────────────────
+
+const renderLatexEnHtml = (html: string): string =>
+  html
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_, latex) => {
+      try {
+        return `<div style="text-align:center;margin:0.8em 0">${katex.renderToString(latex.trim(), { displayMode: true, throwOnError: false })}</div>`;
+      } catch { return `\\[${latex}\\]`; }
+    })
+    .replace(/\\\(([\s\S]*?)\\\)/g, (_, latex) => {
+      try {
+        return katex.renderToString(latex.trim(), { displayMode: false, throwOnError: false });
+      } catch { return `\\(${latex}\\)`; }
+    });
+
+const EnunciadoPreview = ({ html }: { html: string }) => {
+  if (!html) return <span style={{ color: "#8daecb", fontStyle: "italic" }}>Sin enunciado</span>;
+  const rendered = html.trimStart().startsWith("<") ? renderLatexEnHtml(html) : html;
+  return (
+    <div
+      dangerouslySetInnerHTML={{ __html: rendered }}
+      style={{ fontSize: 14, lineHeight: 1.75, color: "#1f2c38" }}
+    />
+  );
+};
 
 // ─── Modal enunciado ──────────────────────────────────────────────────────────
 
@@ -51,7 +78,8 @@ const ModalEnunciado = ({
   ayudantia: IAyudantia;
   onClose:   () => void;
 }) => {
-  const dispatch = useAppDispatch();
+  const dispatch   = useAppDispatch();
+  const siglaCurso = useAppSelector(s => s.mongoCurso.cursoActivo?.codigo ?? "");
   const [enunciado, setEnunciado] = useState(ayudantia.enunciado);
   const [guardando, setGuardando] = useState(false);
 
@@ -73,11 +101,10 @@ const ModalEnunciado = ({
         <span>Enunciado — {ayudantia.nombre}</span>
       </DialogTitle>
       <DialogContent sx={{ pt: 3, pb: 1 }}>
-        <CKEditorField
-          initialContent={enunciado}
-          onChange={(html) => setEnunciado(html)}
-          placeholder="Escribe el enunciado de la ayudantía..."
-          minHeight="240px"
+        <MathTextEditor
+          initialData={enunciado}
+          onChange={setEnunciado}
+          siglaCurso={siglaCurso}
         />
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
@@ -119,7 +146,7 @@ const ModalEliminar = ({
 
   return (
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth
-      sx={{ "& .MuiDialog-paper": { borderRadius: 3 } }}>
+      sx={{ "& .MiDialog-paper": { borderRadius: 3 } }}>
       <DialogTitle sx={{
         bgcolor: "#fef2f2", color: "#991b1b",
         display: "flex", alignItems: "center", gap: 1.5, py: 2,
@@ -173,22 +200,19 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
   const video             = videos.find((v) => recursoVideo && v.recurso_id === recursoVideo._id);
   const quiz              = quizzes.find((q) => recursoQuiz && q.recurso_id === recursoQuiz._id);
 
-  // ── Estado local ───────────────────────────────────────────────────────────
   const [modalEliminar,  setModalEliminar]  = useState(false);
   const [modalEnunciado, setModalEnunciado] = useState(false);
   const [modalSolucion,  setModalSolucion]  = useState(false);
   const [modalVideo,     setModalVideo]     = useState<{ abierto: boolean; recurso_id: string }>({ abierto: false, recurso_id: "" });
-  const [modalQuiz,      setModalQuiz]      = useState(false); // punto 4: sin recurso_id hasta guardar
+  const [modalQuiz,      setModalQuiz]      = useState(false);
 
-  const [editandoNombre,   setEditandoNombre]   = useState(false);
-  const [nombre,           setNombre]           = useState(ayudantia.nombre);
-  const [guardandoNombre,  setGuardandoNombre]  = useState(false);
-  const [toggling,         setToggling]         = useState(false);
-  const [moviendo,         setMoviendo]         = useState(false);
+  const [editandoNombre,  setEditandoNombre]  = useState(false);
+  const [nombre,          setNombre]          = useState(ayudantia.nombre);
+  const [guardandoNombre, setGuardandoNombre] = useState(false);
+  const [toggling,        setToggling]        = useState(false);
+  const [moviendo,        setMoviendo]        = useState(false);
 
-  // ── Handlers nombre ────────────────────────────────────────────────────────
-
-  const handleAbrirNombre = () => { setNombre(ayudantia.nombre); setEditandoNombre(true); };
+  const handleAbrirNombre    = () => { setNombre(ayudantia.nombre); setEditandoNombre(true); };
   const handleCancelarNombre = () => { setNombre(ayudantia.nombre); setEditandoNombre(false); };
 
   const handleGuardarNombre = async () => {
@@ -205,15 +229,11 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
     if (e.key === "Escape") handleCancelarNombre();
   };
 
-  // ── Handlers published ─────────────────────────────────────────────────────
-
   const handleTogglePublished = async () => {
     setToggling(true);
     await dispatch(editarAyudantia({ ayudantia_id: ayudantia._id, published: !ayudantia.published }));
     setToggling(false);
   };
-
-  // ── Handlers posición ──────────────────────────────────────────────────────
 
   const handleMover = async (direction: "up" | "down") => {
     if (moviendo) return;
@@ -221,8 +241,6 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
     await dispatch(cambiarPositionAyudantia({ ayudantia_id: ayudantia._id, direction }));
     setMoviendo(false);
   };
-
-  // ── Handlers video ─────────────────────────────────────────────────────────
 
   const handleCrearVideo = async () => {
     if (recursoVideo) {
@@ -240,11 +258,6 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
     }
   };
 
-  // ── Handlers quiz (punto 4) ───────────────────────────────────────────────
-  // Si ya existe recursoQuiz + quiz configurado → navegar al editor.
-  // Si existe recursoQuiz pero no quiz → abrir modal para configurar.
-  // Si no existe nada → abrir modal (el recurso y quiz se crean al guardar).
-
   const handleAbrirQuiz = () => {
     if (recursoQuiz && quiz) {
       navigate(`/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${recursoQuiz._id}`);
@@ -260,10 +273,7 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
     intentos:      number;
   }) => {
     setModalQuiz(false);
-
-    // Punto 4: crear Recurso y Quiz solo al guardar la configuración
     let rId = recursoQuiz?._id;
-
     if (!rId) {
       const resultadoRecurso = await dispatch(crearRecurso({
         contexto:     "ayudantia",
@@ -274,7 +284,6 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
       if (!resultadoRecurso.ok || !resultadoRecurso.data) return;
       rId = resultadoRecurso.data._id;
     }
-
     const resultadoQuiz = await dispatch(crearQuiz({
       recurso_id:    rId,
       titulo:        quizData.titulo,
@@ -282,25 +291,15 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
       tiempo_limite: quizData.tiempo_limite,
       intentos:      quizData.intentos,
     })) as unknown as { ok: boolean; data?: IQuiz };
-
     if (resultadoQuiz.ok && resultadoQuiz.data) {
       navigate(`/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${rId}`);
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
-      <Card
-        elevation={0}
-        className="animate-fadeIn"
-        sx={{
-          borderRadius: 3,
-          border: "1px solid #d9e4ee",
-          transition: "box-shadow 0.2s",
-          "&:hover": { boxShadow: "0 4px 16px rgba(74,109,140,0.08)" },
-        }}
-      >
+      <Card elevation={0} className="animate-fadeIn"
+        sx={{ borderRadius: 3, border: "1px solid #d9e4ee", transition: "box-shadow 0.2s", "&:hover": { boxShadow: "0 4px 16px rgba(74,109,140,0.08)" } }}>
         <CardContent sx={{ p: 0 }}>
 
           {/* ── Header ── */}
@@ -313,13 +312,9 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
             <div className="flex-1 min-w-0">
               {editandoNombre ? (
                 <div className="flex items-center gap-1">
-                  <TextField
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    onKeyDown={handleKeyDownNombre}
-                    size="small" autoFocus fullWidth
-                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: "0.875rem" } }}
-                  />
+                  <TextField value={nombre} onChange={(e) => setNombre(e.target.value)}
+                    onKeyDown={handleKeyDownNombre} size="small" autoFocus fullWidth
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: "0.875rem" } }} />
                   <Tooltip title="Guardar (Enter)"><span>
                     <IconButton size="small" onClick={handleGuardarNombre} disabled={guardandoNombre} sx={{ color: "#4A6D8C" }}>
                       {guardandoNombre ? <CircularProgress size={14} /> : <CheckIcon fontSize="small" />}
@@ -384,18 +379,13 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
 
           <Divider sx={{ borderColor: "#f0f0f0" }} />
 
-          {/* ── Enunciado ── */}
+          {/* ── Enunciado preview ── */}
           <div className="px-5 py-4">
             <div className="text-sm text-gray-700 leading-relaxed mb-2">
-              {ayudantia.enunciado
-                ? <TiptapRenderer>{(ayudantia.enunciado)}</TiptapRenderer>
-                : <span style={{ color: "#8daecb", fontStyle: "italic" }}>Sin enunciado</span>
-              }
+              <EnunciadoPreview html={ayudantia.enunciado} />
             </div>
-            <button
-              onClick={() => setModalEnunciado(true)}
-              className="text-xs text-[#8daecb] hover:text-[#4A6D8C] transition-colors flex items-center gap-1"
-            >
+            <button onClick={() => setModalEnunciado(true)}
+              className="text-xs text-[#8daecb] hover:text-[#4A6D8C] transition-colors flex items-center gap-1">
               <EditOutlinedIcon sx={{ fontSize: 12 }} />
               {ayudantia.enunciado ? "Editar enunciado" : "Agregar enunciado"}
             </button>
@@ -405,7 +395,6 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
 
           {/* ── Recursos ── */}
           <div className="px-5 py-3 flex items-center gap-4 flex-wrap">
-
             <div className="flex items-center gap-2">
               <div style={{ width: 30, height: 30, borderRadius: 6, background: solucion ? "#4A6D8C" : "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <DescriptionIcon sx={{ fontSize: 16, color: solucion ? "white" : "#8daecb" }} />
@@ -435,7 +424,6 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
                 {quiz ? "Editar preguntas" : "+ Quiz"}
               </Button>
             </div>
-
           </div>
 
         </CardContent>

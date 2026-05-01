@@ -5,7 +5,7 @@ import type { IQuiz }         from "../../store/slices/quiz";
 import type { IRecurso }      from "../../store/slices/recurso";
 import type { IMongoCurso }   from "../../store/slices/mongoCurso";
 import type { ICapitulo }     from "../../store/slices/capitulo";
-import { toCanvasHTML } from "../../components/Editor";
+import { toCanvasHTML } from "../../components/CKEditor/canvasHTML";
 
 interface GenerarHtmlAyudantiasParams {
   curso:           IMongoCurso;

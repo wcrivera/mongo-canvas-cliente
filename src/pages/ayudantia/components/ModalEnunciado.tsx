@@ -1,11 +1,9 @@
-// ─── Modal enunciado ──────────────────────────────────────────────────────────
-
 import { useState } from "react";
-import { useAppDispatch } from "../../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { editarAyudantia, type IAyudantia } from "../../../store/slices/ayudantia";
 import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
 import { EditOutlined } from "@mui/icons-material";
-import { LatexEditor } from "../../../components/Editor";
+import MathTextEditor from "../../../components/CKEditor/MathTextEditor";
 
 export const ModalEnunciado = ({
   ayudantia,
@@ -14,7 +12,9 @@ export const ModalEnunciado = ({
   ayudantia: IAyudantia;
   onClose:   () => void;
 }) => {
-  const dispatch = useAppDispatch();
+  const dispatch   = useAppDispatch();
+  const siglaCurso = useAppSelector(s => s.mongoCurso.cursoActivo?.codigo ?? "");
+
   const [enunciado, setEnunciado] = useState(ayudantia.enunciado);
   const [guardando, setGuardando] = useState(false);
 
@@ -36,11 +36,10 @@ export const ModalEnunciado = ({
         <span>Enunciado — {ayudantia.nombre}</span>
       </DialogTitle>
       <DialogContent sx={{ pt: 3, pb: 1 }}>
-        <LatexEditor
-          initialContent={enunciado}
-          onChange={(html) => setEnunciado(html)}
-          placeholder="Escribe el enunciado de la ayudantía..."
-          minHeight="240px"
+        <MathTextEditor
+          initialData={enunciado}
+          onChange={setEnunciado}
+          siglaCurso={siglaCurso}
         />
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
@@ -63,4 +62,3 @@ export const ModalEnunciado = ({
     </Dialog>
   );
 };
-
