@@ -26,6 +26,7 @@ import { MathBlockExtension } from "./extensions/MathBlock.extension";
 import { MathEditModal }      from "./MathEditModal";
 import { Toolbar }            from "./Toolbar";
 import styles                 from "./LatexEditor.module.css";
+import { toEditorHTML } from "./editoHTML";
 
 // ── NodeView React para imagen ────────────────────────────────────────────────
 const ImageNodeView = ({ node, selected }: NodeViewProps) => {
@@ -149,6 +150,8 @@ export function LatexEditor({
   onChange,
   minHeight = "180px",
 }: LatexEditorProps) {
+
+  console.log(initialContent)
   const [modalOpen,    setModalOpen]    = useState(false);
   const [editingLatex, setEditingLatex] = useState("");
   const [editingPos,   setEditingPos]   = useState<number | null>(null);
@@ -228,8 +231,7 @@ export function LatexEditor({
       // ── Componentes matemáticos custom ───────────────────────────────────────
       MathBlockExtension,
     ],
-    content: initialContent || "",
-    editorProps: {
+    content: toEditorHTML(initialContent || ""),    editorProps: {
       attributes: {
         class:              styles.editorContent,
         "data-placeholder": placeholder,

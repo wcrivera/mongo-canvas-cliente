@@ -89,6 +89,7 @@ const Capitulos = () => {
         className="rounded-2xl px-6 pt-5 pb-4 mb-6 animate-fadeIn"
         style={{ backgroundColor: "#4A6D8C" }}
       >
+        {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-1">
           <Button
             startIcon={<ArrowBackIcon />}
@@ -104,21 +105,30 @@ const Capitulos = () => {
           </Button>
         </div>
 
-        <Typography variant="h6" sx={{ color: "white", fontWeight: 500, mb: 2, lineHeight: 1.3 }}>
+        {/* Título */}
+        <Typography variant="h6" sx={{ color: "white", fontWeight: 500, lineHeight: 1.3 }}>
           {cursoActivo?.nombre ?? "Cargando..."}
         </Typography>
+      </div>
 
-        <div className="flex items-center gap-2 flex-wrap justify-end">
+      {/* ── Acciones ── */}
+      <div className="flex justify-between items-center mb-5">
+        <div className="flex items-center gap-2">
+          <LayersIcon sx={{ color: "#8daecb", fontSize: 18 }} />
+          <Typography variant="body2" sx={{ color: "#6793ba", fontWeight: 500 }}>
+            {capitulos.length} capítulo{capitulos.length !== 1 ? "s" : ""}
+          </Typography>
+        </div>
+        <div className="flex items-center gap-2">
           <Button
             variant="outlined"
             onClick={handleDesplegarPagina}
             disabled={desplegando || capitulos.length === 0}
             startIcon={desplegando ? <CircularProgress size={14} color="inherit" /> : undefined}
             sx={{
-              borderColor: "rgba(255,255,255,0.5)", color: "white",
-              borderRadius: 2.5, px: 2.5, fontWeight: 600, fontSize: "0.8rem", boxShadow: "none",
-              "&:hover": { borderColor: "white", bgcolor: "rgba(255,255,255,0.1)" },
-              "&:disabled": { borderColor: "rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.4)" },
+              borderColor: "#4A6D8C", color: "#4A6D8C",
+              borderRadius: 2.5, px: 3, fontWeight: 600, boxShadow: "none",
+              "&:hover": { bgcolor: "#f0f4f8", borderColor: "#3c5770" },
             }}
           >
             {desplegando ? "Publicando..." : "Publicar en Canvas"}
@@ -129,10 +139,9 @@ const Capitulos = () => {
             startIcon={mostrarForm ? undefined : <AddIcon />}
             onClick={() => { setMostrarForm((v) => !v); setNombre(""); }}
             sx={{
-              bgcolor: "rgba(255,255,255,0.2)", color: "white",
-              borderRadius: 2.5, px: 2.5, fontWeight: 600, fontSize: "0.8rem",
-              boxShadow: "none", border: "1px solid rgba(255,255,255,0.3)",
-              "&:hover": { bgcolor: "rgba(255,255,255,0.3)", boxShadow: "none" },
+              bgcolor: mostrarForm ? "#6793ba" : "#4A6D8C",
+              borderRadius: 2.5, px: 3, fontWeight: 600, boxShadow: "none",
+              "&:hover": { bgcolor: "#3c5770", boxShadow: "none" },
             }}
           >
             {mostrarForm ? "Cancelar" : "Nuevo capítulo"}
@@ -156,7 +165,7 @@ const Capitulos = () => {
         <form
           onSubmit={handleCrear}
           className="mb-6 rounded-2xl p-5 animate-slideDown"
-          style={{ background: "white", border: "1px solid #d9e4ee", boxShadow: "0 4px 16px rgba(74,109,140,0.08)" }}
+          style={{ background: "white", border: "1px solid #d9e4ee" }}
         >
           <Typography variant="subtitle2" sx={{ color: "#2e4154", mb: 2, fontWeight: 600 }}>
             Nuevo capítulo

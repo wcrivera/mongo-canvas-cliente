@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+// import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { Provider } from "react-redux";
@@ -11,9 +11,9 @@ import "katex/dist/katex.min.css";
 import "./css/ckeditor.css"
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  // <StrictMode>
     <Provider store={store}>
       <App />
     </Provider>
-  </StrictMode>,
+  // </StrictMode>,
 );

@@ -8,7 +8,6 @@ import {
   agregarCapitulo,
   actualizarCapitulo,
   intercambiarCapitulos,
-  eliminarCapituloState,
 } from "./capituloSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
@@ -44,8 +43,8 @@ export const crearCapitulo = ({
   nombre,
   published,
 }: {
-  curso_id: string;
-  nombre: string;
+  curso_id:  string;
+  nombre:    string;
   published: boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
@@ -81,8 +80,8 @@ export const editarCapitulo = ({
   published,
 }: {
   capitulo_id: string;
-  nombre?: string;
-  published?: boolean;
+  nombre?:     string;
+  published?:  boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
@@ -110,6 +109,8 @@ export const editarCapitulo = ({
 };
 
 // ─── Eliminar capítulo ────────────────────────────────────────────
+// El backend retorna la lista renumerada — usamos setCapitulos para
+// actualizar el store completo con las nuevas posiciones.
 
 export const eliminarCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
   return async (dispatch: AppDispatch) => {
@@ -122,7 +123,7 @@ export const eliminarCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
       );
       const body = await resp.json();
       if (body.ok) {
-        dispatch(eliminarCapituloState(capitulo_id));
+        dispatch(setCapitulos(body.data));
         dispatch(endLoadingCapitulo());
         return { ok: true };
       } else {
@@ -137,13 +138,13 @@ export const eliminarCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
   };
 };
 
-// ─── Editar capítulo ──────────────────────────────────────────────
+// ─── Reintentar capítulo ──────────────────────────────────────────
 
 export const reintentarCapitulo = ({
   capitulo_id,
   canvas_curso_id,
 }: {
-  capitulo_id: string;
+  capitulo_id:     string;
   canvas_curso_id: number;
 }) => {
   return async (dispatch: AppDispatch) => {
@@ -177,7 +178,7 @@ export const desplegarPendienteCapitulo = ({
   capitulo_id,
   canvas_curso_id,
 }: {
-  capitulo_id: string;
+  capitulo_id:     string;
   canvas_curso_id: number;
 }) => {
   return async (dispatch: AppDispatch) => {
@@ -212,10 +213,9 @@ export const cambiarPositionCapitulo = ({
   direction,
 }: {
   capitulo_id: string;
-  direction: "up" | "down";
+  direction:   "up" | "down";
 }) => {
   return async (dispatch: AppDispatch) => {
-    console.log('hola')
     dispatch(startLoadingCapitulo());
     try {
       const resp = await fetchConToken(
@@ -232,54 +232,6 @@ export const cambiarPositionCapitulo = ({
         dispatch(setErrorCapitulo(body.msg));
         return { ok: false, msg: body.msg };
       }
-    } catch (error) {
-      console.log(error);
-      dispatch(setErrorCapitulo(MSG_ERROR));
-      return { ok: false, msg: MSG_ERROR };
-    }
-  };
-};
-
-export const desplegarPaginaCapitulos = ({
-  canvas_curso_ids,
-  titulo,
-  slug,
-  body,
-}: {
-  canvas_curso_ids: number[];
-  titulo:           string;
-  slug:             string;
-  body:             string;
-}) => {
-  return async (dispatch: AppDispatch) => {
-    dispatch(startLoadingCapitulo());
-    try {
-      const resultados = await Promise.allSettled(
-        canvas_curso_ids.map(async (canvas_curso_id) => {
-          const resp = await fetchConToken(
-            `api/capitulos/deploy-pagina/${canvas_curso_id}`,
-            { titulo, body, slug },
-            "POST"
-          );
-          return await resp.json();
-        })
-      );
-
-      const errores = resultados.filter(
-        (r) => r.status === "rejected" ||
-          (r.status === "fulfilled" && !r.value.ok)
-      );
-
-      dispatch(endLoadingCapitulo());
-
-      if (errores.length > 0) {
-        return {
-          ok:  false,
-          msg: `Falló en ${errores.length} curso(s) Canvas`,
-        };
-      }
-
-      return { ok: true, msg: "Página desplegada en todos los cursos" };
     } catch (error) {
       console.log(error);
       dispatch(setErrorCapitulo(MSG_ERROR));

@@ -1,0 +1,100 @@
+/* src/components/CKEditor/CKEditorField.module.css */
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #d9e4ee;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.extraToolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-bottom: 1px solid #f0f4f8;
+  background: #fafbfc;
+}
+
+.editorContainer {
+  flex: 1;
+}
+
+/* Override CKEditor styles para que encaje con el diseño */
+.editorContainer :global(.ck-editor__editable) {
+  min-height: var(--min-height, 180px);
+  border: none !important;
+  box-shadow: none !important;
+  padding: 16px !important;
+  font-size: 14px;
+  line-height: 1.75;
+  color: #1f2c38;
+}
+
+.editorContainer :global(.ck-toolbar) {
+  border: none !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #f8fafc !important;
+  border-radius: 0 !important;
+}
+
+.editorContainer :global(.ck-editor) {
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Dos columnas en el editor visual */
+.editorContainer :global(.ck-two-columns) {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  padding: 8px;
+  border: 1.5px dashed #94a3b8;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+.editorContainer :global(.ck-column-item) {
+  min-height: 60px;
+  padding: 4px;
+  border-right: 1px dashed #e2e8f0;
+}
+
+.editorContainer :global(.ck-column-item:last-child) {
+  border-right: none;
+}
+
+/* Fórmulas LaTeX en el editor */
+.editorContainer :global(.ck-math-inline) {
+  background: #f0f4f8;
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-family: monospace;
+  font-size: 0.9em;
+  color: #4A6D8C;
+  cursor: pointer;
+}
+
+.editorContainer :global(.ck-math-block) {
+  text-align: center;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin: 8px 0;
+  font-family: monospace;
+  color: #4A6D8C;
+  cursor: pointer;
+}
+
+/* Source editing */
+.editorContainer :global(.ck-source-editing-area) {
+  background: #1e2a38 !important;
+  color: #e2e8f0 !important;
+  font-family: 'Fira Code', 'Consolas', monospace !important;
+  font-size: 12px !important;
+  min-height: var(--min-height, 180px);
+  border: none !important;
+}

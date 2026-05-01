@@ -8,10 +8,35 @@ import {
   agregarClase,
   actualizarClase,
   intercambiarClases,
-  eliminarClaseState,
 } from "./claseSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
+
+// ─── Obtener clases por curso ─────────────────────────────────────
+
+export const obtenerClasesPorCurso = ({ curso_id }: { curso_id: string }) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingClase());
+    try {
+      const resp = await fetchConToken(`api/clases/curso/${curso_id}`);
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(setClases(body.data));
+        dispatch(endLoadingClase());
+        return { ok: true };
+      } else {
+        dispatch(setErrorClase(body.msg));
+        return { ok: false, msg: body.msg };
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorClase(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+// ─── Obtener clases ───────────────────────────────────────────────
 
 export const obtenerClases = ({ capitulo_id }: { capitulo_id: string }) => {
   return async (dispatch: AppDispatch) => {
@@ -35,6 +60,8 @@ export const obtenerClases = ({ capitulo_id }: { capitulo_id: string }) => {
   };
 };
 
+// ─── Crear clase ──────────────────────────────────────────────────
+
 export const crearClase = ({
   capitulo_id,
   nombre,
@@ -50,7 +77,7 @@ export const crearClase = ({
       const resp = await fetchConToken(
         "api/clases",
         { capitulo_id, nombre, published },
-        "POST"
+        "POST",
       );
       const body = await resp.json();
       if (body.ok) {
@@ -69,6 +96,8 @@ export const crearClase = ({
   };
 };
 
+// ─── Editar clase ─────────────────────────────────────────────────
+
 export const editarClase = ({
   clase_id,
   nombre,
@@ -84,7 +113,7 @@ export const editarClase = ({
       const resp = await fetchConToken(
         `api/clases/${clase_id}`,
         { nombre, published },
-        "PUT"
+        "PUT",
       );
       const body = await resp.json();
       if (body.ok) {
@@ -103,6 +132,10 @@ export const editarClase = ({
   };
 };
 
+// ─── Eliminar clase ───────────────────────────────────────────────
+// El backend retorna la lista renumerada — usamos setClases para
+// actualizar el store completo con las nuevas posiciones.
+
 export const eliminarClase = ({ clase_id }: { clase_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
@@ -110,11 +143,11 @@ export const eliminarClase = ({ clase_id }: { clase_id: string }) => {
       const resp = await fetchConToken(
         `api/clases/${clase_id}`,
         {},
-        "DELETE"
+        "DELETE",
       );
       const body = await resp.json();
       if (body.ok) {
-        dispatch(eliminarClaseState(clase_id));
+        dispatch(setClases(body.data));
         dispatch(endLoadingClase());
         return { ok: true };
       } else {
@@ -129,37 +162,7 @@ export const eliminarClase = ({ clase_id }: { clase_id: string }) => {
   };
 };
 
-export const cambiarPositionClase = ({
-  clase_id,
-  direction,
-}: {
-  clase_id:  string;
-  direction: 'up' | 'down';
-}) => {
-  return async (dispatch: AppDispatch) => {
-    dispatch(startLoadingClase());
-    try {
-      const resp = await fetchConToken(
-        `api/clases/${clase_id}/position`,
-        { direction },
-        "PATCH"
-      );
-      const body = await resp.json();
-      if (body.ok) {
-        dispatch(intercambiarClases(body.data));
-        dispatch(endLoadingClase());
-        return { ok: true };
-      } else {
-        dispatch(setErrorClase(body.msg));
-        return { ok: false, msg: body.msg };
-      }
-    } catch (error) {
-      console.log(error);
-      dispatch(setErrorClase(MSG_ERROR));
-      return { ok: false, msg: MSG_ERROR };
-    }
-  };
-};
+// ─── Reintentar clase ─────────────────────────────────────────────
 
 export const reintentarClase = ({
   clase_id,
@@ -174,7 +177,7 @@ export const reintentarClase = ({
       const resp = await fetchConToken(
         `api/clases/${clase_id}/reintentar/${canvas_curso_id}`,
         {},
-        "POST"
+        "POST",
       );
       const body = await resp.json();
       if (body.ok) {
@@ -193,14 +196,26 @@ export const reintentarClase = ({
   };
 };
 
-export const obtenerClasesPorCurso = ({ curso_id }: { curso_id: string }) => {
+// ─── Cambiar posición ─────────────────────────────────────────────
+
+export const cambiarPositionClase = ({
+  clase_id,
+  direction,
+}: {
+  clase_id:  string;
+  direction: "up" | "down";
+}) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchConToken(`api/clases/curso/${curso_id}`);
+      const resp = await fetchConToken(
+        `api/clases/${clase_id}/position`,
+        { direction },
+        "PATCH",
+      );
       const body = await resp.json();
       if (body.ok) {
-        dispatch(setClases(body.data));
+        dispatch(intercambiarClases(body.data));
         dispatch(endLoadingClase());
         return { ok: true };
       } else {

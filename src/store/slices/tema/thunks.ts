@@ -7,12 +7,14 @@ import {
   setTemas,
   agregarTema,
   actualizarTema,
-  eliminarTemaState,
+  intercambiarTemas,
 } from "./temaSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
 
-export const obtenerTemas = ({ clase_id }: { clase_id: string }) => {
+// ─── Obtener por clase ────────────────────────────────────────────
+
+export const obtenerTemasPorClase = ({ clase_id }: { clase_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
@@ -34,11 +36,9 @@ export const obtenerTemas = ({ clase_id }: { clase_id: string }) => {
   };
 };
 
-export const obtenerTemasPorCapitulo = ({
-  capitulo_id,
-}: {
-  capitulo_id: string;
-}) => {
+// ─── Obtener por capítulo ─────────────────────────────────────────
+
+export const obtenerTemasPorCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
@@ -60,21 +60,43 @@ export const obtenerTemasPorCapitulo = ({
   };
 };
 
+// ─── Obtener por curso ────────────────────────────────────────────
+
+export const obtenerTemasPorCurso = ({ curso_id }: { curso_id: string }) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingTema());
+    try {
+      const resp = await fetchConToken(`api/temas/curso/${curso_id}`);
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(setTemas(body.data));
+        dispatch(endLoadingTema());
+        return { ok: true };
+      } else {
+        dispatch(setErrorTema(body.msg));
+        return { ok: false, msg: body.msg };
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorTema(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+// ─── Crear ────────────────────────────────────────────────────────
+
 export const crearTema = ({
   clase_id,
   nombre,
 }: {
   clase_id: string;
-  nombre: string;
+  nombre:   string;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchConToken(
-        "api/temas",
-        { clase_id, nombre },
-        "POST",
-      );
+      const resp = await fetchConToken("api/temas", { clase_id, nombre }, "POST");
       const body = await resp.json();
       if (body.ok) {
         dispatch(agregarTema(body.data));
@@ -92,19 +114,23 @@ export const crearTema = ({
   };
 };
 
+// ─── Editar ───────────────────────────────────────────────────────
+
 export const editarTema = ({
   tema_id,
   nombre,
+  published,
 }: {
-  tema_id: string;
-  nombre: string;
+  tema_id:    string;
+  nombre?:    string;
+  published?: boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
       const resp = await fetchConToken(
         `api/temas/${tema_id}`,
-        { nombre },
+        { nombre, published },
         "PUT",
       );
       const body = await resp.json();
@@ -124,6 +150,9 @@ export const editarTema = ({
   };
 };
 
+// ─── Eliminar ─────────────────────────────────────────────────────
+// El backend retorna la lista renumerada.
+
 export const eliminarTema = ({ tema_id }: { tema_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
@@ -131,7 +160,7 @@ export const eliminarTema = ({ tema_id }: { tema_id: string }) => {
       const resp = await fetchConToken(`api/temas/${tema_id}`, {}, "DELETE");
       const body = await resp.json();
       if (body.ok) {
-        dispatch(eliminarTemaState(tema_id));
+        dispatch(setTemas(body.data));
         dispatch(endLoadingTema());
         return { ok: true };
       } else {
@@ -146,14 +175,26 @@ export const eliminarTema = ({ tema_id }: { tema_id: string }) => {
   };
 };
 
-export const obtenerTemasPorCurso = ({ curso_id }: { curso_id: string }) => {
+// ─── Cambiar posición ─────────────────────────────────────────────
+
+export const cambiarPositionTema = ({
+  tema_id,
+  direction,
+}: {
+  tema_id:   string;
+  direction: "up" | "down";
+}) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchConToken(`api/temas/curso/${curso_id}`);
+      const resp = await fetchConToken(
+        `api/temas/${tema_id}/position`,
+        { direction },
+        "PATCH",
+      );
       const body = await resp.json();
       if (body.ok) {
-        dispatch(setTemas(body.data));
+        dispatch(intercambiarTemas(body.data));
         dispatch(endLoadingTema());
         return { ok: true };
       } else {

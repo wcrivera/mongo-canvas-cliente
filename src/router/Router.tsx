@@ -11,6 +11,7 @@ import EditorDiapositiva from "../pages/diapositiva/EditorDiapositiva";
 import AuthCallback      from "../pages/auth/AuthCallback";
 import Login             from "../pages/auth/Login";
 import TokenCanvas       from "../pages/auth/TokenCanvas";
+import TestEditor from "../pages/test/TestEditor";
 
 const Router = () => {
   return (
@@ -71,6 +72,13 @@ const Router = () => {
         <Route
           path="/cursos/:curso_id/capitulos/:capitulo_id/ejercicios"
           element={<PrivateRoute><Ejercicios /></PrivateRoute>}
+        />
+
+
+        {/* Test Editor */}
+        <Route
+          path="/inicio/test-editor"
+          element={<PrivateRoute><TestEditor /></PrivateRoute>}
         />
 
         {/* Redirección por defecto */}

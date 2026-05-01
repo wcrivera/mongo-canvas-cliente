@@ -8,10 +8,11 @@ import {
   agregarAyudantia,
   actualizarAyudantia,
   intercambiarAyudantias,
-  eliminarAyudantiaState,
 } from "./ayudantiaSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
+
+// ─── Obtener por capítulo ─────────────────────────────────────────
 
 export const obtenerAyudantiasPorCapitulo = ({
   capitulo_id,
@@ -21,9 +22,7 @@ export const obtenerAyudantiasPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchConToken(
-        `api/ayudantias/capitulo/${capitulo_id}`
-      );
+      const resp = await fetchConToken(`api/ayudantias/capitulo/${capitulo_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setAyudantias(body.data));
@@ -40,6 +39,8 @@ export const obtenerAyudantiasPorCapitulo = ({
     }
   };
 };
+
+// ─── Obtener por curso ────────────────────────────────────────────
 
 export const obtenerAyudantiasPorCurso = ({
   curso_id,
@@ -67,6 +68,8 @@ export const obtenerAyudantiasPorCurso = ({
   };
 };
 
+// ─── Crear ───────────────────────────────────────────────────────
+
 export const crearAyudantia = ({
   capitulo_id,
   nombre,
@@ -84,7 +87,7 @@ export const crearAyudantia = ({
       const resp = await fetchConToken(
         "api/ayudantias",
         { capitulo_id, nombre, enunciado, published },
-        "POST"
+        "POST",
       );
       const body = await resp.json();
       if (body.ok) {
@@ -103,6 +106,8 @@ export const crearAyudantia = ({
   };
 };
 
+// ─── Editar ───────────────────────────────────────────────────────
+
 export const editarAyudantia = ({
   ayudantia_id,
   nombre,
@@ -120,7 +125,7 @@ export const editarAyudantia = ({
       const resp = await fetchConToken(
         `api/ayudantias/${ayudantia_id}`,
         { nombre, enunciado, published },
-        "PUT"
+        "PUT",
       );
       const body = await resp.json();
       if (body.ok) {
@@ -139,6 +144,10 @@ export const editarAyudantia = ({
   };
 };
 
+// ─── Eliminar ─────────────────────────────────────────────────────
+// El backend retorna la lista renumerada — usamos setAyudantias para
+// actualizar el store completo con las nuevas posiciones.
+
 export const eliminarAyudantia = ({
   ayudantia_id,
 }: {
@@ -150,11 +159,11 @@ export const eliminarAyudantia = ({
       const resp = await fetchConToken(
         `api/ayudantias/${ayudantia_id}`,
         {},
-        "DELETE"
+        "DELETE",
       );
       const body = await resp.json();
       if (body.ok) {
-        dispatch(eliminarAyudantiaState(ayudantia_id));
+        dispatch(setAyudantias(body.data));
         dispatch(endLoadingAyudantia());
         return { ok: true };
       } else {
@@ -169,12 +178,14 @@ export const eliminarAyudantia = ({
   };
 };
 
+// ─── Cambiar posición ─────────────────────────────────────────────
+
 export const cambiarPositionAyudantia = ({
   ayudantia_id,
   direction,
 }: {
   ayudantia_id: string;
-  direction:    'up' | 'down';
+  direction:    "up" | "down";
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
@@ -182,7 +193,7 @@ export const cambiarPositionAyudantia = ({
       const resp = await fetchConToken(
         `api/ayudantias/${ayudantia_id}/position`,
         { direction },
-        "PATCH"
+        "PATCH",
       );
       const body = await resp.json();
       if (body.ok) {

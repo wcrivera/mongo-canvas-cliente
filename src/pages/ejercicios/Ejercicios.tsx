@@ -1,31 +1,27 @@
 // src/pages/ejercicios/Ejercicios.tsx
-import { useEffect, useState }    from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Button, Typography, CircularProgress, Alert,
 } from "@mui/material";
-import AddIcon       from "@mui/icons-material/Add";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditNoteIcon  from "@mui/icons-material/EditNote";
-import SchoolIcon    from "@mui/icons-material/School";
+import AddIcon       from "@mui/icons-material/Add";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   obtenerEjerciciosPorCapitulo,
   limpiarEjercicios,
 } from "../../store/slices/ejercicio";
-import { obtenerMongoCurso }     from "../../store/slices/mongoCurso";
-import { obtenerCapitulos }      from "../../store/slices/capitulo";
+import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
+import { obtenerCapitulos }  from "../../store/slices/capitulo";
 import { generarHtmlEjercicios } from "./generarHtmlEjercicios";
+import { desplegarPagina }       from "../../helpers/desplegarPagina";
 import EjercicioCard             from "./EjercicioCard";
 import FormEjercicio             from "./FormEjercicio";
 import ModalBanco                from "../../components/banco/ModalBanco";
-import { fetchConToken } from "../../helpers/fetch";
 
 const Ejercicios = () => {
-  const { curso_id, capitulo_id } = useParams<{
-    curso_id:    string;
-    capitulo_id: string;
-  }>();
+  const { curso_id, capitulo_id } = useParams<{ curso_id: string; capitulo_id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
@@ -45,41 +41,32 @@ const Ejercicios = () => {
     dispatch(obtenerMongoCurso({ curso_id }));
     dispatch(obtenerCapitulos({ curso_id }));
     dispatch(obtenerEjerciciosPorCapitulo({ capitulo_id }));
-    return () => { dispatch(limpiarEjercicios()); };
+    return () => {
+      dispatch(limpiarEjercicios());
+    };
   }, [curso_id, capitulo_id, dispatch]);
 
   const handleDesplegarPagina = async () => {
     if (!cursoActivo || !capituloActivo) return;
- 
-    const canvas_activos = cursoActivo.canvas_cursos.filter((c) => c.activo);
-    if (canvas_activos.length === 0) {
+    const canvasActivos = cursoActivo.canvas_cursos.filter((c) => c.activo);
+    if (canvasActivos.length === 0) {
       setMsgDeploy("No hay cursos Canvas activos asociados.");
       return;
     }
- 
     setDesplegando(true);
     setMsgDeploy(null);
- 
-    await Promise.allSettled(
-      canvas_activos.map(async ({ canvas_id }) => {
-        const body = generarHtmlEjercicios({
+    await desplegarPagina({
+      canvasActivos,
+      generarBody: (canvas_id) =>
+        generarHtmlEjercicios({
           curso:           cursoActivo,
           capitulo:        capituloActivo,
           ejercicios,
           canvas_curso_id: canvas_id,
-        });
- 
-        const titulo = `Capitulo ${capituloActivo.position} Ejercicios`;
-        const slug   = `capitulo-${capituloActivo.position}-ejercicios`;
- 
-        await fetchConToken(
-          `api/capitulos/deploy-pagina/${canvas_id}`,
-          { titulo, slug, body },
-          "POST",
-        );
-      }),
-    );
- 
+        }),
+      titulo: `Capitulo ${capituloActivo.position} Ejercicios`,
+      slug:   `capitulo-${capituloActivo.position}-ejercicios`,
+    });
     setDesplegando(false);
     setMsgDeploy("✓ Página publicada en todos los cursos Canvas");
   };
@@ -98,8 +85,7 @@ const Ejercicios = () => {
             onClick={() => navigate(`/cursos/${curso_id}/capitulos`)}
             size="small"
             sx={{
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "0.75rem",
+              color: "rgba(255,255,255,0.7)", fontSize: "0.75rem",
               p: 0, minWidth: 0,
               "&:hover": { color: "white", bgcolor: "transparent" },
             }}
@@ -108,40 +94,30 @@ const Ejercicios = () => {
           </Button>
         </div>
 
-        <Typography
-          variant="h6"
-          sx={{ color: "white", fontWeight: 500, mb: 2, lineHeight: 1.3 }}
-        >
-          {capituloActivo?.nombre ?? "Cargando..."}
+        <Typography variant="h6" sx={{ color: "white", fontWeight: 500, mb: 2, lineHeight: 1.3 }}>
+          {capituloActivo
+            ? `${capituloActivo.position}. ${capituloActivo.nombre}`
+            : "Cargando..."}
         </Typography>
 
+        {/* Tabs */}
         <div className="flex gap-2">
           {[
-            {
-              label: "Clases",
-              ruta:  `/cursos/${curso_id}/capitulos/${capitulo_id}/clases`,
-              activo: false,
-            },
-            {
-              label: "Ayudantías",
-              ruta:  `/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias`,
-              activo: false,
-            },
-            { label: "Ejercicios", ruta: null, activo: true },
+            { label: "Clases",     ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/clases`,     activo: false },
+            { label: "Ayudantías", ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias`, activo: false },
+            { label: "Ejercicios", ruta: null,                                                      activo: true  },
           ].map((tab) => (
             <button
               key={tab.label}
               onClick={() => tab.ruta && navigate(tab.ruta)}
               style={{
-                padding:    "6px 16px",
-                borderRadius: 20,
-                background: tab.activo ? "rgba(255,255,255,0.2)" : "transparent",
-                border:     "1px solid rgba(255,255,255,0.3)",
-                fontSize:   13,
-                color:      "white",
-                fontWeight: tab.activo ? 500 : 400,
-                opacity:    tab.activo ? 1 : 0.7,
-                cursor:     tab.ruta ? "pointer" : "default",
+                padding: "6px 16px", borderRadius: 20,
+                background:  tab.activo ? "rgba(255,255,255,0.2)" : "transparent",
+                border:      "1px solid rgba(255,255,255,0.3)",
+                fontSize:    13, color: "white",
+                fontWeight:  tab.activo ? 500 : 400,
+                opacity:     tab.activo ? 1 : 0.7,
+                cursor:      tab.ruta ? "pointer" : "default",
               }}
             >
               {tab.label}
@@ -158,60 +134,40 @@ const Ejercicios = () => {
             {ejercicios.length} ejercicio{ejercicios.length !== 1 ? "s" : ""}
           </Typography>
         </div>
-
         <div className="flex items-center gap-2">
-          {/* Publicar en Canvas */}
           <Button
             variant="outlined"
             onClick={handleDesplegarPagina}
             disabled={desplegando || ejercicios.length === 0}
-            startIcon={
-              desplegando
-                ? <CircularProgress size={14} color="inherit" />
-                : undefined
-            }
+            startIcon={desplegando ? <CircularProgress size={14} color="inherit" /> : undefined}
             sx={{
-              borderColor: "#4A6D8C",
-              color:       "#4A6D8C",
-              borderRadius: 2.5,
-              px: 3,
-              fontWeight: 600,
-              boxShadow: "none",
+              borderColor: "#4A6D8C", color: "#4A6D8C",
+              borderRadius: 2.5, px: 3, fontWeight: 600, boxShadow: "none",
               "&:hover": { bgcolor: "#f0f4f8", borderColor: "#3c5770" },
             }}
           >
             {desplegando ? "Publicando..." : "Publicar en Canvas"}
           </Button>
 
-          {/* Copiar del banco */}
           <Button
             variant="outlined"
-            startIcon={<SchoolIcon />}
-            onClick={() => { setMostrarBanco(true); setMostrarForm(false); }}
+            onClick={() => setMostrarBanco(true)}
             sx={{
-              borderColor: "#6b46c1",
-              color:       "#6b46c1",
-              borderRadius: 2.5,
-              px: 2.5,
-              fontWeight: 600,
-              boxShadow: "none",
-              "&:hover": { bgcolor: "#f5f0ff", borderColor: "#553c9a" },
+              borderColor: "#6793ba", color: "#6793ba",
+              borderRadius: 2.5, px: 3, fontWeight: 600, boxShadow: "none",
+              "&:hover": { bgcolor: "#f0f4f8" },
             }}
           >
-            Del banco
+            Banco
           </Button>
 
-          {/* Nuevo ejercicio */}
           <Button
             variant="contained"
             startIcon={mostrarForm ? undefined : <AddIcon />}
-            onClick={() => { setMostrarForm((v) => !v); setMostrarBanco(false); }}
+            onClick={() => setMostrarForm((v) => !v)}
             sx={{
               bgcolor: mostrarForm ? "#6793ba" : "#4A6D8C",
-              borderRadius: 2.5,
-              px: 3,
-              fontWeight: 600,
-              boxShadow: "none",
+              borderRadius: 2.5, px: 3, fontWeight: 600, boxShadow: "none",
               "&:hover": { bgcolor: "#3c5770", boxShadow: "none" },
             }}
           >
@@ -223,7 +179,7 @@ const Ejercicios = () => {
       {/* ── Mensaje deploy ── */}
       {msgDeploy && (
         <Alert
-          severity={msgDeploy.startsWith("✓") ? "success" : "error"}
+          severity={msgDeploy.startsWith("✓") ? "success" : "warning"}
           onClose={() => setMsgDeploy(null)}
           sx={{ mb: 4, borderRadius: 2 }}
         >
@@ -250,9 +206,7 @@ const Ejercicios = () => {
       )}
 
       {error && (
-        <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>
-          {error}
-        </Alert>
+        <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>{error}</Alert>
       )}
 
       {!isLoading && ejercicios.length === 0 && !error && (

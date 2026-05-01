@@ -1,9 +1,10 @@
-import { useState }        from "react";
+// src/pages/ayudantia/AyudantiaCard.tsx
+import { useState } from "react";
 import {
   Card, CardContent, Typography,
   IconButton, Tooltip, TextField,
-  Button, CircularProgress,
-  Switch, Divider,
+  Button, CircularProgress, Switch, Divider,
+  Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
 import KeyboardArrowUpIcon   from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -14,6 +15,7 @@ import CloseIcon             from "@mui/icons-material/Close";
 import DescriptionIcon       from "@mui/icons-material/Description";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutlineOutlined";
 import QuizIcon              from "@mui/icons-material/Quiz";
+import WarningAmberIcon      from "@mui/icons-material/WarningAmber";
 import { useNavigate }       from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
@@ -21,17 +23,16 @@ import {
   eliminarAyudantia,
   cambiarPositionAyudantia,
 } from "../../store/slices/ayudantia";
-import { crearRecurso }      from "../../store/slices/recurso";
-import type { IAyudantia }   from "../../store/slices/ayudantia";
-import type { IRecurso }     from "../../store/slices/recurso";
-import ModalSolucionTexto    from "./ModalSolucionTexto";
-import ModalUrlVideo         from "../clases/ModalUrlVideo";
-import ModalCrearQuiz        from "../clases/ModalCrearQuiz";
-import type { IQuiz }        from "../../store/slices/quiz";
-
-import { LatexEditor, toEditorHTML } from "../../components/Editor";
-import TiptapRenderer from "../../components/Editor/TiptapRenderer";
-
+import { crearRecurso }    from "../../store/slices/recurso";
+import { crearQuiz }       from "../../store/slices/quiz";
+import type { IAyudantia } from "../../store/slices/ayudantia";
+import type { IRecurso }   from "../../store/slices/recurso";
+import type { IQuiz }      from "../../store/slices/quiz";
+import { CKEditorField } from "../../components/CKEditor";
+import TiptapRenderer     from "../../components/Editor/TiptapRenderer";
+import ModalSolucionTexto from "./components/ModalSolucionTexto";
+import ModalUrlVideo      from "../clases/ModalUrlVideo";
+import ModalCrearQuizAyudantia from "./components/ModalCrearQuizAyudantia";
 
 interface Props {
   ayudantia:   IAyudantia;
@@ -41,70 +42,187 @@ interface Props {
   esUltimo:    boolean;
 }
 
-const AyudantiaCard = ({
-  ayudantia, curso_id, capitulo_id, esPrimero, esUltimo,
-}: Props) => {
+// ─── Modal enunciado ──────────────────────────────────────────────────────────
+
+const ModalEnunciado = ({
+  ayudantia,
+  onClose,
+}: {
+  ayudantia: IAyudantia;
+  onClose:   () => void;
+}) => {
+  const dispatch = useAppDispatch();
+  const [enunciado, setEnunciado] = useState(ayudantia.enunciado);
+  const [guardando, setGuardando] = useState(false);
+
+  const handleGuardar = async () => {
+    setGuardando(true);
+    await dispatch(editarAyudantia({ ayudantia_id: ayudantia._id, enunciado }));
+    setGuardando(false);
+    onClose();
+  };
+
+  return (
+    <Dialog open onClose={onClose} maxWidth="md" fullWidth
+      sx={{ "& .MuiDialog-paper": { borderRadius: 3 } }}>
+      <DialogTitle sx={{
+        bgcolor: "#4A6D8C", color: "white",
+        display: "flex", alignItems: "center", gap: 1.5, py: 2,
+      }}>
+        <EditOutlinedIcon />
+        <span>Enunciado — {ayudantia.nombre}</span>
+      </DialogTitle>
+      <DialogContent sx={{ pt: 3, pb: 1 }}>
+        <CKEditorField
+          initialContent={enunciado}
+          onChange={(html) => setEnunciado(html)}
+          placeholder="Escribe el enunciado de la ayudantía..."
+          minHeight="240px"
+        />
+      </DialogContent>
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <Button onClick={onClose} variant="text" sx={{ color: "#6793ba", borderRadius: 2 }}>
+          Cancelar
+        </Button>
+        <Button
+          onClick={handleGuardar}
+          variant="contained"
+          disabled={guardando}
+          startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : undefined}
+          sx={{ bgcolor: "#4A6D8C", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#3c5770", boxShadow: "none" } }}
+        >
+          {guardando ? "Guardando..." : "Guardar"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// ─── Modal eliminar ───────────────────────────────────────────────────────────
+
+const ModalEliminar = ({
+  ayudantia,
+  onClose,
+}: {
+  ayudantia: IAyudantia;
+  onClose:   () => void;
+}) => {
+  const dispatch = useAppDispatch();
+  const [eliminando, setEliminando] = useState(false);
+
+  const handleEliminar = async () => {
+    setEliminando(true);
+    await dispatch(eliminarAyudantia({ ayudantia_id: ayudantia._id }));
+    setEliminando(false);
+    onClose();
+  };
+
+  return (
+    <Dialog open onClose={onClose} maxWidth="xs" fullWidth
+      sx={{ "& .MuiDialog-paper": { borderRadius: 3 } }}>
+      <DialogTitle sx={{
+        bgcolor: "#fef2f2", color: "#991b1b",
+        display: "flex", alignItems: "center", gap: 1.5, py: 2,
+      }}>
+        <WarningAmberIcon />
+        <span>Eliminar ayudantía</span>
+      </DialogTitle>
+      <DialogContent sx={{ pt: 3, pb: 1 }}>
+        <Typography variant="body2" sx={{ color: "#374151", mb: 1.5 }}>
+          ¿Eliminar <strong>{ayudantia.nombre}</strong>?
+        </Typography>
+        <Typography variant="body2" sx={{ color: "#6b7280" }}>
+          Se eliminarán todos los recursos asociados (enunciado, solución, video, quiz).
+          Esta acción no se puede deshacer.
+        </Typography>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+        <Button onClick={onClose} variant="outlined"
+          sx={{ borderColor: "#d1d5db", color: "#374151", borderRadius: 2 }}>
+          Cancelar
+        </Button>
+        <Button
+          onClick={handleEliminar}
+          variant="contained"
+          disabled={eliminando}
+          startIcon={eliminando ? <CircularProgress size={14} color="inherit" /> : undefined}
+          sx={{ bgcolor: "#dc2626", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" } }}
+        >
+          {eliminando ? "Eliminando..." : "Sí, eliminar"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+// ─── Card principal ───────────────────────────────────────────────────────────
+
+const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }: Props) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const { soluciones } = useAppSelector((s) => s.solucionTextoMongo);
   const { recursos }   = useAppSelector((s) => s.recursoMongo);
   const { videos }     = useAppSelector((s) => s.videoMongo);
+  const { quizzes }    = useAppSelector((s) => s.quizMongo);
 
   const recursosAyudantia = recursos.filter((r) => r.ayudantia_id === ayudantia._id);
-  const recursoVideo = recursosAyudantia.find((r) => r.tipo === "video");
-  const recursoQuiz  = recursosAyudantia.find((r) => r.tipo === "quiz");
+  const recursoVideo      = recursosAyudantia.find((r) => r.tipo === "video");
+  const recursoQuiz       = recursosAyudantia.find((r) => r.tipo === "quiz");
+  const solucion          = soluciones.find((s) => s.ayudantia_id === ayudantia._id);
+  const video             = videos.find((v) => recursoVideo && v.recurso_id === recursoVideo._id);
+  const quiz              = quizzes.find((q) => recursoQuiz && q.recurso_id === recursoQuiz._id);
 
-  const solucion = soluciones.find((s) => s.ayudantia_id === ayudantia._id);
-  const video    = videos.find((v) => recursoVideo && v.recurso_id === recursoVideo._id);
+  // ── Estado local ───────────────────────────────────────────────────────────
+  const [modalEliminar,  setModalEliminar]  = useState(false);
+  const [modalEnunciado, setModalEnunciado] = useState(false);
+  const [modalSolucion,  setModalSolucion]  = useState(false);
+  const [modalVideo,     setModalVideo]     = useState<{ abierto: boolean; recurso_id: string }>({ abierto: false, recurso_id: "" });
+  const [modalQuiz,      setModalQuiz]      = useState(false); // punto 4: sin recurso_id hasta guardar
 
-  const [editando,   setEditando]   = useState(false);
-  const [guardando,  setGuardando]  = useState(false);
-  const [eliminando, setEliminando] = useState(false);
+  const [editandoNombre,   setEditandoNombre]   = useState(false);
+  const [nombre,           setNombre]           = useState(ayudantia.nombre);
+  const [guardandoNombre,  setGuardandoNombre]  = useState(false);
+  const [toggling,         setToggling]         = useState(false);
+  const [moviendo,         setMoviendo]         = useState(false);
 
-  const [form, setForm] = useState({
-    nombre:    ayudantia.nombre,
-    enunciado: ayudantia.enunciado,
-    published: ayudantia.published,
-  });
+  // ── Handlers nombre ────────────────────────────────────────────────────────
 
-  // Modales
-  const [modalSolucion, setModalSolucion] = useState(false);
-  const [modalVideo, setModalVideo] = useState<{ abierto: boolean; recurso_id: string }>({
-    abierto: false, recurso_id: "",
-  });
-  const [modalQuiz, setModalQuiz] = useState<{ abierto: boolean; recurso_id: string }>({
-    abierto: false, recurso_id: "",
-  });
+  const handleAbrirNombre = () => { setNombre(ayudantia.nombre); setEditandoNombre(true); };
+  const handleCancelarNombre = () => { setNombre(ayudantia.nombre); setEditandoNombre(false); };
 
-  // ── Abrir edición — resetea form con datos actuales ──────────────────────
-  const handleAbrirEdicion = () => {
-    setForm({
-      nombre:    ayudantia.nombre,
-      enunciado: ayudantia.enunciado,
-      published: ayudantia.published,
-    });
-    setEditando(true);
+  const handleGuardarNombre = async () => {
+    const nombreTrim = nombre.trim();
+    if (!nombreTrim || nombreTrim === ayudantia.nombre) { setEditandoNombre(false); return; }
+    setGuardandoNombre(true);
+    await dispatch(editarAyudantia({ ayudantia_id: ayudantia._id, nombre: nombreTrim }));
+    setGuardandoNombre(false);
+    setEditandoNombre(false);
   };
 
-  const handleGuardar = async () => {
-    setGuardando(true);
-    await dispatch(editarAyudantia({ ayudantia_id: ayudantia._id, ...form }));
-    setGuardando(false);
-    setEditando(false);
+  const handleKeyDownNombre = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter")  handleGuardarNombre();
+    if (e.key === "Escape") handleCancelarNombre();
   };
 
-  const handleEliminar = async () => {
-    if (!confirm(`¿Eliminar "${ayudantia.nombre}"?`)) return;
-    setEliminando(true);
-    await dispatch(eliminarAyudantia({ ayudantia_id: ayudantia._id }));
-    setEliminando(false);
+  // ── Handlers published ─────────────────────────────────────────────────────
+
+  const handleTogglePublished = async () => {
+    setToggling(true);
+    await dispatch(editarAyudantia({ ayudantia_id: ayudantia._id, published: !ayudantia.published }));
+    setToggling(false);
   };
 
-  const handleMoverArriba = () =>
-    dispatch(cambiarPositionAyudantia({ ayudantia_id: ayudantia._id, direction: "up" }));
-  const handleMoverAbajo  = () =>
-    dispatch(cambiarPositionAyudantia({ ayudantia_id: ayudantia._id, direction: "down" }));
+  // ── Handlers posición ──────────────────────────────────────────────────────
+
+  const handleMover = async (direction: "up" | "down") => {
+    if (moviendo) return;
+    setMoviendo(true);
+    await dispatch(cambiarPositionAyudantia({ ayudantia_id: ayudantia._id, direction }));
+    setMoviendo(false);
+  };
+
+  // ── Handlers video ─────────────────────────────────────────────────────────
 
   const handleCrearVideo = async () => {
     if (recursoVideo) {
@@ -117,42 +235,60 @@ const AyudantiaCard = ({
       tipo:         "video",
       titulo:       `Video · ${ayudantia.nombre}`,
     })) as unknown as { ok: boolean; data?: IRecurso };
-
     if (resultado.ok && resultado.data) {
       setModalVideo({ abierto: true, recurso_id: resultado.data._id });
     }
   };
 
-  // ── FIX: basta con que recursoQuiz exista para navegar al editor ──────────
-  // Antes la condición era (recursoQuiz && quiz), lo que fallaba cuando
-  // el quiz ya existía en BD pero no estaba cargado en el store Redux.
-  // Eso provocaba que se creara un recurso duplicado sin quiz asociado.
-  const handleCrearQuiz = async () => {
-    if (recursoQuiz) {
-      navigate(
-        `/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${recursoQuiz._id}`,
-      );
+  // ── Handlers quiz (punto 4) ───────────────────────────────────────────────
+  // Si ya existe recursoQuiz + quiz configurado → navegar al editor.
+  // Si existe recursoQuiz pero no quiz → abrir modal para configurar.
+  // Si no existe nada → abrir modal (el recurso y quiz se crean al guardar).
+
+  const handleAbrirQuiz = () => {
+    if (recursoQuiz && quiz) {
+      navigate(`/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${recursoQuiz._id}`);
       return;
     }
-    const resultado = await dispatch(crearRecurso({
-      contexto:     "ayudantia",
-      ayudantia_id: ayudantia._id,
-      tipo:         "quiz",
-      titulo:       `Quiz · ${ayudantia.nombre}`,
-    })) as unknown as { ok: boolean; data?: IRecurso };
+    setModalQuiz(true);
+  };
 
-    if (resultado.ok && resultado.data) {
-      setModalQuiz({ abierto: true, recurso_id: resultado.data._id });
+  const handleQuizCreado = async (quizData: {
+    titulo:        string;
+    descripcion:   string;
+    tiempo_limite: number | null;
+    intentos:      number;
+  }) => {
+    setModalQuiz(false);
+
+    // Punto 4: crear Recurso y Quiz solo al guardar la configuración
+    let rId = recursoQuiz?._id;
+
+    if (!rId) {
+      const resultadoRecurso = await dispatch(crearRecurso({
+        contexto:     "ayudantia",
+        ayudantia_id: ayudantia._id,
+        tipo:         "quiz",
+        titulo:       quizData.titulo,
+      })) as unknown as { ok: boolean; data?: IRecurso };
+      if (!resultadoRecurso.ok || !resultadoRecurso.data) return;
+      rId = resultadoRecurso.data._id;
+    }
+
+    const resultadoQuiz = await dispatch(crearQuiz({
+      recurso_id:    rId,
+      titulo:        quizData.titulo,
+      descripcion:   quizData.descripcion,
+      tiempo_limite: quizData.tiempo_limite,
+      intentos:      quizData.intentos,
+    })) as unknown as { ok: boolean; data?: IQuiz };
+
+    if (resultadoQuiz.ok && resultadoQuiz.data) {
+      navigate(`/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${rId}`);
     }
   };
 
-  const handleQuizCreado = (q: IQuiz) => {
-    setModalQuiz({ abierto: false, recurso_id: "" });
-    navigate(
-      `/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${q.recurso_id}`,
-    );
-  };
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <>
       <Card
@@ -168,157 +304,101 @@ const AyudantiaCard = ({
         <CardContent sx={{ p: 0 }}>
 
           {/* ── Header ── */}
-          <div className="flex items-center gap-4 px-5 py-4">
-            <div style={{
-              width: 48, height: 48, borderRadius: "50%",
-              background: "white", border: "1px solid #e0e0e0",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0, fontSize: 22,
-            }}>
-              👥
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className="flex items-center justify-center shrink-0"
+              style={{ width: 38, height: 38, borderRadius: "50%", background: "#6793ba", color: "white", fontSize: 13, fontWeight: 600 }}>
+              {ayudantia.position}
             </div>
 
             <div className="flex-1 min-w-0">
-              <Typography variant="caption" sx={{ color: "#a0a0a0", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Ayudantía {ayudantia.position}
-              </Typography>
-              <Typography variant="body2" sx={{ color: "#3d3d3d", fontWeight: 500, mt: 0.3 }} noWrap>
-                {ayudantia.nombre}
-              </Typography>
-            </div>
-
-            {/* Controles */}
-            <div className="flex items-center gap-0.5 shrink-0">
-              {editando ? (
-                <>
-                  <Tooltip title="Guardar">
-                    <span>
-                      <IconButton size="small" onClick={handleGuardar} disabled={guardando} sx={{ color: "#4A6D8C" }}>
-                        {guardando ? <CircularProgress size={14} /> : <CheckIcon fontSize="small" />}
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                  <Tooltip title="Cancelar">
-                    <IconButton size="small" onClick={() => setEditando(false)} sx={{ color: "#8daecb" }}>
+              {editandoNombre ? (
+                <div className="flex items-center gap-1">
+                  <TextField
+                    value={nombre}
+                    onChange={(e) => setNombre(e.target.value)}
+                    onKeyDown={handleKeyDownNombre}
+                    size="small" autoFocus fullWidth
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: "0.875rem" } }}
+                  />
+                  <Tooltip title="Guardar (Enter)"><span>
+                    <IconButton size="small" onClick={handleGuardarNombre} disabled={guardandoNombre} sx={{ color: "#4A6D8C" }}>
+                      {guardandoNombre ? <CircularProgress size={14} /> : <CheckIcon fontSize="small" />}
+                    </IconButton>
+                  </span></Tooltip>
+                  <Tooltip title="Cancelar (Esc)">
+                    <IconButton size="small" onClick={handleCancelarNombre} sx={{ color: "#8daecb" }}>
                       <CloseIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                </>
+                </div>
               ) : (
                 <>
-                  <Tooltip title={ayudantia.published ? "Publicada" : "No publicada"}>
-                    <Switch
-                      size="small" checked={ayudantia.published} disabled
-                      sx={{ "& .MuiSwitch-thumb": { bgcolor: ayudantia.published ? "#4A6D8C" : "#ccc" } }}
-                    />
-                  </Tooltip>
-                  <Tooltip title="Editar">
-                    <IconButton
-                      size="small" onClick={handleAbrirEdicion}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}
-                    >
-                      <EditOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar">
-                    <span>
-                      <IconButton
-                        size="small" onClick={handleEliminar} disabled={eliminando}
-                        sx={{ color: "#8daecb", "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" } }}
-                      >
-                        {eliminando ? <CircularProgress size={14} /> : <DeleteOutlineIcon fontSize="small" />}
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                  <Tooltip title="Subir">
-                    <span>
-                      <IconButton
-                        size="small" disabled={esPrimero} onClick={handleMoverArriba}
-                        sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" }, "&:disabled": { color: "#d9e4ee" } }}
-                      >
-                        <KeyboardArrowUpIcon fontSize="small" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
-                  <Tooltip title="Bajar">
-                    <span>
-                      <IconButton
-                        size="small" disabled={esUltimo} onClick={handleMoverAbajo}
-                        sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" }, "&:disabled": { color: "#d9e4ee" } }}
-                      >
-                        <KeyboardArrowDownIcon fontSize="small" />
-                      </IconButton>
-                    </span>
-                  </Tooltip>
+                  <Typography variant="caption" sx={{ color: "#a0a0a0", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Ayudantía {ayudantia.position}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: "#1f2c38", fontWeight: 600, mt: 0.3 }} noWrap>
+                    {ayudantia.nombre}
+                  </Typography>
                 </>
               )}
             </div>
+
+            {!editandoNombre && (
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Tooltip title={ayudantia.published ? "Publicada — click para ocultar" : "Oculta — click para publicar"}>
+                  <span>
+                    {toggling
+                      ? <CircularProgress size={16} sx={{ color: "#4A6D8C", mx: 0.75 }} />
+                      : <Switch size="small" checked={ayudantia.published} onChange={handleTogglePublished} disabled={moviendo}
+                          sx={{ "& .MuiSwitch-thumb": { bgcolor: ayudantia.published ? "#4A6D8C" : "#ccc" }, "& .MuiSwitch-track": { bgcolor: ayudantia.published ? "#6793ba !important" : "#d9e4ee !important" } }} />
+                    }
+                  </span>
+                </Tooltip>
+                <Tooltip title="Mover arriba"><span>
+                  <IconButton size="small" disabled={esPrimero || moviendo} onClick={() => handleMover("up")}
+                    sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" }, "&:disabled": { color: "#d9e4ee" } }}>
+                    {moviendo ? <CircularProgress size={14} sx={{ color: "#8daecb" }} /> : <KeyboardArrowUpIcon fontSize="small" />}
+                  </IconButton>
+                </span></Tooltip>
+                <Tooltip title="Mover abajo"><span>
+                  <IconButton size="small" disabled={esUltimo || moviendo} onClick={() => handleMover("down")}
+                    sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" }, "&:disabled": { color: "#d9e4ee" } }}>
+                    <KeyboardArrowDownIcon fontSize="small" />
+                  </IconButton>
+                </span></Tooltip>
+                <Tooltip title="Editar nombre">
+                  <IconButton size="small" onClick={handleAbrirNombre} disabled={moviendo}
+                    sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}>
+                    <EditOutlinedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Eliminar ayudantía">
+                  <IconButton size="small" onClick={() => setModalEliminar(true)} disabled={moviendo}
+                    sx={{ color: "#8daecb", "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" } }}>
+                    <DeleteOutlineIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </div>
+            )}
           </div>
 
           <Divider sx={{ borderColor: "#f0f0f0" }} />
 
-          {/* ── Enunciado / Edición ── */}
+          {/* ── Enunciado ── */}
           <div className="px-5 py-4">
-            {editando ? (
-              <div className="flex flex-col gap-3">
-
-                {/* Nombre */}
-                <TextField
-                  label="Nombre"
-                  value={form.nombre}
-                  onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-                  size="small" fullWidth
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
-                />
-
-                {/* Enunciado con LatexEditor */}
-                <div>
-                  <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600, display: "block", mb: 1 }}>
-                    Enunciado
-                  </Typography>
-                  <LatexEditor
-                    initialContent={toEditorHTML(form.enunciado)}
-                    onChange={(html) => setForm((f) => ({ ...f, enunciado: html }))}
-                    placeholder="Escribe el enunciado…"
-                    minHeight="120px"
-                  />
-                </div>
-
-                {/* Published */}
-                <Switch
-                  checked={form.published}
-                  onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))}
-                  size="small"
-                  sx={{ "& .MuiSwitch-thumb": { bgcolor: form.published ? "#4A6D8C" : "#ccc" } }}
-                />
-
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="text" size="small"
-                    onClick={() => setEditando(false)}
-                    sx={{ color: "#8daecb", borderRadius: 2 }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    variant="contained" size="small"
-                    onClick={handleGuardar} disabled={guardando}
-                    startIcon={guardando ? <CircularProgress size={12} color="inherit" /> : <CheckIcon />}
-                    sx={{ bgcolor: "#4A6D8C", borderRadius: 2, boxShadow: "none", "&:hover": { bgcolor: "#3c5770", boxShadow: "none" } }}
-                  >
-                    {guardando ? "Guardando..." : "Guardar"}
-                  </Button>
-                </div>
-
-              </div>
-            ) : (
-              <div style={{ fontSize: 14, lineHeight: 1.8, color: "#3d3d3d" }}>
-                {ayudantia.enunciado
-                  ? <TiptapRenderer>{ayudantia.enunciado}</TiptapRenderer>
-                  : <span style={{ color: "#8daecb", fontStyle: "italic" }}>Sin enunciado</span>
-                }
-              </div>
-            )}
+            <div className="text-sm text-gray-700 leading-relaxed mb-2">
+              {ayudantia.enunciado
+                ? <TiptapRenderer>{(ayudantia.enunciado)}</TiptapRenderer>
+                : <span style={{ color: "#8daecb", fontStyle: "italic" }}>Sin enunciado</span>
+              }
+            </div>
+            <button
+              onClick={() => setModalEnunciado(true)}
+              className="text-xs text-[#8daecb] hover:text-[#4A6D8C] transition-colors flex items-center gap-1"
+            >
+              <EditOutlinedIcon sx={{ fontSize: 12 }} />
+              {ayudantia.enunciado ? "Editar enunciado" : "Agregar enunciado"}
+            </button>
           </div>
 
           <Divider sx={{ borderColor: "#f0f0f0" }} />
@@ -326,81 +406,44 @@ const AyudantiaCard = ({
           {/* ── Recursos ── */}
           <div className="px-5 py-3 flex items-center gap-4 flex-wrap">
 
-            {/* Solución texto */}
             <div className="flex items-center gap-2">
-              <div style={{
-                width: 30, height: 30, borderRadius: 6,
-                background: solucion ? "#4A6D8C" : "#f0f4f8",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
+              <div style={{ width: 30, height: 30, borderRadius: 6, background: solucion ? "#4A6D8C" : "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <DescriptionIcon sx={{ fontSize: 16, color: solucion ? "white" : "#8daecb" }} />
               </div>
-              <Button
-                size="small"
-                onClick={() => setModalSolucion(true)}
-                sx={{
-                  fontSize: "0.7rem",
-                  color:    solucion ? "#4A6D8C" : "#8daecb",
-                  p:        "2px 6px",
-                  "&:hover": { bgcolor: "#f0f4f8" },
-                }}
-              >
+              <Button size="small" onClick={() => setModalSolucion(true)}
+                sx={{ fontSize: "0.7rem", color: solucion ? "#4A6D8C" : "#8daecb", p: "2px 6px", "&:hover": { bgcolor: "#f0f4f8" } }}>
                 {solucion ? "Editar solución" : "+ Solución"}
               </Button>
             </div>
 
-            {/* Video */}
             <div className="flex items-center gap-2">
-              <div style={{
-                width: 30, height: 30, borderRadius: 6,
-                background: video ? "#e67e22" : "#f0f4f8",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
+              <div style={{ width: 30, height: 30, borderRadius: 6, background: video ? "#e67e22" : "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <PlayCircleOutlineIcon sx={{ fontSize: 16, color: video ? "white" : "#8daecb" }} />
               </div>
-              <Button
-                size="small"
-                onClick={handleCrearVideo}
-                sx={{
-                  fontSize: "0.7rem",
-                  color:    video ? "#e67e22" : "#8daecb",
-                  p:        "2px 6px",
-                  "&:hover": { bgcolor: "#f0f4f8" },
-                }}
-              >
+              <Button size="small" onClick={handleCrearVideo}
+                sx={{ fontSize: "0.7rem", color: video ? "#e67e22" : "#8daecb", p: "2px 6px", "&:hover": { bgcolor: "#f0f4f8" } }}>
                 {video ? "Editar video" : "+ Video"}
               </Button>
             </div>
 
-            {/* Quiz */}
             <div className="flex items-center gap-2">
-              <div style={{
-                width: 30, height: 30, borderRadius: 6,
-                background: recursoQuiz ? "#2d5be3" : "#f0f4f8",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <QuizIcon sx={{ fontSize: 16, color: recursoQuiz ? "white" : "#8daecb" }} />
+              <div style={{ width: 30, height: 30, borderRadius: 6, background: quiz ? "#2d5be3" : "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <QuizIcon sx={{ fontSize: 16, color: quiz ? "white" : "#8daecb" }} />
               </div>
-              <Button
-                size="small"
-                onClick={handleCrearQuiz}
-                sx={{
-                  fontSize: "0.7rem",
-                  color:    recursoQuiz ? "#2d5be3" : "#8daecb",
-                  p:        "2px 6px",
-                  "&:hover": { bgcolor: "#f0f4f8" },
-                }}
-              >
-                {recursoQuiz ? "Editar preguntas" : "+ Quiz"}
+              <Button size="small" onClick={handleAbrirQuiz}
+                sx={{ fontSize: "0.7rem", color: quiz ? "#2d5be3" : "#8daecb", p: "2px 6px", "&:hover": { bgcolor: "#f0f4f8" } }}>
+                {quiz ? "Editar preguntas" : "+ Quiz"}
               </Button>
             </div>
 
           </div>
+
         </CardContent>
       </Card>
 
-      {/* ── Modales ── */}
-      {modalSolucion && (
+      {modalEnunciado && <ModalEnunciado ayudantia={ayudantia} onClose={() => setModalEnunciado(false)} />}
+      {modalEliminar  && <ModalEliminar  ayudantia={ayudantia} onClose={() => setModalEliminar(false)} />}
+      {modalSolucion  && (
         <ModalSolucionTexto
           ayudantia_id={ayudantia._id}
           solucion={solucion}
@@ -414,10 +457,9 @@ const AyudantiaCard = ({
           onClose={() => setModalVideo({ abierto: false, recurso_id: "" })}
         />
       )}
-      {modalQuiz.abierto && (
-        <ModalCrearQuiz
-          recurso_id={modalQuiz.recurso_id}
-          onClose={() => setModalQuiz({ abierto: false, recurso_id: "" })}
+      {modalQuiz && (
+        <ModalCrearQuizAyudantia
+          onClose={() => setModalQuiz(false)}
           onCreado={handleQuizCreado}
         />
       )}

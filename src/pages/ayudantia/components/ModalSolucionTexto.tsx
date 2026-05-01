@@ -9,13 +9,13 @@ import {
   CircularProgress,
 } from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { useAppDispatch } from "../../store/hooks";
+import { useAppDispatch } from "../../../store/hooks";
 import {
   crearSolucionTexto,
   editarSolucionTexto,
-} from "../../store/slices/solucionTexto";
-import type { ISolucionTexto } from "../../store/slices/solucionTexto";
-import { LatexEditor, toEditorHTML } from "../../components/Editor";
+} from "../../../store/slices/solucionTexto";
+import type { ISolucionTexto } from "../../../store/slices/solucionTexto";
+import { LatexEditor, toEditorHTML } from "../../../components/Editor";
 
 interface Props {
   ayudantia_id: string;

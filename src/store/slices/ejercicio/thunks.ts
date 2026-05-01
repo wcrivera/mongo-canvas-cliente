@@ -14,12 +14,12 @@ import {
   agregarEjercicio,
   actualizarEjercicio,
   intercambiarEjercicios,
-  eliminarEjercicioState,
 } from "./ejercicioSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
 
 // ─── Obtener ──────────────────────────────────────────────────────────────
+
 export const obtenerEjerciciosPorCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
@@ -65,6 +65,7 @@ export const obtenerEjerciciosPorCurso = ({ curso_id }: { curso_id: string }) =>
 };
 
 // ─── Crear ────────────────────────────────────────────────────────────────
+
 export const crearEjercicio = ({
   capitulo_id,
   nombre,
@@ -92,10 +93,7 @@ export const crearEjercicio = ({
       const resp = await fetchConToken(
         "api/ejercicios",
         {
-          capitulo_id,
-          nombre,
-          enunciado,
-          tipo_pregunta,
+          capitulo_id, nombre, enunciado, tipo_pregunta,
           opciones,
           pares:              pares ?? [],
           respuesta_numerica: respuesta_numerica ?? null,
@@ -122,6 +120,7 @@ export const crearEjercicio = ({
 };
 
 // ─── Editar ───────────────────────────────────────────────────────────────
+
 export const editarEjercicio = ({
   ejercicio_id,
   nombre,
@@ -165,6 +164,9 @@ export const editarEjercicio = ({
 };
 
 // ─── Eliminar ─────────────────────────────────────────────────────────────
+// El backend retorna la lista renumerada — usamos setEjercicios para
+// actualizar el store completo con las nuevas posiciones.
+
 export const eliminarEjercicio = ({ ejercicio_id }: { ejercicio_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
@@ -172,7 +174,7 @@ export const eliminarEjercicio = ({ ejercicio_id }: { ejercicio_id: string }) =>
       const resp = await fetchConToken(`api/ejercicios/${ejercicio_id}`, {}, "DELETE");
       const body = await resp.json();
       if (body.ok) {
-        dispatch(eliminarEjercicioState(ejercicio_id));
+        dispatch(setEjercicios(body.data));
         dispatch(endLoadingEjercicio());
         return { ok: true };
       } else {
@@ -188,6 +190,7 @@ export const eliminarEjercicio = ({ ejercicio_id }: { ejercicio_id: string }) =>
 };
 
 // ─── Cambiar posición ─────────────────────────────────────────────────────
+
 export const cambiarPositionEjercicio = ({
   ejercicio_id,
   direction,
@@ -221,6 +224,7 @@ export const cambiarPositionEjercicio = ({
 };
 
 // ─── Reintentar deploy ────────────────────────────────────────────────────
+
 export const reintentarEjercicio = ({
   ejercicio_id,
   canvas_curso_id,

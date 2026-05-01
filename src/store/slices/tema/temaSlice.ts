@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 export interface ICanvasDeploymentTema {
   canvas_curso_id: number;
   canvas_id:       number | null;
-  status:          'pending' | 'synced' | 'dirty' | 'missing' | 'error';
+  status:          "pending" | "synced" | "dirty" | "missing" | "error";
   synced_at:       string | null;
   error_msg:       string;
 }
@@ -15,15 +15,16 @@ export interface ITema {
   curso_id:           string;
   nombre:             string;
   position:           number;
+  published:          boolean;   // ← nuevo
   canvas_deployments: ICanvasDeploymentTema[];
   createdAt:          string;
   updatedAt:          string;
 }
 
 export interface TemaState {
-  temas:      ITema[];
-  isLoading:  boolean;
-  error:      string | null;
+  temas:     ITema[];
+  isLoading: boolean;
+  error:     string | null;
 }
 
 const initialState: TemaState = {
@@ -43,11 +44,20 @@ export const temaMongoSlice = createSlice({
       state.temas.push(action.payload);
     },
     actualizarTema: (state, action) => {
-      const idx = state.temas.findIndex(t => t._id === action.payload._id);
+      const idx = state.temas.findIndex((t) => t._id === action.payload._id);
       if (idx !== -1) state.temas[idx] = action.payload;
     },
+    // Usado al eliminar — reemplaza la lista completa con posiciones renumeradas
     eliminarTemaState: (state, action) => {
-      state.temas = state.temas.filter(t => t._id !== action.payload);
+      state.temas = state.temas.filter((t) => t._id !== action.payload);
+    },
+    // Usado al cambiar posición — actualiza posiciones de los afectados
+    intercambiarTemas: (state, action) => {
+      action.payload.forEach((tema: ITema) => {
+        const idx = state.temas.findIndex((t) => t._id === tema._id);
+        if (idx !== -1) state.temas[idx] = tema;
+      });
+      state.temas.sort((a, b) => a.position - b.position);
     },
     limpiarTemas: (state) => {
       state.temas = [];
@@ -71,6 +81,7 @@ export const {
   agregarTema,
   actualizarTema,
   eliminarTemaState,
+  intercambiarTemas,
   limpiarTemas,
   startLoadingTema,
   endLoadingTema,

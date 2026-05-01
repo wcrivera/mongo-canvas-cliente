@@ -37,24 +37,34 @@ const RecursoItem = ({ recurso }: Props) => {
   const diap  = diapositivas.find((d) => d.recurso_id === recurso._id);
   const video = videos.find((v) => v.recurso_id === recurso._id);
 
-  // Determina el estado de sync del recurso
   const tieneSynced = (() => {
-    if (recurso.tipo === "diapositiva") {
-      return diap?.canvas_deployments.some((d) => d.status === "synced") ?? false;
-    }
-    if (recurso.tipo === "video") {
-      return video?.canvas_deployments.some((d) => d.status === "synced") ?? false;
-    }
-    if (recurso.tipo === "quiz") {
-      return quiz?.canvas_deployments.some((d) => d.status === "synced") ?? false;
-    }
+    if (recurso.tipo === "diapositiva") return diap?.canvas_deployments.some((d) => d.status === "synced") ?? false;
+    if (recurso.tipo === "video")       return video?.canvas_deployments.some((d) => d.status === "synced") ?? false;
+    if (recurso.tipo === "quiz")        return quiz?.canvas_deployments.some((d) => d.status === "synced") ?? false;
     return false;
   })();
 
   const tieneError = recurso.canvas_deployments.some((d) => d.status === "error");
 
+  // ── Subtítulo contextual ──────────────────────────────────────────────────
+
+  const subtitulo = (() => {
+    if (recurso.tipo === "quiz") return "preguntas";
+    if (recurso.tipo === "diapositiva") {
+      if (!diap)                                          return "sin config";
+      if (diap.slides && diap.slides.length > 0)         return `${diap.slides.length} slide${diap.slides.length !== 1 ? "s" : ""}`;
+      if (diap.url && diap.url.trim() !== "")            return "URL externa";
+      return "editor";
+    }
+    if (recurso.tipo === "video") {
+      return video ? "configurado" : "sin URL";
+    }
+    return "";
+  })();
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
   const handleEliminar = async () => {
-    if (!confirm(`¿Eliminar ${cfg.label}?`)) return;
     setEliminando(true);
     await dispatch(eliminarRecurso({ recurso_id: recurso._id }));
     setEliminando(false);
@@ -62,8 +72,6 @@ const RecursoItem = ({ recurso }: Props) => {
 
   const handleEditar = () => {
     if (recurso.tipo === "diapositiva") {
-      // Si tiene URL externa explícita → modal URL
-      // En cualquier otro caso (editor, vacía, sin diap) → ir al editor
       if (diap?.url && diap.url.trim() !== "") {
         setModalDiapositiva(true);
       } else {
@@ -80,100 +88,70 @@ const RecursoItem = ({ recurso }: Props) => {
     }
   };
 
+  // ── Render — pill horizontal compacto ────────────────────────────────────
+
   return (
     <>
       <div
-        className="flex items-center justify-between group px-2 py-1.5 rounded-lg"
-        style={{ background: "transparent" }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "#f8fafc")}
-        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+        className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg"
+        style={{
+          background:   `${cfg.color}10`,
+          border:       `1px solid ${cfg.color}30`,
+          cursor:       "pointer",
+          transition:   "all 0.15s",
+          position:     "relative",
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLDivElement).style.background = `${cfg.color}20`;
+          (e.currentTarget as HTMLDivElement).style.borderColor = `${cfg.color}60`;
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLDivElement).style.background = `${cfg.color}10`;
+          (e.currentTarget as HTMLDivElement).style.borderColor = `${cfg.color}30`;
+        }}
+        onClick={handleEditar}
       >
-        {/* Info */}
-        <div className="flex items-center gap-2">
-          {/* Indicador color + dot de estado */}
-          <div style={{ position: "relative", flexShrink: 0 }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: 7,
-              background: `${cfg.color}18`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 13, color: cfg.color, fontWeight: 600,
-            }}>
-              {cfg.icon}
-            </div>
-            {/* Dot de sync */}
-            <div style={{
-              position: "absolute", bottom: -1, right: -1,
-              width: 8, height: 8, borderRadius: "50%",
-              background: tieneError ? "#ef4444" : tieneSynced ? "#1a9e5c" : "#f59e0b",
-              border: "1.5px solid white",
-            }} />
-          </div>
+        {/* Ícono */}
+        <span style={{ fontSize: 13, color: cfg.color, fontWeight: 700, lineHeight: 1 }}>
+          {cfg.icon}
+        </span>
 
-          <div className="flex flex-col">
-            <span style={{ fontSize: 13, color: "#4d4d4d" }}>
-              {cfg.label}
+        {/* Label + subtítulo */}
+        <div className="flex flex-col" style={{ lineHeight: 1.2 }}>
+          <span style={{ fontSize: 11, fontWeight: 600, color: cfg.color }}>
+            {cfg.label}
+          </span>
+          {subtitulo && (
+            <span style={{ fontSize: 9.5, color: "#8daecb" }}>
+              {subtitulo}
             </span>
-
-            {/* Subtítulo contextual */}
-            {recurso.tipo === "quiz" && quiz && (
-              <span
-                style={{ fontSize: 10, color: "#2d5be3", cursor: "pointer", textDecoration: "underline" }}
-                onClick={handleEditar}
-              >
-                Editar preguntas
-              </span>
-            )}
-            {recurso.tipo === "diapositiva" && diap && diap.slides && diap.slides.length > 0 && (
-              <span style={{ fontSize: 10, color: "#4A6D8C" }}>
-                {diap.slides.length} slide{diap.slides.length !== 1 ? "s" : ""}
-              </span>
-            )}
-            {recurso.tipo === "diapositiva" && diap && (!diap.slides || diap.slides.length === 0) && diap.url && diap.url.trim() !== "" && (
-              <span style={{ fontSize: 10, color: "#94a3b8" }}>
-                URL externa
-              </span>
-            )}
-            {recurso.tipo === "diapositiva" && diap && (!diap.slides || diap.slides.length === 0) && (!diap.url || diap.url.trim() === "") && (
-              <span style={{ fontSize: 10, color: "#4A6D8C" }}>
-                Editor — sin slides aún
-              </span>
-            )}
-            {recurso.tipo === "diapositiva" && !diap && (
-              <span style={{ fontSize: 10, color: "#f47c3c" }}>
-                Sin configurar
-              </span>
-            )}
-            {recurso.tipo === "video" && !video && (
-              <span style={{ fontSize: 10, color: "#e03030" }}>
-                Sin URL
-              </span>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Acciones — visibles al hover */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
+        {/* Dot de sync */}
+        <div style={{
+          width: 6, height: 6, borderRadius: "50%", flexShrink: 0,
+          background: tieneError ? "#ef4444" : tieneSynced ? "#1a9e5c" : "#f59e0b",
+        }} />
+
+        {/* Acciones — visibles al hover, flotando a la derecha */}
+        <div
+          className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Tooltip title="Editar">
-            <IconButton
-              size="small"
-              onClick={handleEditar}
-              sx={{ color: "#8daecb", p: 0.3, "&:hover": { color: "#4A6D8C" } }}
-            >
-              <EditOutlinedIcon sx={{ fontSize: 14 }} />
+            <IconButton size="small" onClick={handleEditar}
+              sx={{ color: cfg.color, p: 0.25, "&:hover": { bgcolor: `${cfg.color}20` } }}>
+              <EditOutlinedIcon sx={{ fontSize: 12 }} />
             </IconButton>
           </Tooltip>
-
           <Tooltip title="Eliminar">
             <span>
-              <IconButton
-                size="small"
-                onClick={handleEliminar}
-                disabled={eliminando}
-                sx={{ color: "#8daecb", p: 0.3, "&:hover": { color: "#ef4444" } }}
-              >
+              <IconButton size="small" onClick={handleEliminar} disabled={eliminando}
+                sx={{ color: "#8daecb", p: 0.25, "&:hover": { color: "#ef4444" } }}>
                 {eliminando
-                  ? <CircularProgress size={12} />
-                  : <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+                  ? <CircularProgress size={10} />
+                  : <DeleteOutlineIcon sx={{ fontSize: 12 }} />
                 }
               </IconButton>
             </span>
@@ -181,7 +159,6 @@ const RecursoItem = ({ recurso }: Props) => {
         </div>
       </div>
 
-      {/* Modales edición */}
       {modalDiapositiva && (
         <ModalUrlDiapositiva
           recurso_id={recurso._id}
@@ -189,7 +166,6 @@ const RecursoItem = ({ recurso }: Props) => {
           onClose={() => setModalDiapositiva(false)}
         />
       )}
-
       {modalVideo && (
         <ModalUrlVideo
           recurso_id={recurso._id}
