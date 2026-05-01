@@ -33,7 +33,7 @@ import {
 
 import "ckeditor5/ckeditor5.css";
 
-import { MathPlugin, type MathPluginConfig } from "./plugins/MathPlugin";
+import { MathPlugin, } from "./plugins/MathPlugin";
 import { InlineTablePlugin } from "./plugins/InlineTablePlugin";
 import { ImageUploadPlugin, type ImageUploadPluginConfig } from "./plugins/ImageUploadPlugin";
 import { InlineStylesPlugin } from "./plugins/InlineStylesPlugin";
@@ -168,7 +168,7 @@ const MathTextEditor: React.FC<EditorProps> = ({
     setModal(MODAL_CLOSED);
   }, []);
 
-  const editorConfig: EditorConfig & { math: MathPluginConfig; imageUpload: ImageUploadPluginConfig; insertImageUrl: InsertImageUrlPluginConfig } = {
+  const editorConfig: EditorConfig = {
     licenseKey: "GPL",
     plugins: BASE_PLUGINS,
     toolbar: {

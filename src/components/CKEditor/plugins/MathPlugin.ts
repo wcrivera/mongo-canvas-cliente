@@ -1,344 +1,191 @@
-import { Plugin, Command, ButtonView, toWidget } from "ckeditor5";
+/**
+ * MathPlugin.ts
+ *
+ * Plugin CKEditor 5 para fórmulas LaTeX.
+ *
+ * UPCAST (HTML → modelo): acepta los 4 formatos posibles:
+ *   - Tiptap legado inline:  <span data-latex="..." data-type="inline-math"></span>
+ *   - Tiptap legado block:   <div  data-latex="..." data-type="block-math"></div>
+ *   - Formato nuevo inline:  \(...\)   (texto plano guardado en DB)
+ *   - Formato nuevo block:   \[...\]   (texto plano guardado en DB)
+ *
+ * EDITING DOWNCAST (modelo → vista editable): renderiza KaTeX visual
+ *
+ * DATA DOWNCAST (modelo → HTML para guardar en DB): emite \(...\) o \[...\]
+ *   → La DB queda limpia, sin tags HTML ni atributos data-*
+ */
+
+import { Plugin } from "ckeditor5";
+import type { Editor } from "ckeditor5";
 import katex from "katex";
-import { KATEX_MACROS } from "../components/katexMacros";
-
-// ── Tipos para la configuración del plugin ────────────────────────────────────
-
-export interface MathPluginConfig {
-  /** Callback que abre el modal (el usuario elige inline/block dentro del modal) */
-  onInsert: () => void;
-  /**
-   * Callback que abre el modal para EDITAR una fórmula existente.
-   * Recibe el latex actual, el tipo, y una función para confirmar los cambios.
-   */
-  onEdit: (
-    latex: string,
-    type: "inline" | "block",
-    onSave: (newLatex: string, newType: "inline" | "block") => void
-  ) => void;
-}
 
 // ── Helpers de renderizado KaTeX ──────────────────────────────────────────────
 
-function renderKatex(latex: string, displayMode: boolean): string {
+function renderKatexInline(latex: string): string {
   try {
-    return katex.renderToString(latex, {
-      throwOnError: false,
-      displayMode,
-      macros: KATEX_MACROS,
-    });
+    return katex.renderToString(latex, { throwOnError: false, displayMode: false });
   } catch {
-    return `<span style="color:#c0392b;font-family:monospace">${latex}</span>`;
+    return latex;
   }
 }
 
-// ── Comandos ──────────────────────────────────────────────────────────────────
-
-class InsertMathInlineCommand extends Command {
-  override execute({ latex }: { latex: string }): void {
-    this.editor.model.change((writer) => {
-      const el = writer.createElement("mathInline", { latex });
-      this.editor.model.insertObject(el, null, null, { setSelection: "after" });
-    });
-  }
-
-  override refresh(): void {
-    this.isEnabled = true;
+function renderKatexBlock(latex: string): string {
+  try {
+    return katex.renderToString(latex, { throwOnError: false, displayMode: true });
+  } catch {
+    return latex;
   }
 }
 
-class InsertMathBlockCommand extends Command {
-  override execute({ latex }: { latex: string }): void {
-    this.editor.model.change((writer) => {
-      const el = writer.createElement("mathBlock", { latex });
-      this.editor.model.insertObject(el, null, null, { setSelection: "after" });
-    });
-  }
-
-  override refresh(): void {
-    this.isEnabled = true;
-  }
-}
-
-class UpdateMathCommand extends Command {
-  override execute({
-    element,
-    latex,
-    type,
-  }: {
-    element: unknown;
-    latex: string;
-    type: "inline" | "block";
-  }): void {
-    this.editor.model.change((writer) => {
-      if (!element) return;
-      const targetName = type === "inline" ? "mathInline" : "mathBlock";
-
-      if ((element as { name: string }).name === targetName) {
-        writer.setAttribute(
-          "latex",
-          latex,
-          element as Parameters<typeof writer.setAttribute>[2]
-        );
-      } else {
-        const newEl = writer.createElement(targetName, { latex });
-        writer.insert(
-          newEl,
-          element as Parameters<typeof writer.insert>[1],
-          "before"
-        );
-        writer.remove(element as Parameters<typeof writer.remove>[0]);
-      }
-    });
-  }
-
-  override refresh(): void {
-    this.isEnabled = true;
-  }
-}
-
-// ── Plugin principal ──────────────────────────────────────────────────────────
+// ── Plugin ────────────────────────────────────────────────────────────────────
 
 export class MathPlugin extends Plugin {
-  static get pluginName(): string {
-    return "MathPlugin";
+  static get pluginName() {
+    return "MathPlugin" as const;
   }
 
-  init(): void {
-    this._defineSchema();
-    this._defineConverters();
-    this._defineCommands();
-    this._defineToolbarButtons();
-    this._defineClickHandler();
-  }
+  init() {
+    const editor: Editor = this.editor;
 
-  // ── Schema ──────────────────────────────────────────────────────────────────
+    // ── Schema ──────────────────────────────────────────────────────────────
 
-  private _defineSchema(): void {
-    const { schema } = this.editor.model;
-
-    schema.register("mathInline", {
+    editor.model.schema.register("mathInline", {
       allowWhere: "$text",
       isInline: true,
       isObject: true,
       allowAttributes: ["latex"],
     });
 
-    schema.register("mathBlock", {
+    editor.model.schema.register("mathBlock", {
       allowWhere: "$block",
       isObject: true,
-      isBlock: true,
       allowAttributes: ["latex"],
     });
-  }
 
-  // ── Conversores ─────────────────────────────────────────────────────────────
+    // ── Upcast: HTML → modelo ───────────────────────────────────────────────
+    // Acepta formato Tiptap legado Y formato nuevo \(...\)
 
-  private _defineConverters(): void {
-    const { conversion } = this.editor;
-
-    // ── mathInline: editingDowncast ────────────────────────────────────────────
-    conversion.for("editingDowncast").elementToElement({
-      model: "mathInline",
-      view: (modelElement, { writer }) => {
-        const latex = String(modelElement.getAttribute("latex") ?? "");
-        const rendered = renderKatex(latex, false);
-
-        const wrapper = writer.createContainerElement("span", {
-          class: "ck-math-widget ck-math-inline",
-          "data-latex": latex,
-          style: [
-            "display:inline-block",
-            "cursor:pointer",
-            // "padding:0 3px",
-            "border-radius:3px",
-            // "background:#f0f4ff",
-            // "border:1px solid #c8d8f0",
-            "vertical-align:middle",
-          ].join(";"),
-        });
-
-        const inner = writer.createRawElement(
-          "span",
-          { style: "pointer-events:none" },
-          (domElement) => { domElement.innerHTML = rendered; }
-        );
-
-        writer.insert(writer.createPositionAt(wrapper, 0), inner);
-        return toWidget(wrapper, writer, { label: "fórmula inline" });
-      },
+    // [Legado Tiptap] <span data-type="inline-math" data-latex="...">
+    editor.conversion.for("upcast").elementToElement({
+      view: { name: "span", attributes: { "data-type": "inline-math" } },
+      model: (viewEl, { writer }) =>
+        writer.createElement("mathInline", {
+          latex: viewEl.getAttribute("data-latex") ?? "",
+        }),
     });
 
-    // ── mathBlock: editingDowncast ─────────────────────────────────────────────
-    conversion.for("editingDowncast").elementToElement({
-      model: "mathBlock",
-      view: (modelElement, { writer }) => {
-        const latex = String(modelElement.getAttribute("latex") ?? "");
-        const rendered = renderKatex(latex, true);
-
-        const wrapper = writer.createContainerElement("div", {
-          class: "ck-math-widget ck-math-block",
-          "data-latex": latex,
-          style: [
-            "display:block",
-            "cursor:pointer",
-            "text-align:center",
-            // "padding:12px 16px",
-            // "margin:8px 0",
-            "border-radius:6px",
-            // "background:#f8fafc",
-            // "border:1px solid #e2e8f0",
-          ].join(";"),
-        });
-
-        const inner = writer.createRawElement(
-          "span",
-          { style: "pointer-events:none;display:block" },
-          (domElement) => { domElement.innerHTML = rendered; }
-        );
-
-        writer.insert(writer.createPositionAt(wrapper, 0), inner);
-        return toWidget(wrapper, writer, { label: "bloque matemático" });
-      },
+    // [Legado Tiptap] <div data-type="block-math" data-latex="...">
+    editor.conversion.for("upcast").elementToElement({
+      view: { name: "div", attributes: { "data-type": "block-math" } },
+      model: (viewEl, { writer }) =>
+        writer.createElement("mathBlock", {
+          latex: viewEl.getAttribute("data-latex") ?? "",
+        }),
     });
 
-    // ── mathInline: dataDowncast ───────────────────────────────────────────────
-    conversion.for("dataDowncast").elementToElement({
+    // [Formato nuevo] <span data-type="math-inline" data-latex="...">
+    // (por si algún dato fue guardado con el formato intermedio de la sesión anterior)
+    editor.conversion.for("upcast").elementToElement({
+      view: { name: "span", attributes: { "data-type": "math-inline" } },
+      model: (viewEl, { writer }) =>
+        writer.createElement("mathInline", {
+          latex: viewEl.getAttribute("data-latex") ?? "",
+        }),
+    });
+
+    // [Formato nuevo] <div data-type="math-block" data-latex="...">
+    editor.conversion.for("upcast").elementToElement({
+      view: { name: "div", attributes: { "data-type": "math-block" } },
+      model: (viewEl, { writer }) =>
+        writer.createElement("mathBlock", {
+          latex: viewEl.getAttribute("data-latex") ?? "",
+        }),
+    });
+
+    // ── Editing Downcast: modelo → vista editable (KaTeX visual) ───────────
+
+    editor.conversion.for("editingDowncast").elementToElement({
       model: "mathInline",
-      view: (modelElement, { writer }) => {
-        const latex = String(modelElement.getAttribute("latex") ?? "");
-        return writer.createRawElement(
+      view: (modelEl, { writer }) => {
+        const latex = (modelEl.getAttribute("latex") as string) ?? "";
+        const rendered = renderKatexInline(latex);
+
+        const container = writer.createRawElement(
           "span",
           {
-            "data-type": "math-inline",
+            class: "ck-math-inline",
             "data-latex": latex,
-            style: [
-              "display:inline-block",
-              // "padding:0 3px",
-              // "background:#f0f4ff",
-              "border-radius:3px",
-              // "border:1px solid #c8d8f0",
-              "font-family:monospace",
-              // "color:#185FA5",
-              "font-size:0.95em",
-            ].join(";"),
+            style:
+              "display:inline-flex;align-items:center;cursor:pointer;" +
+              "background:#eef3f8;border:1px solid #c9dae8;" +
+              "border-radius:4px;padding:1px 5px;margin:0 2px;vertical-align:middle;",
           },
-          (domElement) => { domElement.textContent = `\\(${latex}\\)`; }
+          (el) => {
+            el.innerHTML = rendered;
+          },
         );
+
+        return container;
       },
     });
 
-    // ── mathBlock: dataDowncast ────────────────────────────────────────────────
-    conversion.for("dataDowncast").elementToElement({
+    editor.conversion.for("editingDowncast").elementToElement({
       model: "mathBlock",
-      view: (modelElement, { writer }) => {
-        const latex = String(modelElement.getAttribute("latex") ?? "");
-        return writer.createRawElement(
+      view: (modelEl, { writer }) => {
+        const latex = (modelEl.getAttribute("latex") as string) ?? "";
+        const rendered = renderKatexBlock(latex);
+
+        const container = writer.createRawElement(
           "div",
           {
-            "data-type": "math-block",
+            class: "ck-math-block",
             "data-latex": latex,
-            style: [
-              "display:block",
-              "text-align:center",
-              // "padding:14px 18px",
-              // "background:#E6F1FB",
-              // "border:0.5px solid #b5d4f4",
-              "border-radius:8px",
-              "font-family:monospace",
-              // "color:#185FA5",
-            ].join(";"),
+            style:
+              "text-align:center;padding:14px 18px;margin:8px 0;" +
+              "background:#eef3f8;border:1px solid #c9dae8;" +
+              "border-radius:6px;cursor:pointer;",
           },
-          (domElement) => { domElement.textContent = `\\[${latex}\\]`; }
+          (el) => {
+            el.innerHTML = rendered;
+          },
+        );
+
+        return container;
+      },
+    });
+
+    // ── Data Downcast: modelo → HTML para guardar en DB ─────────────────────
+    // IMPORTANTE: emite \(...\) y \[...\] limpio, sin tags HTML.
+    // El contenido guardado en MongoDB no tendrá ningún tag data-* de fórmulas.
+
+    editor.conversion.for("dataDowncast").elementToElement({
+      model: "mathInline",
+      view: (modelEl, { writer }) => {
+        const latex = (modelEl.getAttribute("latex") as string) ?? "";
+        // Emitimos como texto dentro de un span invisible que CKEditor
+        // luego serializa como texto plano al hacer getData()
+        return writer.createRawElement(
+          "span",
+          { class: "math-tex" },
+          (el) => {
+            el.innerHTML = `\\(${latex}\\)`;
+          },
         );
       },
     });
 
-    // ── upcast: HTML guardado → modelo ─────────────────────────────────────────
-    conversion.for("upcast").elementToElement({
-      view: { name: "span", attributes: { "data-type": "math-inline" } },
-      model: (viewElement, { writer }) => {
-        const latex = viewElement.getAttribute("data-latex") ?? "";
-        return writer.createElement("mathInline", { latex });
+    editor.conversion.for("dataDowncast").elementToElement({
+      model: "mathBlock",
+      view: (modelEl, { writer }) => {
+        const latex = (modelEl.getAttribute("latex") as string) ?? "";
+        return writer.createRawElement(
+          "span",
+          { class: "math-tex" },
+          (el) => {
+            el.innerHTML = `\\[${latex}\\]`;
+          },
+        );
       },
-    });
-
-    conversion.for("upcast").elementToElement({
-      view: { name: "div", attributes: { "data-type": "math-block" } },
-      model: (viewElement, { writer }) => {
-        const latex = viewElement.getAttribute("data-latex") ?? "";
-        return writer.createElement("mathBlock", { latex });
-      },
-    });
-  }
-
-  // ── Comandos ─────────────────────────────────────────────────────────────────
-
-  private _defineCommands(): void {
-    const { editor } = this;
-    editor.commands.add("insertMathInline", new InsertMathInlineCommand(editor));
-    editor.commands.add("insertMathBlock", new InsertMathBlockCommand(editor));
-    editor.commands.add("updateMath", new UpdateMathCommand(editor));
-  }
-
-  // ── Botón de toolbar ──────────────────────────────────────────────────────────
-
-  private _defineToolbarButtons(): void {
-    const { editor } = this;
-
-    editor.ui.componentFactory.add("insertMath", () => {
-      const button = new ButtonView();
-      button.set({
-        label: "f(x)",
-        withText: true,
-        tooltip: "Insertar fórmula matemática",
-        class: "ck-math-button",
-      });
-      button.on("execute", () => {
-        const config = editor.config.get("math") as MathPluginConfig | undefined;
-        config?.onInsert();
-      });
-      return button;
-    });
-  }
-
-  // ── Click en widget para editar ───────────────────────────────────────────────
-
-  private _defineClickHandler(): void {
-    const { editor } = this;
-
-    editor.editing.view.document.on("click", (_evt, data) => {
-      // Ignorar clicks en los botones type-around (flechas naranjas de CKEditor)
-      const clickedDom = data.domTarget as HTMLElement | null;
-      if (clickedDom?.closest(".ck-widget__type-around__button, .ck-widget__type-around")) {
-        return;
-      }
-
-      let target = clickedDom;
-      while (target && target !== data.domEvent.currentTarget) {
-        if (target.classList?.contains("ck-math-widget")) break;
-        target = target.parentElement;
-      }
-
-      if (!target?.classList?.contains("ck-math-widget")) return;
-
-      const latex = target.getAttribute("data-latex") ?? "";
-      const type: "inline" | "block" = target.classList.contains("ck-math-inline")
-        ? "inline"
-        : "block";
-
-      const viewElement = editor.editing.view.domConverter.domToView(target);
-      if (!viewElement) return;
-
-      const modelElement = editor.editing.mapper.toModelElement(
-        viewElement as Parameters<typeof editor.editing.mapper.toModelElement>[0]
-      );
-      if (!modelElement) return;
-
-      const config = editor.config.get("math") as MathPluginConfig | undefined;
-      config?.onEdit(latex, type, (newLatex, newType) => {
-        editor.execute("updateMath", { element: modelElement, latex: newLatex, type: newType });
-      });
     });
   }
 }

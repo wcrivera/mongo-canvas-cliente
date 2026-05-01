@@ -32,8 +32,7 @@ import MathTextEditor      from "../../components/CKEditor/MathTextEditor";
 import ModalSolucionTexto  from "./components/ModalSolucionTexto";
 import ModalUrlVideo       from "../clases/ModalUrlVideo";
 import ModalCrearQuizAyudantia from "./components/ModalCrearQuizAyudantia";
-import katex               from "katex";
-import "katex/dist/katex.min.css";
+import TiptapRenderer from "../../components/CKEditor/TiptapRenderer";
 
 interface Props {
   ayudantia:   IAyudantia;
@@ -42,32 +41,6 @@ interface Props {
   esPrimero:   boolean;
   esUltimo:    boolean;
 }
-
-// ── Renderer para el enunciado (HTML de CKEditor con LaTeX) ───────────────────
-
-const renderLatexEnHtml = (html: string): string =>
-  html
-    .replace(/\\\[([\s\S]*?)\\\]/g, (_, latex) => {
-      try {
-        return `<div style="text-align:center;margin:0.8em 0">${katex.renderToString(latex.trim(), { displayMode: true, throwOnError: false })}</div>`;
-      } catch { return `\\[${latex}\\]`; }
-    })
-    .replace(/\\\(([\s\S]*?)\\\)/g, (_, latex) => {
-      try {
-        return katex.renderToString(latex.trim(), { displayMode: false, throwOnError: false });
-      } catch { return `\\(${latex}\\)`; }
-    });
-
-const EnunciadoPreview = ({ html }: { html: string }) => {
-  if (!html) return <span style={{ color: "#8daecb", fontStyle: "italic" }}>Sin enunciado</span>;
-  const rendered = html.trimStart().startsWith("<") ? renderLatexEnHtml(html) : html;
-  return (
-    <div
-      dangerouslySetInnerHTML={{ __html: rendered }}
-      style={{ fontSize: 14, lineHeight: 1.75, color: "#1f2c38" }}
-    />
-  );
-};
 
 // ─── Modal enunciado ──────────────────────────────────────────────────────────
 
@@ -382,7 +355,7 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
           {/* ── Enunciado preview ── */}
           <div className="px-5 py-4">
             <div className="text-sm text-gray-700 leading-relaxed mb-2">
-              <EnunciadoPreview html={ayudantia.enunciado} />
+              <TiptapRenderer>{ayudantia.enunciado}</TiptapRenderer>
             </div>
             <button onClick={() => setModalEnunciado(true)}
               className="text-xs text-[#8daecb] hover:text-[#4A6D8C] transition-colors flex items-center gap-1">

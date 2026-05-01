@@ -1,0 +1,99 @@
+/* TiptapRenderer.module.css
+   Estilos para el contenido renderizado por TiptapRenderer.
+   Protege contra el reset de Tailwind y normaliza elementos HTML comunes.
+*/
+
+/* ── Listas ──────────────────────────────────────────────────────────── */
+.content ul {
+  list-style-type: disc !important;
+  padding-left: 1.75em !important;
+  margin: 0.5em 0 !important;
+  display: block !important;
+}
+
+.content ol {
+  list-style-type: decimal !important;
+  padding-left: 1.75em !important;
+  margin: 0.5em 0 !important;
+  display: block !important;
+}
+
+.content li {
+  display: list-item !important;
+  margin: 0.2em 0 !important;
+}
+
+.content ol[type="1"] { list-style-type: decimal     !important; }
+.content ol[type="a"] { list-style-type: lower-alpha !important; }
+.content ol[type="A"] { list-style-type: upper-alpha !important; }
+.content ol[type="i"] { list-style-type: lower-roman !important; }
+.content ol[type="I"] { list-style-type: upper-roman !important; }
+
+.content ul ul    { list-style-type: circle !important; }
+.content ul ul ul { list-style-type: square !important; }
+.content ol ol    { list-style-type: lower-alpha !important; }
+.content ol ol ol { list-style-type: lower-roman !important; }
+
+/* ── Tabla ───────────────────────────────────────────────────────────── */
+.content table { border-collapse: collapse; width: 100%; margin: 0.8em 0; }
+.content th,
+.content td    { border: 1px solid #d9e4ee; padding: 6px 10px; text-align: left; }
+.content th    { background: #f7f9fc; font-weight: 600; color: #4A6D8C; }
+.content tr:nth-child(even) td { background: #fafcfd; }
+
+/* ── Texto ───────────────────────────────────────────────────────────── */
+.content p              { margin: 0.4em 0; }
+.content b,
+.content strong         { font-weight: 700; }
+.content i,
+.content em             { font-style: italic; }
+.content u              { text-decoration: underline; }
+.content s              { text-decoration: line-through; }
+.content h1             { font-size: 1.4em; font-weight: 700; margin: 0.8em 0 0.4em; }
+.content h2             { font-size: 1.2em; font-weight: 700; margin: 0.7em 0 0.3em; }
+.content h3             { font-size: 1.05em; font-weight: 600; margin: 0.6em 0 0.25em; }
+.content blockquote     { border-left: 3px solid #c9dae8; margin: 0.8em 0; padding: 6px 14px; color: #4A6D8C; }
+.content a              { color: #2d5be3; text-decoration: underline; text-underline-offset: 2px; }
+.content mark           { background: #fef08a; border-radius: 2px; padding: 0.05em 0.15em; }
+.content sup            { font-size: 0.75em; vertical-align: super; line-height: 0; }
+.content sub            { font-size: 0.75em; vertical-align: sub; line-height: 0; }
+.content code           { font-family: 'Fira Code', 'Consolas', monospace; background: #f0f4f8; border-radius: 3px; padding: 1px 5px; font-size: 0.88em; }
+.content pre            { background: #1e2a38; color: #e2e8f0; border-radius: 8px; padding: 14px 18px; overflow-x: auto; margin: 0.8em 0; }
+.content pre code       { background: none; padding: 0; font-size: 0.85em; }
+
+/* ── Imágenes ────────────────────────────────────────────────────────── */
+.content figure {
+  display: block !important;
+  margin: 0.6em 0 !important;
+  padding: 0 !important;
+}
+.content figure[data-align="left"]   { text-align: left !important; }
+.content figure[data-align="center"] { text-align: center !important; }
+.content figure[data-align="right"]  { text-align: right !important; }
+.content figure img {
+  display: inline-block !important;
+  max-width: 100% !important;
+  height: auto !important;
+  border-radius: 8px;
+}
+.content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* ── Dos columnas (CKEditor InlineColumns) ───────────────────────────── */
+.content .ck-two-columns,
+.content [data-two-columns] {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5em;
+  margin: 0.8em 0;
+}
+
+/* ── KaTeX inline y bloque ───────────────────────────────────────────── */
+.content .katex { font-size: 1em; }
+.content .katex-display {
+  margin: 0.8em 0 !important;
+  text-align: center;
+}
