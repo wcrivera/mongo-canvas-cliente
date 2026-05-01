@@ -1,1 +1,1 @@
-export { default as CKEditorField } from "./CKEditorField";
+export { default as CKEditorMath } from "./MathTextEditor";

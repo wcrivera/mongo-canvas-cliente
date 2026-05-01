@@ -4,7 +4,7 @@ import "ckeditor5/ckeditor5.css";
 
 // import { CKEditorField } from "../../components/CKEditor";
 // import CKEditorMath from "../../components/CKEditor/CKEditorMath";
-import RichTextEditor from "../../components/CKEditor/components/RichTextEditor";
+import MathTextEditor from "../../components/CKEditor/MathTextEditor";
 
 function App() {
   // const [content, setContent] = useState("");
@@ -16,7 +16,7 @@ function App() {
   };
   return (
     <>
-      <RichTextEditor onChange={handleChange} />
+      <MathTextEditor onChange={handleChange} />
 
       <br />
       {/* <CKEditorMath setContent={setContent} content={content} />
