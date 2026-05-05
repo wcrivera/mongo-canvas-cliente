@@ -8,7 +8,9 @@ export type TipoPregunta =
   | "multiple_answers"
   | "matching"
   | "numerical"
-  | "calculated";
+  | "calculated"
+  | "fill_in_multiple_blanks"
+  | "text_only_question";
 
 export interface ICanvasDeploymentQuiz {
   canvas_curso_id: number;
@@ -23,6 +25,7 @@ export interface IOpcion {
   _id: string;
   texto: string;
   es_correcta: boolean;
+  blank_id?: string | null;
   canvas_id?: number;
 }
 
@@ -53,6 +56,8 @@ export interface IPregunta {
   quiz_id: string;
   enunciado: string;
   tipo: TipoPregunta;
+  tipo_pimu?: string | null;
+  respuesta_lti?: string | null;
   puntos: number;
   position: number;
   opciones: IOpcion[];

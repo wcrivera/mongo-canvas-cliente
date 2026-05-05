@@ -224,7 +224,7 @@ const Clases = () => {
           </Typography>
           <div className="flex gap-3 items-start">
             <TextField
-              label="Nombre *"
+              label="Nombre de la clase"
               placeholder="ej: Introducción a los límites"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}

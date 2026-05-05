@@ -8,7 +8,9 @@ export type TipoPreguntaEjercicio =
   | "short_answer"
   | "essay"
   | "matching"
-  | "numerical";
+  | "numerical"
+  | "fill_in_multiple_blanks"
+  | "text_only_question"; 
 
 // ─── Interfaces ───────────────────────────────────────────────────────────
 export interface IOpcionEjercicio {

@@ -1,3 +1,4 @@
+// src/store/slices/diapositiva/thunks.ts
 import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
@@ -19,9 +20,7 @@ export const obtenerDiapositivasPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingDiapositiva());
     try {
-      const resp = await fetchConToken(
-        `api/diapositivas/capitulo/${capitulo_id}`
-      );
+      const resp = await fetchConToken(`api/diapositivas/capitulo/${capitulo_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setDiapositivas(body.data));
@@ -49,11 +48,7 @@ export const crearDiapositiva = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingDiapositiva());
     try {
-      const resp = await fetchConToken(
-        "api/diapositivas",
-        { recurso_id, url },
-        "POST"
-      );
+      const resp = await fetchConToken("api/diapositivas", { recurso_id, url }, "POST");
       const body = await resp.json();
       if (body.ok) {
         dispatch(agregarDiapositiva(body.data));
@@ -84,7 +79,43 @@ export const editarUrlDiapositiva = ({
       const resp = await fetchConToken(
         `api/diapositivas/${diapositiva_id}/url`,
         { url },
-        "PUT"
+        "PATCH",
+      );
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(actualizarDiapositiva(body.data));
+        dispatch(endLoadingDiapositiva());
+        return { ok: true };
+      } else {
+        dispatch(setErrorDiapositiva(body.msg));
+        return { ok: false, msg: body.msg };
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorDiapositiva(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+// ─── Reintentar publicación de diapositiva en un canvas_curso_id específico ──
+// Llamado desde ClaseCard/RecursoItem cuando el deployment de la diapositiva
+// tiene status "error" o "missing".
+
+export const reintentarDiapositiva = ({
+  diapositiva_id,
+  canvas_curso_id,
+}: {
+  diapositiva_id:  string;
+  canvas_curso_id: number;
+}) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingDiapositiva());
+    try {
+      const resp = await fetchConToken(
+        `api/diapositivas/${diapositiva_id}/reintentar/${canvas_curso_id}`,
+        {},
+        "POST",
       );
       const body = await resp.json();
       if (body.ok) {

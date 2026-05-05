@@ -92,14 +92,7 @@ export const generarHtmlCapitulos = ({
   }).join("");
 
   return `
-    <div style="
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 24px 16px;
-      font-family: sans-serif;
-      background-color: #f0f4f8;
-      min-height: 100vh;
-    ">
+    <div style="font-family: sans-serif;">
 
       <!-- Header -->
       <div style="

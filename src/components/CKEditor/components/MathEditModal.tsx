@@ -52,7 +52,6 @@ export function MathEditModal({ latex, type: initialType, onSave, onClose }: Mat
     setTimeout(() => textareaRef.current?.focus(), 80)
   }, [])
 
-  // Preview con KaTeX directo para mostrar errores en tiempo real
   const { preview, error } = useMemo(() => {
     if (!value.trim()) return { preview: '', error: '' }
     try {
@@ -168,12 +167,12 @@ export function MathEditModal({ latex, type: initialType, onSave, onClose }: Mat
               fontFamily: 'Georgia, serif', transition: 'all 0.1s',
             }}
             onMouseEnter={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = '#daeaf6';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#4A6D8C';
+              e.currentTarget.style.background = '#daeaf6';
+              e.currentTarget.style.borderColor = '#4A6D8C';
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'white';
-              (e.currentTarget as HTMLButtonElement).style.borderColor = '#c9dae8';
+              e.currentTarget.style.background = 'white';
+              e.currentTarget.style.borderColor = '#c9dae8';
             }}
           >
             <Latex macros={KATEX_MACROS}>{s.label}</Latex>
@@ -185,7 +184,7 @@ export function MathEditModal({ latex, type: initialType, onSave, onClose }: Mat
       <DialogContent sx={{ p: 0 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 200 }}>
 
-          {/* LaTeX */}
+          {/* LaTeX input */}
           <div style={{ display: 'flex', flexDirection: 'column', padding: '16px 18px', borderRight: '1px solid #e4edf5' }}>
             <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#8daecb', marginBottom: 8 }}>
               LaTeX
@@ -220,7 +219,8 @@ export function MathEditModal({ latex, type: initialType, onSave, onClose }: Mat
             <div style={{
               flex: 1, border: '1.5px solid #d9e4ee', borderRadius: 8,
               padding: '12px 16px', background: '#f9fbfd',
-              display: 'flex', alignItems: type === 'block' ? 'center' : 'flex-start',
+              display: 'flex',
+              alignItems: type === 'block' ? 'center' : 'flex-start',
               justifyContent: type === 'block' ? 'center' : 'flex-start',
               minHeight: 130, overflow: 'auto',
             }}>
@@ -280,3 +280,6 @@ export function MathEditModal({ latex, type: initialType, onSave, onClose }: Mat
     </Dialog>
   )
 }
+
+// Permite tanto import { MathEditModal } como import MathEditModal
+export default MathEditModal

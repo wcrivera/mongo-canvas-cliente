@@ -155,6 +155,7 @@ export const obtenerPreguntas = ({ quiz_id }: { quiz_id: string }) => {
 
 export const crearPregunta = ({
   quiz_id, enunciado, tipo, puntos,
+  tipo_pimu, respuesta_lti,
   opciones, pares, respuesta_numerica,
   formula, variables, decimales_resultado,
 }: {
@@ -162,7 +163,11 @@ export const crearPregunta = ({
   enunciado:           string;
   tipo:                TipoPregunta;
   puntos:              number;
-  opciones?:           { texto: string; es_correcta: boolean }[];
+  // ── Campos LTI ──────────────────────────────────────────────────────────
+  tipo_pimu?:          string | null;
+  respuesta_lti?:      string | null;
+  // ────────────────────────────────────────────────────────────────────────
+  opciones?:           { texto: string; es_correcta: boolean; blank_id?: string | null }[];
   pares?:              { izquierda: string; derecha: string }[];
   respuesta_numerica?: {
     tipo:       "exact" | "range" | "precision";
@@ -172,8 +177,8 @@ export const crearPregunta = ({
     maximo?:    number;
     precision?: number;
   };
-  formula?:            string;
-  variables?:          { nombre: string; minimo: number; maximo: number; decimales: number }[];
+  formula?:             string;
+  variables?:           { nombre: string; minimo: number; maximo: number; decimales: number }[];
   decimales_resultado?: number;
 }) => {
   return async (dispatch: AppDispatch) => {
@@ -183,6 +188,7 @@ export const crearPregunta = ({
         `api/quizzes/${quiz_id}/preguntas`,
         {
           quiz_id, enunciado, tipo, puntos,
+          tipo_pimu, respuesta_lti,
           opciones, pares, respuesta_numerica,
           formula, variables, decimales_resultado,
         },
@@ -266,6 +272,8 @@ export const editarPregunta = ({
   pregunta_id,
   enunciado,
   puntos,
+  tipo_pimu,
+  respuesta_lti,
   opciones,
   pares,
   respuesta_numerica,
@@ -273,7 +281,11 @@ export const editarPregunta = ({
   pregunta_id:         string;
   enunciado?:          string;
   puntos?:             number;
-  opciones?:           { texto: string; es_correcta: boolean }[];
+  // ── Campos LTI ──────────────────────────────────────────────────────────
+  tipo_pimu?:          string | null;
+  respuesta_lti?:      string | null;
+  // ────────────────────────────────────────────────────────────────────────
+  opciones?:           { texto: string; es_correcta: boolean; blank_id?: string | null }[];
   pares?:              { izquierda: string; derecha: string }[];
   respuesta_numerica?: {
     tipo:       "exact" | "range" | "precision";
@@ -289,7 +301,7 @@ export const editarPregunta = ({
     try {
       const resp = await fetchConToken(
         `api/quizzes/preguntas/${pregunta_id}`,
-        { enunciado, puntos, opciones, pares, respuesta_numerica },
+        { enunciado, puntos, tipo_pimu, respuesta_lti, opciones, pares, respuesta_numerica },
         "PUT"
       );
       const body = await resp.json();

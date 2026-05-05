@@ -107,6 +107,26 @@
   animation: fadeIn 0.5s ease-in-out;
 }
 
+/* Títulos con League Gothic */
+.ck-content h1,
+.ck-content h2 {
+  font-family: 'League Gothic', sans-serif;
+  letter-spacing: 0.02em;
+}
+
 .ck.ck-powered-by {
   display: none !important;
+}
+
+:root {
+  --ck-content-font-family: 'Lato', sans-serif;
+  --ck-content-font-size: 20px;
+  --ck-content-line-height: 1.6;
+}
+
+.ck-content .math-environment-title,
+.reveal .math-environment-title {
+  font-family: 'EB Garamond', Georgia, serif;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
 }

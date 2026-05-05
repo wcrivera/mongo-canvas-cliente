@@ -199,12 +199,9 @@ export const generarHtmlClases = ({
 
   return `
     <div style="
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 24px 16px;
       font-family: sans-serif;
-      background-color: #f0f4f8;
-      min-height: 100vh;
+      position: relative;
+      top: -70px;
     ">
 
       <!-- Header azul -->
