@@ -18,7 +18,7 @@ export const obtenerTemasPorClase = ({ clase_id }: { clase_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchConToken(`api/temas/clase/${clase_id}`);
+      const resp = await fetchConToken(`api/admin/temas/clase/${clase_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setTemas(body.data));
@@ -42,7 +42,7 @@ export const obtenerTemasPorCapitulo = ({ capitulo_id }: { capitulo_id: string }
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchConToken(`api/temas/capitulo/${capitulo_id}`);
+      const resp = await fetchConToken(`api/admin/temas/capitulo/${capitulo_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setTemas(body.data));
@@ -66,7 +66,7 @@ export const obtenerTemasPorCurso = ({ curso_id }: { curso_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchConToken(`api/temas/curso/${curso_id}`);
+      const resp = await fetchConToken(`api/admin/temas/curso/${curso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setTemas(body.data));
@@ -96,7 +96,7 @@ export const crearTema = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchConToken("api/temas", { clase_id, nombre }, "POST");
+      const resp = await fetchConToken("api/admin/temas", { clase_id, nombre }, "POST");
       const body = await resp.json();
       if (body.ok) {
         dispatch(agregarTema(body.data));
@@ -119,18 +119,20 @@ export const crearTema = ({
 export const editarTema = ({
   tema_id,
   nombre,
-  published,
+  published_canvas,
+  published_api,
 }: {
-  tema_id:    string;
-  nombre?:    string;
-  published?: boolean;
+  tema_id:          string;
+  nombre?:          string;
+  published_canvas?: boolean;
+  published_api?:    boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
       const resp = await fetchConToken(
-        `api/temas/${tema_id}`,
-        { nombre, published },
+        `api/admin/temas/${tema_id}`,
+        { nombre, published_canvas, published_api },
         "PUT",
       );
       const body = await resp.json();
@@ -157,7 +159,7 @@ export const eliminarTema = ({ tema_id }: { tema_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingTema());
     try {
-      const resp = await fetchConToken(`api/temas/${tema_id}`, {}, "DELETE");
+      const resp = await fetchConToken(`api/admin/temas/${tema_id}`, {}, "DELETE");
       const body = await resp.json();
       if (body.ok) {
         dispatch(setTemas(body.data));
@@ -188,7 +190,7 @@ export const cambiarPositionTema = ({
     dispatch(startLoadingTema());
     try {
       const resp = await fetchConToken(
-        `api/temas/${tema_id}/position`,
+        `api/admin/temas/${tema_id}/position`,
         { direction },
         "PATCH",
       );

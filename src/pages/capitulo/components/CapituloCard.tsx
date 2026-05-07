@@ -13,6 +13,7 @@ import DeleteOutlineIcon     from "@mui/icons-material/DeleteOutlineOutlined";
 import CheckIcon             from "@mui/icons-material/Check";
 import CloseIcon             from "@mui/icons-material/Close";
 import SchoolIcon            from "@mui/icons-material/School";
+import PublicIcon            from "@mui/icons-material/Public";
 import { useNavigate }       from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import {
@@ -49,10 +50,10 @@ const CapituloCard = ({ capitulo, curso_id, esPrimero, esUltimo }: Props) => {
   const [editando,  setEditando]  = useState(false);
   const [nombre,    setNombre]    = useState(capitulo.nombre);
   const [guardando, setGuardando] = useState(false);
-  const [toggling,  setToggling]  = useState(false);
 
-  // Bloquea ambas flechas mientras se procesa el cambio de posición
-  const [moviendo,  setMoviendo]  = useState(false);
+  const [togglingCanvas, setTogglingCanvas] = useState(false);
+  const [togglingApi,    setTogglingApi]    = useState(false);
+  const [moviendo,       setMoviendo]       = useState(false);
 
   // ── Derivados ──────────────────────────────────────────────────────────────
   const tieneErrores = capitulo.canvas_deployments.some(
@@ -93,17 +94,26 @@ const CapituloCard = ({ capitulo, curso_id, esPrimero, esUltimo }: Props) => {
     if (e.key === "Escape") handleCancelarEdicion();
   };
 
-  const handleTogglePublished = async () => {
-    setToggling(true);
+  // Toggle Canvas — actualiza Mongo + Canvas
+  const handleToggleCanvas = async () => {
+    setTogglingCanvas(true);
     await dispatch(editarCapitulo({
-      capitulo_id: capitulo._id,
-      published:   !capitulo.published,
+      capitulo_id:     capitulo._id,
+      published_canvas: !capitulo.published_canvas,
     }));
-    setToggling(false);
+    setTogglingCanvas(false);
   };
 
-  // Ambas flechas comparten el mismo guard — mientras una opera, ambas quedan
-  // deshabilitadas, evitando requests simultáneos sobre el mismo capítulo.
+  // Toggle API — solo Mongo
+  const handleToggleApi = async () => {
+    setTogglingApi(true);
+    await dispatch(editarCapitulo({
+      capitulo_id:  capitulo._id,
+      published_api: !capitulo.published_api,
+    }));
+    setTogglingApi(false);
+  };
+
   const handleMover = async (direction: "up" | "down") => {
     if (moviendo) return;
     setMoviendo(true);
@@ -114,7 +124,7 @@ const CapituloCard = ({ capitulo, curso_id, esPrimero, esUltimo }: Props) => {
   const handleDesplegarPendiente = (canvas_curso_id: number) =>
     dispatch(desplegarPendienteCapitulo({ capitulo_id: capitulo._id, canvas_curso_id }));
 
-  void reintentarCapitulo; // usado por DeploymentBadge
+  void reintentarCapitulo;
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -149,7 +159,7 @@ const CapituloCard = ({ capitulo, curso_id, esPrimero, esUltimo }: Props) => {
               {capitulo.position}
             </div>
 
-            {/* Nombre — normal o en edición ── */}
+            {/* Nombre */}
             <div className="flex-1 min-w-0">
               {editando ? (
                 <div className="flex items-center gap-1">
@@ -209,24 +219,47 @@ const CapituloCard = ({ capitulo, curso_id, esPrimero, esUltimo }: Props) => {
               )}
             </div>
 
-            {/* Controles — ocultos durante edición del nombre ── */}
+            {/* Controles */}
             {!editando && (
               <div className="flex items-center gap-0.5 shrink-0">
 
-                {/* Switch published */}
-                <Tooltip title={capitulo.published ? "Publicado — click para ocultar" : "Oculto — click para publicar"}>
-                  <span>
-                    {toggling
+                {/* Toggle Canvas */}
+                <Tooltip title={`Canvas: ${capitulo.published_canvas ? "publicado" : "oculto"}`}>
+                  <span className="flex items-center gap-0.5">
+                    <SchoolIcon sx={{ fontSize: 13, color: "#8daecb" }} />
+                    {togglingCanvas
                       ? <CircularProgress size={16} sx={{ color: "#4A6D8C", mx: 0.75 }} />
                       : (
                         <Switch
                           size="small"
-                          checked={capitulo.published}
-                          onChange={handleTogglePublished}
-                          disabled={moviendo}
+                          checked={capitulo.published_canvas}
+                          onChange={handleToggleCanvas}
+                          disabled={moviendo || togglingApi}
                           sx={{
-                            "& .MuiSwitch-thumb": { bgcolor: capitulo.published ? "#4A6D8C" : "#ccc" },
-                            "& .MuiSwitch-track": { bgcolor: capitulo.published ? "#6793ba !important" : "#d9e4ee !important" },
+                            "& .MuiSwitch-thumb": { bgcolor: capitulo.published_canvas ? "#4A6D8C" : "#ccc" },
+                            "& .MuiSwitch-track": { bgcolor: capitulo.published_canvas ? "#6793ba !important" : "#d9e4ee !important" },
+                          }}
+                        />
+                      )
+                    }
+                  </span>
+                </Tooltip>
+
+                {/* Toggle API */}
+                <Tooltip title={`Plataforma: ${capitulo.published_api ? "publicado" : "oculto"}`}>
+                  <span className="flex items-center gap-0.5">
+                    <PublicIcon sx={{ fontSize: 13, color: "#8daecb" }} />
+                    {togglingApi
+                      ? <CircularProgress size={16} sx={{ color: "#4A6D8C", mx: 0.75 }} />
+                      : (
+                        <Switch
+                          size="small"
+                          checked={capitulo.published_api}
+                          onChange={handleToggleApi}
+                          disabled={moviendo || togglingCanvas}
+                          sx={{
+                            "& .MuiSwitch-thumb": { bgcolor: capitulo.published_api ? "#4A6D8C" : "#ccc" },
+                            "& .MuiSwitch-track": { bgcolor: capitulo.published_api ? "#6793ba !important" : "#d9e4ee !important" },
                           }}
                         />
                       )
@@ -268,7 +301,6 @@ const CapituloCard = ({ capitulo, curso_id, esPrimero, esUltimo }: Props) => {
                         "&:disabled": { color: "#d9e4ee" },
                       }}
                     >
-                      {/* Solo la flecha de abajo muestra el spinner para no duplicar */}
                       <KeyboardArrowDownIcon fontSize="small" />
                     </IconButton>
                   </span>

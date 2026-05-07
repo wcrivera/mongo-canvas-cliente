@@ -55,7 +55,7 @@ const Capitulos = () => {
     const nombreTrim = nombre.trim();
     if (!nombreTrim || !curso_id) return;
     setGuardando(true);
-    await dispatch(crearCapitulo({ curso_id, nombre: nombreTrim, published: false }));
+    await dispatch(crearCapitulo({ curso_id, nombre: nombreTrim }));
     setGuardando(false);
     setNombre("");
     setMostrarForm(false);

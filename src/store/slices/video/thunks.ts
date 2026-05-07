@@ -1,3 +1,4 @@
+// src/store/slices/video/thunks.ts
 import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
@@ -7,6 +8,7 @@ import {
   setVideos,
   agregarVideo,
   actualizarVideo,
+  eliminarVideoState,
 } from "./videoSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
@@ -19,16 +21,38 @@ export const obtenerVideosPorCapitulo = ({
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingVideo());
     try {
-      const resp = await fetchConToken(`api/videos/capitulo/${capitulo_id}`);
+      const resp = await fetchConToken(
+        `api/admin/videos/capitulo/${capitulo_id}`,
+      );
       const body = await resp.json();
       if (body.ok) {
         dispatch(setVideos(body.data));
         dispatch(endLoadingVideo());
         return { ok: true };
-      } else {
-        dispatch(setErrorVideo(body.msg));
-        return { ok: false, msg: body.msg };
       }
+      dispatch(setErrorVideo(body.msg));
+      return { ok: false, msg: body.msg };
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorVideo(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+export const obtenerVideosPorTema = ({ tema_id }: { tema_id: string }) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingVideo());
+    try {
+      const resp = await fetchConToken(`api/admin/videos/tema/${tema_id}`);
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(setVideos(body.data));
+        dispatch(endLoadingVideo());
+        return { ok: true };
+      }
+      dispatch(setErrorVideo(body.msg));
+      return { ok: false, msg: body.msg };
     } catch (error) {
       console.log(error);
       dispatch(setErrorVideo(MSG_ERROR));
@@ -38,29 +62,38 @@ export const obtenerVideosPorCapitulo = ({
 };
 
 export const crearVideo = ({
-  recurso_id,
+  contexto,
+  tema_id,
+  ayudantia_id,
+  capitulo_id,
+  curso_id,
+  titulo,
   url,
 }: {
-  recurso_id: string;
-  url:        string;
+  contexto: "clase" | "ayudantia";
+  tema_id?: string;
+  ayudantia_id?: string;
+  capitulo_id: string;
+  curso_id: string;
+  titulo: string;
+  url: string;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingVideo());
     try {
       const resp = await fetchConToken(
-        "api/videos",
-        { recurso_id, url },
-        "POST"
+        "api/admin/videos",
+        { contexto, tema_id, ayudantia_id, capitulo_id, curso_id, titulo, url },
+        "POST",
       );
       const body = await resp.json();
       if (body.ok) {
         dispatch(agregarVideo(body.data));
         dispatch(endLoadingVideo());
         return { ok: true, data: body.data };
-      } else {
-        dispatch(setErrorVideo(body.msg));
-        return { ok: false, msg: body.msg };
       }
+      dispatch(setErrorVideo(body.msg));
+      return { ok: false, msg: body.msg };
     } catch (error) {
       console.log(error);
       dispatch(setErrorVideo(MSG_ERROR));
@@ -74,25 +107,82 @@ export const editarUrlVideo = ({
   url,
 }: {
   video_id: string;
-  url:      string;
+  url: string;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingVideo());
     try {
       const resp = await fetchConToken(
-        `api/videos/${video_id}/url`,
+        `api/admin/videos/${video_id}/url`,
         { url },
-        "PUT"
+        "PATCH",
       );
       const body = await resp.json();
       if (body.ok) {
         dispatch(actualizarVideo(body.data));
         dispatch(endLoadingVideo());
         return { ok: true };
-      } else {
-        dispatch(setErrorVideo(body.msg));
-        return { ok: false, msg: body.msg };
       }
+      dispatch(setErrorVideo(body.msg));
+      return { ok: false, msg: body.msg };
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorVideo(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+export const editarVideo = ({
+  video_id,
+  published_canvas,
+  published_api,
+}: {
+  video_id: string;
+  published_canvas?: boolean;
+  published_api?: boolean;
+}) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingVideo());
+    try {
+      const resp = await fetchConToken(
+        `api/admin/videos/${video_id}`,
+        { published_canvas, published_api },
+        "PUT",
+      );
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(actualizarVideo(body.data));
+        dispatch(endLoadingVideo());
+        return { ok: true };
+      }
+      dispatch(setErrorVideo(body.msg));
+      return { ok: false, msg: body.msg };
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorVideo(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+export const eliminarVideo = ({ video_id }: { video_id: string }) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingVideo());
+    try {
+      const resp = await fetchConToken(
+        `api/admin/videos/${video_id}`,
+        {},
+        "DELETE",
+      );
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(eliminarVideoState(video_id));
+        dispatch(endLoadingVideo());
+        return { ok: true };
+      }
+      dispatch(setErrorVideo(body.msg));
+      return { ok: false, msg: body.msg };
     } catch (error) {
       console.log(error);
       dispatch(setErrorVideo(MSG_ERROR));

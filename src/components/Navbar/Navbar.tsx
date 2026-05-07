@@ -63,7 +63,11 @@ const Navbar = () => {
             {nombre ?? email}
           </Typography>
           <Typography variant="caption" sx={{ color: "#6793ba" }}>
-            {role === "admin" ? "Administrador" : "Profesor"}
+            {role === "admin"
+              ? "Administrador"
+              : role === "profesor"
+                ? "Profesor"
+                : "Estudiante"}
           </Typography>
         </div>
 

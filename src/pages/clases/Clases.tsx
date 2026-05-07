@@ -15,10 +15,9 @@ import {
   limpiarClases,
 } from "../../store/slices/clase";
 import { obtenerTemasPorCapitulo, limpiarTemas }           from "../../store/slices/tema";
-import { obtenerRecursosPorCapitulo, limpiarRecursos }     from "../../store/slices/recurso";
 import { obtenerDiapositivasPorCapitulo, limpiarDiapositivas } from "../../store/slices/diapositiva";
-import { obtenerVideosPorCapitulo, limpiarVideos }         from "../../store/slices/video";
-import { obtenerQuizzesPorCapitulo, limpiarQuizzes }       from "../../store/slices/quiz";
+import { obtenerVideosPorCapitulo, limpiarVideos } from "../../store/slices/video";
+import { obtenerQuizzesPorCapitulo, limpiarQuizzes } from "../../store/slices/quiz";
 import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
 import { obtenerCapitulos }  from "../../store/slices/capitulo";
 import { generarHtmlClases } from "./generarHtmlClases";
@@ -34,7 +33,6 @@ const Clases = () => {
   const { cursoActivo }              = useAppSelector((s) => s.mongoCurso);
   const { capitulos }                = useAppSelector((s) => s.capituloMongo);
   const { temas }                    = useAppSelector((s) => s.temaMongo);
-  const { recursos }                 = useAppSelector((s) => s.recursoMongo);
   const { diapositivas }             = useAppSelector((s) => s.diapositivaMongo);
   const { videos }                   = useAppSelector((s) => s.videoMongo);
   const { quizzes }                  = useAppSelector((s) => s.quizMongo);
@@ -49,18 +47,20 @@ const Clases = () => {
 
   useEffect(() => {
     if (!curso_id || !capitulo_id) return;
+    // Limpiar estado previo antes de cargar
+    dispatch(limpiarQuizzes());
+    dispatch(limpiarDiapositivas());
+    dispatch(limpiarVideos());
     dispatch(obtenerMongoCurso({ curso_id }));
     dispatch(obtenerCapitulos({ curso_id }));
     dispatch(obtenerClases({ capitulo_id }));
     dispatch(obtenerTemasPorCapitulo({ capitulo_id }));
-    dispatch(obtenerRecursosPorCapitulo({ capitulo_id, contexto: "clase" }));
     dispatch(obtenerDiapositivasPorCapitulo({ capitulo_id }));
     dispatch(obtenerVideosPorCapitulo({ capitulo_id }));
     dispatch(obtenerQuizzesPorCapitulo({ capitulo_id }));
     return () => {
       dispatch(limpiarClases());
       dispatch(limpiarTemas());
-      dispatch(limpiarRecursos());
       dispatch(limpiarDiapositivas());
       dispatch(limpiarVideos());
       dispatch(limpiarQuizzes());
@@ -72,7 +72,7 @@ const Clases = () => {
     const nombreTrim = nombre.trim();
     if (!nombreTrim || !capitulo_id) return;
     setGuardando(true);
-    await dispatch(crearClase({ capitulo_id, nombre: nombreTrim, published: false }));
+    await dispatch(crearClase({ capitulo_id, nombre: nombreTrim }));
     setGuardando(false);
     setNombre("");
     setMostrarForm(false);
@@ -95,7 +95,6 @@ const Clases = () => {
           capitulo:        capituloActivo,
           clases,
           temas,
-          recursos,
           diapositivas,
           videos,
           quizzes,

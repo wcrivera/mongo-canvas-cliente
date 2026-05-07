@@ -91,9 +91,9 @@ const ModalBanco = ({ modo, capitulo_id, curso_id, quiz_id, onCopiado, onClose }
   const [cursoFiltro, setCursoFiltro] = useState("");
   const [cursos, setCursos]     = useState<ICursoBanco[]>([]);
 
-  const endpoint       = modo === "ejercicio" ? "api/banco/ejercicios"       : "api/banco/preguntas";
-  const cursosEndpoint = modo === "ejercicio" ? "api/banco/ejercicios/cursos" : "api/banco/preguntas/cursos";
-  const copiarEndpoint = modo === "ejercicio" ? "api/banco/ejercicios/copiar" : "api/banco/preguntas/copiar";
+  const endpoint       = modo === "ejercicio" ? "api/admin/banco/ejercicios"       : "api/admin/banco/preguntas";
+  const cursosEndpoint = modo === "ejercicio" ? "api/admin/banco/ejercicios/cursos" : "api/admin/banco/preguntas/cursos";
+  const copiarEndpoint = modo === "ejercicio" ? "api/admin/banco/ejercicios/copiar" : "api/admin/banco/preguntas/copiar";
 
   // ── Cargar cursos disponibles para el filtro ──────────────────────────────
   useEffect(() => {

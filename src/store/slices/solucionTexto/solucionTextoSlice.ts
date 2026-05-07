@@ -13,6 +13,8 @@ export interface ICanvasDeploymentSolucion {
 export interface ISolucionTexto {
   _id:                string;
   ayudantia_id:       string;
+  published_canvas:   boolean;
+  published_api:      boolean;
   capitulo_id:        string;
   curso_id:           string;
   texto:              string;
@@ -50,6 +52,9 @@ export const solucionTextoMongoSlice = createSlice({
         state.soluciones.push(action.payload);
       }
     },
+    eliminarSolucionState: (state, action) => {
+      state.soluciones = state.soluciones.filter((s) => s._id !== action.payload);
+    },
     actualizarSolucion: (state, action) => {
       const idx = state.soluciones.findIndex(
         s => s._id === action.payload._id
@@ -76,6 +81,7 @@ export const solucionTextoMongoSlice = createSlice({
 export const {
   setSoluciones,
   agregarSolucion,
+  eliminarSolucionState,
   actualizarSolucion,
   limpiarSoluciones,
   startLoadingSolucion,

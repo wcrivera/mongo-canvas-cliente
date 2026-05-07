@@ -18,7 +18,7 @@ export const obtenerCapitulos = ({ curso_id }: { curso_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
-      const resp = await fetchConToken(`api/capitulos/curso/${curso_id}`);
+      const resp = await fetchConToken(`api/admin/capitulos/curso/${curso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setCapitulos(body.data));
@@ -41,18 +41,16 @@ export const obtenerCapitulos = ({ curso_id }: { curso_id: string }) => {
 export const crearCapitulo = ({
   curso_id,
   nombre,
-  published,
 }: {
-  curso_id:  string;
-  nombre:    string;
-  published: boolean;
+  curso_id: string;
+  nombre:   string;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
       const resp = await fetchConToken(
-        "api/capitulos",
-        { curso_id, nombre, published },
+        "api/admin/capitulos",
+        { curso_id, nombre },
         "POST",
       );
       const body = await resp.json();
@@ -77,18 +75,20 @@ export const crearCapitulo = ({
 export const editarCapitulo = ({
   capitulo_id,
   nombre,
-  published,
+  published_canvas,
+  published_api,
 }: {
-  capitulo_id: string;
-  nombre?:     string;
-  published?:  boolean;
+  capitulo_id:       string;
+  nombre?:           string;
+  published_canvas?: boolean;
+  published_api?:    boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
       const resp = await fetchConToken(
-        `api/capitulos/${capitulo_id}`,
-        { nombre, published },
+        `api/admin/capitulos/${capitulo_id}`,
+        { nombre, published_canvas, published_api },
         "PUT",
       );
       const body = await resp.json();
@@ -109,15 +109,13 @@ export const editarCapitulo = ({
 };
 
 // ─── Eliminar capítulo ────────────────────────────────────────────
-// El backend retorna la lista renumerada — usamos setCapitulos para
-// actualizar el store completo con las nuevas posiciones.
 
 export const eliminarCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
     try {
       const resp = await fetchConToken(
-        `api/capitulos/${capitulo_id}`,
+        `api/admin/capitulos/${capitulo_id}`,
         {},
         "DELETE",
       );
@@ -151,7 +149,7 @@ export const reintentarCapitulo = ({
     dispatch(startLoadingCapitulo());
     try {
       const resp = await fetchConToken(
-        `api/capitulos/${capitulo_id}/reintentar/${canvas_curso_id}`,
+        `api/admin/capitulos/${capitulo_id}/reintentar/${canvas_curso_id}`,
         {},
         "POST",
       );
@@ -185,7 +183,7 @@ export const desplegarPendienteCapitulo = ({
     dispatch(startLoadingCapitulo());
     try {
       const resp = await fetchConToken(
-        `api/capitulos/${capitulo_id}/pendiente/${canvas_curso_id}`,
+        `api/admin/capitulos/${capitulo_id}/pendiente/${canvas_curso_id}`,
         {},
         "POST",
       );
@@ -219,7 +217,7 @@ export const cambiarPositionCapitulo = ({
     dispatch(startLoadingCapitulo());
     try {
       const resp = await fetchConToken(
-        `api/capitulos/${capitulo_id}/position`,
+        `api/admin/capitulos/${capitulo_id}/position`,
         { direction },
         "PATCH",
       );

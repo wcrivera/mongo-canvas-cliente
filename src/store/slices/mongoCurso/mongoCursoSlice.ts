@@ -8,13 +8,14 @@ export interface ICanvasCursoAsociado {
 }
 
 export interface IMongoCurso {
-  _id:          string;
-  codigo:       string;
-  nombre:       string;
-  descripcion?: string;
+  _id:           string;
+  codigo:        string;
+  nombre:        string;
+  descripcion?:  string;
+  published_api: boolean;
   canvas_cursos: ICanvasCursoAsociado[];
-  createdAt:    string;
-  updatedAt:    string;
+  createdAt:     string;
+  updatedAt:     string;
 }
 
 export interface MongoCursoState {

@@ -24,7 +24,7 @@ export interface AuthState {
   token:               string | null;
   email:               string | null;
   nombre:              string | null;
-  role:                'admin' | 'profesor' | null;
+  role:                'admin' | 'profesor' | 'estudiante' | null;
   id:                  string | null;
   tiene_token_canvas:  boolean;
   perfilCargado:       boolean;  // ← nuevo
@@ -51,7 +51,7 @@ export const authSlice = createSlice({
     setCredenciales: (state, action: PayloadAction<{
       token: string;
       email: string;
-      role:  'admin' | 'profesor';
+      role:  'admin' | 'profesor' | 'estudiante';
       id:    string;
     }>) => {
       state.token         = action.payload.token;

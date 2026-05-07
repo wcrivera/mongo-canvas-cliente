@@ -20,7 +20,7 @@ export const obtenerMongoCursos = () => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingMongoCurso());
     try {
-      const resp = await fetchConToken("api/cursos");
+      const resp = await fetchConToken("api/admin/cursos");
       const body = await resp.json();
       if (body.ok) {
         dispatch(setCursos(body.data));
@@ -44,7 +44,7 @@ export const obtenerMongoCurso = ({ curso_id }: { curso_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingMongoCurso());
     try {
-      const resp = await fetchConToken(`api/cursos/${curso_id}`);
+      const resp = await fetchConToken(`api/admin/cursos/${curso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setCursoActivo(body.data));
@@ -77,7 +77,7 @@ export const crearMongoCurso = ({
     dispatch(startLoadingMongoCurso());
     try {
       const resp = await fetchConToken(
-        "api/cursos",
+        "api/admin/cursos",
         { codigo, nombre, descripcion },
         "POST",
       );
@@ -114,7 +114,7 @@ export const editarMongoCurso = ({
     dispatch(startLoadingMongoCurso());
     try {
       const resp = await fetchConToken(
-        `api/cursos/${curso_id}`,
+        `api/admin/cursos/${curso_id}`,
         { nombre, descripcion },
         "PUT",
       );
@@ -142,7 +142,7 @@ export const eliminarMongoCurso = ({ curso_id }: { curso_id: string }) => {
     dispatch(startLoadingMongoCurso());
     try {
       const resp = await fetchConToken(
-        `api/cursos/${curso_id}`,
+        `api/admin/cursos/${curso_id}`,
         {},
         "DELETE",
       );
@@ -178,7 +178,7 @@ export const asociarCanvasCurso = ({
     dispatch(startLoadingMongoCurso());
     try {
       const resp = await fetchConToken(
-        `api/cursos/${curso_id}/canvas-cursos`,
+        `api/admin/cursos/${curso_id}/canvas-cursos`,
         { canvas_id, nombre },
         "POST",
       );
@@ -212,7 +212,7 @@ export const desactivarCanvasCurso = ({
     dispatch(startLoadingMongoCurso());
     try {
       const resp = await fetchConToken(
-        `api/cursos/${curso_id}/canvas-cursos/${canvas_id}/desactivar`,
+        `api/admin/cursos/${curso_id}/canvas-cursos/${canvas_id}/desactivar`,
         {},
         "PATCH",
       );
@@ -246,7 +246,7 @@ export const eliminarCanvasCurso = ({
     dispatch(startLoadingMongoCurso());
     try {
       const resp = await fetchConToken(
-        `api/cursos/${curso_id}/canvas-cursos/${canvas_id}`,
+        `api/admin/cursos/${curso_id}/canvas-cursos/${canvas_id}`,
         {},
         "DELETE",
       );
@@ -255,6 +255,39 @@ export const eliminarCanvasCurso = ({
         dispatch(actualizarCurso(body.data));
         dispatch(endLoadingMongoCurso());
         return { ok: true };
+      } else {
+        dispatch(setErrorMongoCurso(body.msg));
+        return { ok: false, msg: body.msg };
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorMongoCurso(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+// ─── Cambiar published_api del curso ──────────────────────────────
+
+export const editarPublishedApiCurso = ({
+  curso_id,
+  published_api,
+}: {
+  curso_id:      string;
+  published_api: boolean;
+}) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingMongoCurso());
+    try {
+      const resp = await fetchConToken(
+        `api/admin/cursos/${curso_id}`,
+        { published_api },
+        "PUT",
+      );
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(actualizarCurso(body.data));
+        dispatch(endLoadingMongoCurso());
+        return { ok: true, data: body.data };
       } else {
         dispatch(setErrorMongoCurso(body.msg));
         return { ok: false, msg: body.msg };

@@ -17,7 +17,8 @@ export interface IAyudantia {
   nombre:             string;
   enunciado:          string;
   position:           number;
-  published:          boolean;
+  published_canvas:   boolean;
+  published_api:      boolean;
   canvas_deployments: ICanvasDeploymentAyudantia[];
   createdAt:          string;
   updatedAt:          string;

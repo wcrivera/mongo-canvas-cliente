@@ -1,27 +1,37 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+export type ContextoDiapositiva = "clase" | "ayudantia";
+
 export interface ICanvasDeploymentDiapositiva {
   canvas_curso_id:  number;
+  canvas_module_id: number | null;
+  canvas_file_id:   number | null;
   canvas_page_id:   number | null;
   canvas_page_url:  string;
   canvas_item_id:   number | null;
-  status:           'pending' | 'synced' | 'dirty' | 'missing' | 'error';
+  status:           "pending" | "synced" | "dirty" | "missing" | "error";
   synced_at:        string | null;
   error_msg:        string;
 }
 
 export interface IDiapositiva {
-  _id:                string;
-  recurso_id:         string;
-  tema_id:            string;
-  clase_id:           string;
-  capitulo_id:        string;
-  curso_id:           string;
-  url:                string;
-  slides:             object[];
+  _id:              string;
+  contexto:         ContextoDiapositiva;
+  tema_id:          string | null;
+  ayudantia_id:     string | null;
+  capitulo_id:      string;
+  curso_id:         string;
+  titulo:           string;
+  position:         number;
+  published_canvas: boolean;
+  published_api:    boolean;
+  url:              string;
+  slides:           object[];
+  html_compilado:   string;
+  config:           { tema: string; transicion: string; menu: boolean };
   canvas_deployments: ICanvasDeploymentDiapositiva[];
-  createdAt:          string;
-  updatedAt:          string;
+  createdAt:        string;
+  updatedAt:        string;
 }
 
 export interface DiapositivaState {
@@ -44,18 +54,14 @@ export const diapositivaMongoSlice = createSlice({
       state.diapositivas = action.payload;
     },
     agregarDiapositiva: (state, action) => {
-      const idx = state.diapositivas.findIndex(
-        d => d.recurso_id === action.payload.recurso_id
-      );
-      if (idx !== -1) {
-        state.diapositivas[idx] = action.payload;
-      } else {
-        state.diapositivas.push(action.payload);
-      }
+      state.diapositivas.push(action.payload);
     },
     actualizarDiapositiva: (state, action) => {
-      const idx = state.diapositivas.findIndex(d => d._id === action.payload._id);
+      const idx = state.diapositivas.findIndex((d) => d._id === action.payload._id);
       if (idx !== -1) state.diapositivas[idx] = action.payload;
+    },
+    eliminarDiapositivaState: (state, action) => {
+      state.diapositivas = state.diapositivas.filter((d) => d._id !== action.payload);
     },
     limpiarDiapositivas: (state) => {
       state.diapositivas = [];
@@ -78,6 +84,7 @@ export const {
   setDiapositivas,
   agregarDiapositiva,
   actualizarDiapositiva,
+  eliminarDiapositivaState,
   limpiarDiapositivas,
   startLoadingDiapositiva,
   endLoadingDiapositiva,

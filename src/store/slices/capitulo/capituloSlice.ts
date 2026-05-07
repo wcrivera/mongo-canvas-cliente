@@ -4,38 +4,39 @@ export type SyncStatus = "pending" | "synced" | "dirty" | "missing" | "error";
 
 export interface ICanvasDeployment {
   canvas_curso_id: number;
-  canvas_id: number | null;
-  canvas_url: string;
-  status: SyncStatus;
-  synced_at: string | null;
-  error_msg: string;
+  canvas_id:       number | null;
+  canvas_url:      string;
+  status:          SyncStatus;
+  synced_at:       string | null;
+  error_msg:       string;
 }
 
 export interface ICapitulo {
-  _id: string;
-  curso_id: string;
-  nombre: string;
-  position: number;
-  published: boolean;
-  clases_count?: number;
-  temas_count?: number;
+  _id:                string;
+  curso_id:           string;
+  nombre:             string;
+  position:           number;
+  published_canvas:   boolean;
+  published_api:      boolean;
+  clases_count?:      number;
+  temas_count?:       number;
   canvas_deployments: ICanvasDeployment[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt:          string;
+  updatedAt:          string;
 }
 
 export interface CapituloState {
-  capitulos: ICapitulo[];
+  capitulos:      ICapitulo[];
   capituloActivo: ICapitulo | null;
-  isLoading: boolean;
-  error: string | null;
+  isLoading:      boolean;
+  error:          string | null;
 }
 
 const initialState: CapituloState = {
-  capitulos: [],
+  capitulos:      [],
   capituloActivo: null,
-  isLoading: false,
-  error: null,
+  isLoading:      false,
+  error:          null,
 };
 
 export const capituloMongoSlice = createSlice({
@@ -58,14 +59,9 @@ export const capituloMongoSlice = createSlice({
       );
       if (idx !== -1) state.capitulos[idx] = action.payload;
     },
-    // Recibe array de dos capítulos intercambiados
+    // Recibe el array completo renumerado desde el backend
     intercambiarCapitulos: (state, action) => {
-      action.payload.forEach((cap: ICapitulo) => {
-        const idx = state.capitulos.findIndex((c) => c._id === cap._id);
-        if (idx !== -1) state.capitulos[idx] = cap;
-      });
-      // Reordenar el array por position
-      state.capitulos.sort((a, b) => a.position - b.position);
+      state.capitulos = action.payload;
     },
     eliminarCapituloState: (state, action) => {
       state.capitulos = state.capitulos.filter((c) => c._id !== action.payload);
@@ -74,19 +70,19 @@ export const capituloMongoSlice = createSlice({
       }
     },
     limpiarCapitulos: (state) => {
-      state.capitulos = [];
+      state.capitulos      = [];
       state.capituloActivo = null;
     },
     startLoadingCapitulo: (state) => {
       state.isLoading = true;
-      state.error = null;
+      state.error     = null;
     },
     endLoadingCapitulo: (state) => {
       state.isLoading = false;
     },
     setErrorCapitulo: (state, action) => {
       state.isLoading = false;
-      state.error = action.payload;
+      state.error     = action.payload;
     },
   },
 });

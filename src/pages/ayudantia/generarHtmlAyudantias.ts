@@ -2,7 +2,6 @@ import type { IAyudantia }    from "../../store/slices/ayudantia";
 import type { ISolucionTexto } from "../../store/slices/solucionTexto";
 import type { IVideo }        from "../../store/slices/video";
 import type { IQuiz }         from "../../store/slices/quiz";
-import type { IRecurso }      from "../../store/slices/recurso";
 import type { IMongoCurso }   from "../../store/slices/mongoCurso";
 import type { ICapitulo }     from "../../store/slices/capitulo";
 import { toCanvasHTML } from "../../components/CKEditor/canvasHTML";
@@ -12,7 +11,6 @@ interface GenerarHtmlAyudantiasParams {
   capitulo:        ICapitulo;
   ayudantias:      IAyudantia[];
   soluciones:      ISolucionTexto[];
-  recursos:        IRecurso[];
   videos:          IVideo[];
   quizzes:         IQuiz[];
   canvas_curso_id: number;
@@ -23,7 +21,6 @@ export const generarHtmlAyudantias = ({
   capitulo,
   ayudantias,
   soluciones,
-  recursos,
   videos,
   quizzes,
   canvas_curso_id,
@@ -34,18 +31,10 @@ export const generarHtmlAyudantias = ({
   );
 
   const itemsHtml = ayudantiasOrdenadas.map((ay) => {
-    // Recursos de esta ayudantía
-    const recursosAy  = recursos.filter(r => r.ayudantia_id === ay._id);
-    const recursoVideo = recursosAy.find(r => r.tipo === 'video');
-    const recursoQuiz  = recursosAy.find(r => r.tipo === 'quiz');
-
+    // Recursos directamente por ayudantia_id (sin modelo Recurso)
     const solucion = soluciones.find(s => s.ayudantia_id === ay._id);
-    const video    = recursoVideo
-      ? videos.find(v => v.recurso_id === recursoVideo._id)
-      : undefined;
-    const quiz     = recursoQuiz
-      ? quizzes.find(q => q.recurso_id === recursoQuiz._id)
-      : undefined;
+    const video    = videos.find(v => v.ayudantia_id === ay._id && v.contexto === "ayudantia");
+    const quiz     = quizzes.find(q => q.ayudantia_id === ay._id && q.contexto === "ayudantia");
 
     // URLs de recursos
     const solucionDep = solucion?.canvas_deployments.find(

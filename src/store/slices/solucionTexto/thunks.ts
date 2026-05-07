@@ -7,6 +7,7 @@ import {
   setSoluciones,
   agregarSolucion,
   actualizarSolucion,
+  eliminarSolucionState,
 } from "./solucionTextoSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
@@ -20,7 +21,7 @@ export const obtenerSolucionesPorCapitulo = ({
     dispatch(startLoadingSolucion());
     try {
       const resp = await fetchConToken(
-        `api/soluciones-texto/capitulo/${capitulo_id}`
+        `api/admin/soluciones-texto/capitulo/${capitulo_id}`
       );
       const body = await resp.json();
       if (body.ok) {
@@ -50,7 +51,7 @@ export const crearSolucionTexto = ({
     dispatch(startLoadingSolucion());
     try {
       const resp = await fetchConToken(
-        "api/soluciones-texto",
+        "api/admin/soluciones-texto",
         { ayudantia_id, texto },
         "POST"
       );
@@ -82,7 +83,7 @@ export const editarSolucionTexto = ({
     dispatch(startLoadingSolucion());
     try {
       const resp = await fetchConToken(
-        `api/soluciones-texto/${solucion_id}`,
+        `api/admin/soluciones-texto/${solucion_id}`,
         { texto },
         "PUT"
       );
@@ -99,6 +100,23 @@ export const editarSolucionTexto = ({
       console.log(error);
       dispatch(setErrorSolucion(MSG_ERROR));
       return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+export const eliminarSolucionTexto = ({ solucion_id }: { solucion_id: string }) => {
+  return async (dispatch: AppDispatch) => {
+    try {
+      const resp = await fetchConToken(`api/admin/soluciones-texto/${solucion_id}`, {}, "DELETE");
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(eliminarSolucionState(solucion_id));
+        return { ok: true };
+      }
+      return { ok: false, msg: body.msg };
+    } catch (error) {
+      console.log(error);
+      return { ok: false };
     }
   };
 };

@@ -47,7 +47,7 @@ const ModalSincronizar = ({
     setTerminado(false);
 
     const token = sessionStorage.getItem("auth_token");
-    const url = `${import.meta.env.VITE_BACKEND_URL}/api/sincronizar/${curso_id}/${canvas_curso_id}?token=${token}`;
+    const url = `${import.meta.env.VITE_BACKEND_URL}/api/admin/sincronizar/${curso_id}/${canvas_curso_id}?token=${token}`;
     const es = new EventSource(url);
     eventSourceRef.current = es;
 

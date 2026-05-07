@@ -15,9 +15,8 @@ import {
   limpiarAyudantias,
 } from "../../store/slices/ayudantia";
 import { obtenerSolucionesPorCapitulo, limpiarSoluciones } from "../../store/slices/solucionTexto";
-import { obtenerVideosPorCapitulo, limpiarVideos }         from "../../store/slices/video";
-import { obtenerQuizzesPorCapitulo, limpiarQuizzes }       from "../../store/slices/quiz";
-import { obtenerRecursosPorCapitulo, limpiarRecursos }     from "../../store/slices/recurso";
+import { obtenerVideosPorCapitulo, limpiarVideos } from "../../store/slices/video";
+import { obtenerQuizzesPorCapitulo, limpiarQuizzes } from "../../store/slices/quiz";
 import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
 import { obtenerCapitulos }  from "../../store/slices/capitulo";
 import { generarHtmlAyudantias } from "./generarHtmlAyudantias";
@@ -33,7 +32,6 @@ const Ayudantias = () => {
   const { capitulos }   = useAppSelector((s) => s.capituloMongo);
   const { cursoActivo } = useAppSelector((s) => s.mongoCurso);
   const { soluciones }  = useAppSelector((s) => s.solucionTextoMongo);
-  const { recursos }    = useAppSelector((s) => s.recursoMongo);
   const { videos }      = useAppSelector((s) => s.videoMongo);
   const { quizzes }     = useAppSelector((s) => s.quizMongo);
 
@@ -47,19 +45,20 @@ const Ayudantias = () => {
 
   useEffect(() => {
     if (!curso_id || !capitulo_id) return;
+    // Limpiar estado previo antes de cargar
+    dispatch(limpiarQuizzes());
+    dispatch(limpiarVideos());
     dispatch(obtenerMongoCurso({ curso_id }));
     dispatch(obtenerCapitulos({ curso_id }));
     dispatch(obtenerAyudantiasPorCapitulo({ capitulo_id }));
     dispatch(obtenerSolucionesPorCapitulo({ capitulo_id }));
     dispatch(obtenerVideosPorCapitulo({ capitulo_id }));
     dispatch(obtenerQuizzesPorCapitulo({ capitulo_id }));
-    dispatch(obtenerRecursosPorCapitulo({ capitulo_id, contexto: "ayudantia" }));
     return () => {
       dispatch(limpiarAyudantias());
       dispatch(limpiarSoluciones());
       dispatch(limpiarVideos());
       dispatch(limpiarQuizzes());
-      dispatch(limpiarRecursos());
     };
   }, [curso_id, capitulo_id, dispatch]);
 
@@ -72,7 +71,7 @@ const Ayudantias = () => {
       capitulo_id,
       nombre:    nombreTrim,
       enunciado: "",
-      published: false,
+      // published: false,
     }));
     setGuardando(false);
     setNombre("");
@@ -96,7 +95,6 @@ const Ayudantias = () => {
           capitulo:        capituloActivo,
           ayudantias,
           soluciones,
-          recursos,
           videos,
           quizzes,
           canvas_curso_id: canvas_id,

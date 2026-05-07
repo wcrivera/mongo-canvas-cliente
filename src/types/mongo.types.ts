@@ -12,6 +12,7 @@ export interface IMongoCurso {
   codigo: string;
   nombre: string;
   descripcion?: string;
+  published_api: boolean;
   canvas_cursos: ICanvasCursoAsociado[];
   createdAt: string;
   updatedAt: string;

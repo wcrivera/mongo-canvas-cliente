@@ -3,13 +3,16 @@ import { useState }    from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card, CardContent, IconButton,
-  Tooltip, Typography, Divider, Button,
+  Tooltip, Typography, Divider, Button, Switch, CircularProgress,
 } from "@mui/material";
 import EditOutlinedIcon              from "@mui/icons-material/EditOutlined";
 import ArrowForwardIcon              from "@mui/icons-material/ArrowForward";
 import SchoolIcon                    from "@mui/icons-material/School";
+import PublicIcon                    from "@mui/icons-material/Public";
 import SyncIcon                      from "@mui/icons-material/Sync";
 import { AddCircleOutlineOutlined, DeleteOutlineOutlined } from "@mui/icons-material";
+import { useAppDispatch }            from "../../../store/hooks";
+import { editarPublishedApiCurso }   from "../../../store/slices/mongoCurso";
 import type { IMongoCurso }          from "../../../store/slices/mongoCurso";
 import CanvasCursoChip               from "./CanvasCursoChip";
 import ModalAsociarCanvas            from "./ModalAsociarCanvas";
@@ -18,15 +21,17 @@ import ModalSincronizar              from "./ModalSincronizar";
 interface Props {
   curso:      IMongoCurso;
   onEditar:   (curso: IMongoCurso) => void;
-  onEliminar: (curso: IMongoCurso) => void; // ← ahora recibe el curso completo
+  onEliminar: (curso: IMongoCurso) => void;
 }
 
 const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const [modalAsociar, setModalAsociar] = useState(false);
   const [verInactivos, setVerInactivos] = useState(false);
-  const [modalSync, setModalSync]       = useState<{
+  const [togglingApi,  setTogglingApi]  = useState(false);
+  const [modalSync, setModalSync] = useState<{
     abierto:         boolean;
     canvas_curso_id: number;
     canvas_nombre:   string;
@@ -34,6 +39,15 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
 
   const canvasActivos   = curso.canvas_cursos.filter((c) => c.activo);
   const canvasInactivos = curso.canvas_cursos.filter((c) => !c.activo);
+
+  const handleToggleApi = async () => {
+    setTogglingApi(true);
+    await dispatch(editarPublishedApiCurso({
+      curso_id:     curso._id,
+      published_api: !curso.published_api,
+    }));
+    setTogglingApi(false);
+  };
 
   return (
     <>
@@ -89,15 +103,34 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
             </div>
 
             {/* Acciones */}
-            <div className="flex shrink-0 gap-0.5">
+            <div className="flex shrink-0 items-center gap-0.5">
+
+              {/* Toggle API plataforma */}
+              <Tooltip title={`Plataforma: ${curso.published_api ? "publicado" : "oculto"}`}>
+                <span className="flex items-center gap-0.5">
+                  <PublicIcon sx={{ fontSize: 13, color: "#8daecb" }} />
+                  {togglingApi
+                    ? <CircularProgress size={16} sx={{ color: "#4A6D8C", mx: 0.75 }} />
+                    : (
+                      <Switch
+                        size="small"
+                        checked={curso.published_api}
+                        onChange={handleToggleApi}
+                        sx={{
+                          "& .MuiSwitch-thumb": { bgcolor: curso.published_api ? "#4A6D8C" : "#ccc" },
+                          "& .MuiSwitch-track": { bgcolor: curso.published_api ? "#6793ba !important" : "#d9e4ee !important" },
+                        }}
+                      />
+                    )
+                  }
+                </span>
+              </Tooltip>
+
               <Tooltip title="Editar curso">
                 <IconButton
                   size="small"
                   onClick={() => onEditar(curso)}
-                  sx={{
-                    color: "#8daecb",
-                    "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" },
-                  }}
+                  sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}
                 >
                   <EditOutlinedIcon fontSize="small" />
                 </IconButton>
@@ -105,11 +138,8 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
               <Tooltip title="Eliminar curso">
                 <IconButton
                   size="small"
-                  onClick={() => onEliminar(curso)} // ← pasa el curso completo
-                  sx={{
-                    color: "#8daecb",
-                    "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" },
-                  }}
+                  onClick={() => onEliminar(curso)}
+                  sx={{ color: "#8daecb", "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" } }}
                 >
                   <DeleteOutlineOutlined fontSize="small" />
                 </IconButton>
@@ -118,10 +148,7 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
                 <IconButton
                   size="small"
                   onClick={() => navigate(`/cursos/${curso._id}/capitulos`)}
-                  sx={{
-                    color: "#8daecb",
-                    "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" },
-                  }}
+                  sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}
                 >
                   <ArrowForwardIcon fontSize="small" />
                 </IconButton>
@@ -153,11 +180,8 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
                 startIcon={<AddCircleOutlineOutlined />}
                 onClick={() => setModalAsociar(true)}
                 sx={{
-                  color: "#4A6D8C",
-                  fontSize: "0.7rem",
-                  fontWeight: 600,
-                  borderRadius: 2,
-                  px: 1.5,
+                  color: "#4A6D8C", fontSize: "0.7rem", fontWeight: 600,
+                  borderRadius: 2, px: 1.5,
                   "&:hover": { bgcolor: "#f0f4f8" },
                 }}
               >
@@ -185,18 +209,12 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
                   <Tooltip title="Sincronizar contenido">
                     <IconButton
                       size="small"
-                      onClick={() =>
-                        setModalSync({
-                          abierto:         true,
-                          canvas_curso_id: cc.canvas_id,
-                          canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
-                        })
-                      }
-                      sx={{
-                        color: "#8daecb",
-                        flexShrink: 0,
-                        "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" },
-                      }}
+                      onClick={() => setModalSync({
+                        abierto:         true,
+                        canvas_curso_id: cc.canvas_id,
+                        canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
+                      })}
+                      sx={{ color: "#8daecb", flexShrink: 0, "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}
                     >
                       <SyncIcon fontSize="small" />
                     </IconButton>
@@ -225,18 +243,12 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
                         <Tooltip title="Sincronizar contenido">
                           <IconButton
                             size="small"
-                            onClick={() =>
-                              setModalSync({
-                                abierto:         true,
-                                canvas_curso_id: cc.canvas_id,
-                                canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
-                              })
-                            }
-                            sx={{
-                              color: "#8daecb",
-                              flexShrink: 0,
-                              "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" },
-                            }}
+                            onClick={() => setModalSync({
+                              abierto:         true,
+                              canvas_curso_id: cc.canvas_id,
+                              canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
+                            })}
+                            sx={{ color: "#8daecb", flexShrink: 0, "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}
                           >
                             <SyncIcon fontSize="small" />
                           </IconButton>
@@ -251,23 +263,16 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
         </CardContent>
       </Card>
 
-      {/* Modal asociar */}
       {modalAsociar && (
-        <ModalAsociarCanvas
-          curso_id={curso._id}
-          onClose={() => setModalAsociar(false)}
-        />
+        <ModalAsociarCanvas curso_id={curso._id} onClose={() => setModalAsociar(false)} />
       )}
 
-      {/* Modal sincronizar */}
       {modalSync.abierto && (
         <ModalSincronizar
           curso_id={curso._id}
           canvas_curso_id={modalSync.canvas_curso_id}
           canvas_nombre={modalSync.canvas_nombre}
-          onClose={() =>
-            setModalSync({ abierto: false, canvas_curso_id: 0, canvas_nombre: "" })
-          }
+          onClose={() => setModalSync({ abierto: false, canvas_curso_id: 0, canvas_nombre: "" })}
         />
       )}
     </>

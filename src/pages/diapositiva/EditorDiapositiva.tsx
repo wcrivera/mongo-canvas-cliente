@@ -29,10 +29,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import {
-  agregarDiapositiva,
-  actualizarDiapositiva,
-} from "../../store/slices/diapositiva";
+import { actualizarDiapositiva, eliminarDiapositiva } from "../../store/slices/diapositiva";
 import { fetchConToken } from "../../helpers/fetch";
 import MathTextEditor from "../../components/CKEditor/MathTextEditorDiapositiva";
 import SlidePreview from "./SlidePreview"; // mismo directorio: src/pages/diapositiva/
@@ -103,7 +100,9 @@ const EditorDiapositiva = () => {
   const [msgOk, setMsgOk] = useState<string | null>(null);
   const [msgErr, setMsgErr] = useState<string | null>(null);
   const [modalConfig, setModalConfig] = useState(false);
-  const [modalPreview, setModalPreview] = useState<number | null>(null);
+  const [modalPreview,  setModalPreview]  = useState<number | null>(null);
+  const [eliminando,    setEliminando]    = useState(false);
+  const [modalEliminar, setModalEliminar] = useState(false);
 
   const diapId = useRef<string | null>(null);
   const inicializado = useRef(false);
@@ -112,14 +111,13 @@ const EditorDiapositiva = () => {
 
   // ── Cargar ────────────────────────────────────────────────────────────────
 
+  // recurso_id en la ruta contiene directamente el diapositiva_id
   useEffect(() => {
     if (inicializado.current || !recurso_id) return;
 
     const cargar = async () => {
       try {
-        const resp = await fetchConToken(
-          `api/diapositivas/recurso/${recurso_id}`,
-        );
+        const resp = await fetchConToken(`api/admin/diapositivas/${recurso_id}`);
         const body = await resp.json();
 
         if (body.ok && body.data) {
@@ -135,21 +133,8 @@ const EditorDiapositiva = () => {
             );
           }
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const savedConfig = (body.data as any).config as
-            | IConfigReveal
-            | undefined;
+          const savedConfig = (body.data as any).config as IConfigReveal | undefined;
           if (savedConfig) setConfig(savedConfig);
-        } else {
-          const respCrear = await fetchConToken(
-            "api/diapositivas",
-            { recurso_id, url: "" },
-            "POST",
-          );
-          const bodyCrear = await respCrear.json();
-          if (bodyCrear.ok && bodyCrear.data) {
-            diapId.current = bodyCrear.data._id;
-            dispatch(agregarDiapositiva(bodyCrear.data));
-          }
         }
       } catch (e) {
         console.error("[EditorDiapositiva] error al cargar:", e);
@@ -160,7 +145,7 @@ const EditorDiapositiva = () => {
     };
 
     cargar();
-  }, [recurso_id, dispatch]);
+  }, [recurso_id]);
 
   // ── CRUD slides ───────────────────────────────────────────────────────────
 
@@ -206,7 +191,7 @@ const EditorDiapositiva = () => {
     setMsgErr(null);
     
     const resp = await fetchConToken(
-      `api/diapositivas/${diapId.current}/slides`,
+      `api/admin/diapositivas/${diapId.current}/slides`,
       { slides, config },
       "PATCH",
     );
@@ -230,7 +215,7 @@ const EditorDiapositiva = () => {
 
     // 1. Guardar primero para asegurar que los slides están en BD
     const respGuardar = await fetchConToken(
-      `api/diapositivas/${diapId.current}/slides`,
+      `api/admin/diapositivas/${diapId.current}/slides`,
       { slides, config },
       "PATCH",
     );
@@ -244,7 +229,7 @@ const EditorDiapositiva = () => {
 
     // 2. Publicar — el servidor obtiene el canvas_token del usuario autenticado
     const resp = await fetchConToken(
-      `api/diapositivas/${diapId.current}/publicar`,
+      `api/admin/diapositivas/${diapId.current}/publicar`,
       {},
       "POST",
     );
@@ -258,6 +243,16 @@ const EditorDiapositiva = () => {
     } else {
       setMsgErr(body.msg ?? "Error al publicar");
     }
+  };
+
+  // ── Eliminar ─────────────────────────────────────────────────────────────
+
+  const handleEliminar = async () => {
+    if (!diapId.current) return;
+    setEliminando(true);
+    await dispatch(eliminarDiapositiva({ diapositiva_id: diapId.current }));
+    setEliminando(false);
+    navigate(`/cursos/${curso_id}/capitulos/${capitulo_id}/clases`);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -338,6 +333,16 @@ const EditorDiapositiva = () => {
               sx={{ color: "#64748b" }}
             >
               <SettingsIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Eliminar diapositiva">
+            <IconButton
+              size="small"
+              onClick={() => setModalEliminar(true)}
+              sx={{ color: "#94a3b8", "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" } }}
+            >
+              <DeleteOutlineIcon fontSize="small" />
             </IconButton>
           </Tooltip>
 
@@ -762,6 +767,31 @@ const EditorDiapositiva = () => {
           )}
         </DialogContent>
       </Dialog>
+      {/* ── Modal: confirmar eliminar ── */}
+      <Dialog open={modalEliminar} onClose={() => setModalEliminar(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ bgcolor: "#fef2f2", color: "#991b1b", display: "flex", alignItems: "center", gap: 1.5, py: 2 }}>
+          <DeleteOutlineIcon />
+          <span>Eliminar diapositiva</span>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3, pb: 1 }}>
+          <Typography variant="body2" sx={{ color: "#374151" }}>
+            Se eliminará la diapositiva, sus slides y el contenido en Canvas. Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          <Button onClick={() => setModalEliminar(false)} variant="outlined"
+            sx={{ borderColor: "#d1d5db", color: "#374151", borderRadius: 2 }}>
+            Cancelar
+          </Button>
+          <Button onClick={handleEliminar} variant="contained" disabled={eliminando}
+            startIcon={eliminando ? <CircularProgress size={14} color="inherit" /> : undefined}
+            sx={{ bgcolor: "#dc2626", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none",
+              "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" } }}>
+            {eliminando ? "Eliminando..." : "Sí, eliminar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </div>
   );
 };

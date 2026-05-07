@@ -18,7 +18,7 @@ export const obtenerClasesPorCurso = ({ curso_id }: { curso_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchConToken(`api/clases/curso/${curso_id}`);
+      const resp = await fetchConToken(`api/admin/clases/curso/${curso_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setClases(body.data));
@@ -42,7 +42,7 @@ export const obtenerClases = ({ capitulo_id }: { capitulo_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
-      const resp = await fetchConToken(`api/clases/capitulo/${capitulo_id}`);
+      const resp = await fetchConToken(`api/admin/clases/capitulo/${capitulo_id}`);
       const body = await resp.json();
       if (body.ok) {
         dispatch(setClases(body.data));
@@ -65,18 +65,20 @@ export const obtenerClases = ({ capitulo_id }: { capitulo_id: string }) => {
 export const crearClase = ({
   capitulo_id,
   nombre,
-  published,
+  published_canvas,
+  published_api,
 }: {
   capitulo_id: string;
   nombre:      string;
-  published:   boolean;
+  published_canvas?: boolean;
+  published_api?:    boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
       const resp = await fetchConToken(
-        "api/clases",
-        { capitulo_id, nombre, published },
+        "api/admin/clases",
+        { capitulo_id, nombre, published_canvas, published_api },
         "POST",
       );
       const body = await resp.json();
@@ -101,18 +103,20 @@ export const crearClase = ({
 export const editarClase = ({
   clase_id,
   nombre,
-  published,
+  published_canvas,
+  published_api,
 }: {
-  clase_id:   string;
-  nombre?:    string;
-  published?: boolean;
+  clase_id:         string;
+  nombre?:          string;
+  published_canvas?: boolean;
+  published_api?:    boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingClase());
     try {
       const resp = await fetchConToken(
-        `api/clases/${clase_id}`,
-        { nombre, published },
+        `api/admin/clases/${clase_id}`,
+        { nombre, published_canvas, published_api },
         "PUT",
       );
       const body = await resp.json();
@@ -141,7 +145,7 @@ export const eliminarClase = ({ clase_id }: { clase_id: string }) => {
     dispatch(startLoadingClase());
     try {
       const resp = await fetchConToken(
-        `api/clases/${clase_id}`,
+        `api/admin/clases/${clase_id}`,
         {},
         "DELETE",
       );
@@ -175,7 +179,7 @@ export const reintentarClase = ({
     dispatch(startLoadingClase());
     try {
       const resp = await fetchConToken(
-        `api/clases/${clase_id}/reintentar/${canvas_curso_id}`,
+        `api/admin/clases/${clase_id}/reintentar/${canvas_curso_id}`,
         {},
         "POST",
       );
@@ -209,7 +213,7 @@ export const cambiarPositionClase = ({
     dispatch(startLoadingClase());
     try {
       const resp = await fetchConToken(
-        `api/clases/${clase_id}/position`,
+        `api/admin/clases/${clase_id}/position`,
         { direction },
         "PATCH",
       );

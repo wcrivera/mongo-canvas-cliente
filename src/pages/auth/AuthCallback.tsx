@@ -48,7 +48,9 @@ const AuthCallback = () => {
         // Cargar perfil completo para saber si tiene token Canvas
         await dispatch(cargarPerfil());
 
-        navigate("/inicio", { replace: true });
+        // Redirigir según rol
+        const destino = payload.role === "admin" ? "/inicio" : "/plataforma";
+        navigate(destino, { replace: true });
       } catch (e) {
         console.error("Error en callback:", e);
         navigate("/login?error=invalid_token", { replace: true });

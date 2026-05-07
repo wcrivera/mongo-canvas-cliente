@@ -15,7 +15,8 @@ export interface ITema {
   curso_id:           string;
   nombre:             string;
   position:           number;
-  published:          boolean;   // ← nuevo
+  published_canvas:   boolean;
+  published_api:      boolean;
   canvas_deployments: ICanvasDeploymentTema[];
   createdAt:          string;
   updatedAt:          string;
@@ -53,11 +54,7 @@ export const temaMongoSlice = createSlice({
     },
     // Usado al cambiar posición — actualiza posiciones de los afectados
     intercambiarTemas: (state, action) => {
-      action.payload.forEach((tema: ITema) => {
-        const idx = state.temas.findIndex((t) => t._id === tema._id);
-        if (idx !== -1) state.temas[idx] = tema;
-      });
-      state.temas.sort((a, b) => a.position - b.position);
+      state.temas = action.payload;
     },
     limpiarTemas: (state) => {
       state.temas = [];

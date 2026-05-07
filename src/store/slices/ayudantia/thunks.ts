@@ -1,213 +1,86 @@
 import { fetchConToken } from "../../../helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
-  startLoadingAyudantia,
-  endLoadingAyudantia,
-  setErrorAyudantia,
-  setAyudantias,
-  agregarAyudantia,
-  actualizarAyudantia,
-  intercambiarAyudantias,
+  startLoadingAyudantia, endLoadingAyudantia, setErrorAyudantia,
+  setAyudantias, agregarAyudantia, actualizarAyudantia, intercambiarAyudantias,
 } from "./ayudantiaSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
 
-// ─── Obtener por capítulo ─────────────────────────────────────────
-
-export const obtenerAyudantiasPorCapitulo = ({
-  capitulo_id,
-}: {
-  capitulo_id: string;
-}) => {
+export const obtenerAyudantiasPorCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchConToken(`api/ayudantias/capitulo/${capitulo_id}`);
+      const resp = await fetchConToken(`api/admin/ayudantias/capitulo/${capitulo_id}`);
       const body = await resp.json();
-      if (body.ok) {
-        dispatch(setAyudantias(body.data));
-        dispatch(endLoadingAyudantia());
-        return { ok: true };
-      } else {
-        dispatch(setErrorAyudantia(body.msg));
-        return { ok: false, msg: body.msg };
-      }
-    } catch (error) {
-      console.log(error);
-      dispatch(setErrorAyudantia(MSG_ERROR));
-      return { ok: false, msg: MSG_ERROR };
-    }
+      if (body.ok) { dispatch(setAyudantias(body.data)); dispatch(endLoadingAyudantia()); return { ok: true }; }
+      dispatch(setErrorAyudantia(body.msg)); return { ok: false, msg: body.msg };
+    } catch (error) { console.log(error); dispatch(setErrorAyudantia(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
   };
 };
-
-// ─── Obtener por curso ────────────────────────────────────────────
-
-export const obtenerAyudantiasPorCurso = ({
-  curso_id,
-}: {
-  curso_id: string;
-}) => {
-  return async (dispatch: AppDispatch) => {
-    dispatch(startLoadingAyudantia());
-    try {
-      const resp = await fetchConToken(`api/ayudantias/curso/${curso_id}`);
-      const body = await resp.json();
-      if (body.ok) {
-        dispatch(setAyudantias(body.data));
-        dispatch(endLoadingAyudantia());
-        return { ok: true };
-      } else {
-        dispatch(setErrorAyudantia(body.msg));
-        return { ok: false, msg: body.msg };
-      }
-    } catch (error) {
-      console.log(error);
-      dispatch(setErrorAyudantia(MSG_ERROR));
-      return { ok: false, msg: MSG_ERROR };
-    }
-  };
-};
-
-// ─── Crear ───────────────────────────────────────────────────────
 
 export const crearAyudantia = ({
-  capitulo_id,
-  nombre,
-  enunciado,
-  published,
+  capitulo_id, nombre, enunciado,
 }: {
   capitulo_id: string;
   nombre:      string;
   enunciado:   string;
-  published:   boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchConToken(
-        "api/ayudantias",
-        { capitulo_id, nombre, enunciado, published },
-        "POST",
-      );
+      const resp = await fetchConToken("api/admin/ayudantias", { capitulo_id, nombre, enunciado }, "POST");
       const body = await resp.json();
-      if (body.ok) {
-        dispatch(agregarAyudantia(body.data));
-        dispatch(endLoadingAyudantia());
-        return { ok: true, data: body.data };
-      } else {
-        dispatch(setErrorAyudantia(body.msg));
-        return { ok: false, msg: body.msg };
-      }
-    } catch (error) {
-      console.log(error);
-      dispatch(setErrorAyudantia(MSG_ERROR));
-      return { ok: false, msg: MSG_ERROR };
-    }
+      if (body.ok) { dispatch(agregarAyudantia(body.data)); dispatch(endLoadingAyudantia()); return { ok: true, data: body.data }; }
+      dispatch(setErrorAyudantia(body.msg)); return { ok: false, msg: body.msg };
+    } catch (error) { console.log(error); dispatch(setErrorAyudantia(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
   };
 };
 
-// ─── Editar ───────────────────────────────────────────────────────
-
 export const editarAyudantia = ({
-  ayudantia_id,
-  nombre,
-  enunciado,
-  published,
+  ayudantia_id, nombre, enunciado, published_canvas, published_api,
 }: {
-  ayudantia_id: string;
-  nombre?:      string;
-  enunciado?:   string;
-  published?:   boolean;
+  ayudantia_id:      string;
+  nombre?:           string;
+  enunciado?:        string;
+  published_canvas?: boolean;
+  published_api?:    boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
       const resp = await fetchConToken(
-        `api/ayudantias/${ayudantia_id}`,
-        { nombre, enunciado, published },
+        `api/admin/ayudantias/${ayudantia_id}`,
+        { nombre, enunciado, published_canvas, published_api },
         "PUT",
       );
       const body = await resp.json();
-      if (body.ok) {
-        dispatch(actualizarAyudantia(body.data));
-        dispatch(endLoadingAyudantia());
-        return { ok: true };
-      } else {
-        dispatch(setErrorAyudantia(body.msg));
-        return { ok: false, msg: body.msg };
-      }
-    } catch (error) {
-      console.log(error);
-      dispatch(setErrorAyudantia(MSG_ERROR));
-      return { ok: false, msg: MSG_ERROR };
-    }
+      if (body.ok) { dispatch(actualizarAyudantia(body.data)); dispatch(endLoadingAyudantia()); return { ok: true }; }
+      dispatch(setErrorAyudantia(body.msg)); return { ok: false, msg: body.msg };
+    } catch (error) { console.log(error); dispatch(setErrorAyudantia(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
   };
 };
 
-// ─── Eliminar ─────────────────────────────────────────────────────
-// El backend retorna la lista renumerada — usamos setAyudantias para
-// actualizar el store completo con las nuevas posiciones.
-
-export const eliminarAyudantia = ({
-  ayudantia_id,
-}: {
-  ayudantia_id: string;
-}) => {
+export const eliminarAyudantia = ({ ayudantia_id }: { ayudantia_id: string }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchConToken(
-        `api/ayudantias/${ayudantia_id}`,
-        {},
-        "DELETE",
-      );
+      const resp = await fetchConToken(`api/admin/ayudantias/${ayudantia_id}`, {}, "DELETE");
       const body = await resp.json();
-      if (body.ok) {
-        dispatch(setAyudantias(body.data));
-        dispatch(endLoadingAyudantia());
-        return { ok: true };
-      } else {
-        dispatch(setErrorAyudantia(body.msg));
-        return { ok: false, msg: body.msg };
-      }
-    } catch (error) {
-      console.log(error);
-      dispatch(setErrorAyudantia(MSG_ERROR));
-      return { ok: false, msg: MSG_ERROR };
-    }
+      if (body.ok) { dispatch(setAyudantias(body.data)); dispatch(endLoadingAyudantia()); return { ok: true }; }
+      dispatch(setErrorAyudantia(body.msg)); return { ok: false, msg: body.msg };
+    } catch (error) { console.log(error); dispatch(setErrorAyudantia(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
   };
 };
 
-// ─── Cambiar posición ─────────────────────────────────────────────
-
-export const cambiarPositionAyudantia = ({
-  ayudantia_id,
-  direction,
-}: {
-  ayudantia_id: string;
-  direction:    "up" | "down";
-}) => {
+export const cambiarPositionAyudantia = ({ ayudantia_id, direction }: { ayudantia_id: string; direction: "up" | "down" }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingAyudantia());
     try {
-      const resp = await fetchConToken(
-        `api/ayudantias/${ayudantia_id}/position`,
-        { direction },
-        "PATCH",
-      );
+      const resp = await fetchConToken(`api/admin/ayudantias/${ayudantia_id}/position`, { direction }, "PATCH");
       const body = await resp.json();
-      if (body.ok) {
-        dispatch(intercambiarAyudantias(body.data));
-        dispatch(endLoadingAyudantia());
-        return { ok: true };
-      } else {
-        dispatch(setErrorAyudantia(body.msg));
-        return { ok: false, msg: body.msg };
-      }
-    } catch (error) {
-      console.log(error);
-      dispatch(setErrorAyudantia(MSG_ERROR));
-      return { ok: false, msg: MSG_ERROR };
-    }
+      if (body.ok) { dispatch(intercambiarAyudantias(body.data)); dispatch(endLoadingAyudantia()); return { ok: true }; }
+      dispatch(setErrorAyudantia(body.msg)); return { ok: false, msg: body.msg };
+    } catch (error) { console.log(error); dispatch(setErrorAyudantia(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
   };
 };

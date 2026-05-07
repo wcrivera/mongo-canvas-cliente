@@ -1,8 +1,7 @@
 // src/pages/ayudantia/AyudantiaCard.tsx
 import { useState } from "react";
 import {
-  Card, CardContent, Typography,
-  IconButton, Tooltip, TextField,
+  Card, CardContent, Typography, IconButton, Tooltip, TextField,
   Button, CircularProgress, Switch, Divider,
   Dialog, DialogTitle, DialogContent, DialogActions,
 } from "@mui/material";
@@ -16,6 +15,8 @@ import DescriptionIcon       from "@mui/icons-material/Description";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutlineOutlined";
 import QuizIcon              from "@mui/icons-material/Quiz";
 import WarningAmberIcon      from "@mui/icons-material/WarningAmber";
+import SchoolIcon            from "@mui/icons-material/School";
+import PublicIcon            from "@mui/icons-material/Public";
 import { useNavigate }       from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
@@ -23,16 +24,13 @@ import {
   eliminarAyudantia,
   cambiarPositionAyudantia,
 } from "../../store/slices/ayudantia";
-import { crearRecurso }    from "../../store/slices/recurso";
-import { crearQuiz }       from "../../store/slices/quiz";
 import type { IAyudantia } from "../../store/slices/ayudantia";
-import type { IRecurso }   from "../../store/slices/recurso";
-import type { IQuiz }      from "../../store/slices/quiz";
-import MathTextEditor      from "../../components/CKEditor/MathTextEditor";
-import ModalSolucionTexto  from "./components/ModalSolucionTexto";
-import ModalUrlVideo       from "../clases/ModalUrlVideo";
-import ModalCrearQuizAyudantia from "./components/ModalCrearQuizAyudantia";
-import TiptapRenderer from "../../components/CKEditor/TiptapRenderer";
+import type { IQuiz } from "../../store/slices/quiz";
+import MathTextEditor     from "../../components/CKEditor/MathTextEditor";
+import ModalSolucionTexto from "./components/ModalSolucionTexto";
+import ModalUrlVideo      from "../clases/ModalUrlVideo";
+import ModalCrearQuiz     from "../clases/ModalCrearQuiz";
+import TiptapRenderer     from "../../components/CKEditor/TiptapRenderer";
 
 interface Props {
   ayudantia:   IAyudantia;
@@ -44,15 +42,9 @@ interface Props {
 
 // ─── Modal enunciado ──────────────────────────────────────────────────────────
 
-const ModalEnunciado = ({
-  ayudantia,
-  onClose,
-}: {
-  ayudantia: IAyudantia;
-  onClose:   () => void;
-}) => {
+const ModalEnunciado = ({ ayudantia, onClose }: { ayudantia: IAyudantia; onClose: () => void }) => {
   const dispatch   = useAppDispatch();
-  const siglaCurso = useAppSelector(s => s.mongoCurso.cursoActivo?.codigo ?? "");
+  const siglaCurso = useAppSelector((s) => s.mongoCurso.cursoActivo?.codigo ?? "");
   const [enunciado, setEnunciado] = useState(ayudantia.enunciado);
   const [guardando, setGuardando] = useState(false);
 
@@ -66,31 +58,17 @@ const ModalEnunciado = ({
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth
       sx={{ "& .MuiDialog-paper": { borderRadius: 3 } }}>
-      <DialogTitle sx={{
-        bgcolor: "#4A6D8C", color: "white",
-        display: "flex", alignItems: "center", gap: 1.5, py: 2,
-      }}>
-        <EditOutlinedIcon />
-        <span>Enunciado — {ayudantia.nombre}</span>
+      <DialogTitle sx={{ bgcolor: "#4A6D8C", color: "white", display: "flex", alignItems: "center", gap: 1.5, py: 2 }}>
+        <EditOutlinedIcon /><span>Enunciado — {ayudantia.nombre}</span>
       </DialogTitle>
       <DialogContent sx={{ pt: 3, pb: 1 }}>
-        <MathTextEditor
-          initialData={enunciado}
-          onChange={setEnunciado}
-          siglaCurso={siglaCurso}
-        />
+        <MathTextEditor initialData={enunciado} onChange={setEnunciado} siglaCurso={siglaCurso} />
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        <Button onClick={onClose} variant="text" sx={{ color: "#6793ba", borderRadius: 2 }}>
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleGuardar}
-          variant="contained"
-          disabled={guardando}
+        <Button onClick={onClose} variant="text" sx={{ color: "#6793ba", borderRadius: 2 }}>Cancelar</Button>
+        <Button onClick={handleGuardar} variant="contained" disabled={guardando}
           startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : undefined}
-          sx={{ bgcolor: "#4A6D8C", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#3c5770", boxShadow: "none" } }}
-        >
+          sx={{ bgcolor: "#4A6D8C", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#3c5770", boxShadow: "none" } }}>
           {guardando ? "Guardando..." : "Guardar"}
         </Button>
       </DialogActions>
@@ -100,13 +78,7 @@ const ModalEnunciado = ({
 
 // ─── Modal eliminar ───────────────────────────────────────────────────────────
 
-const ModalEliminar = ({
-  ayudantia,
-  onClose,
-}: {
-  ayudantia: IAyudantia;
-  onClose:   () => void;
-}) => {
+const ModalEliminar = ({ ayudantia, onClose }: { ayudantia: IAyudantia; onClose: () => void }) => {
   const dispatch = useAppDispatch();
   const [eliminando, setEliminando] = useState(false);
 
@@ -119,35 +91,24 @@ const ModalEliminar = ({
 
   return (
     <Dialog open onClose={onClose} maxWidth="xs" fullWidth
-      sx={{ "& .MiDialog-paper": { borderRadius: 3 } }}>
-      <DialogTitle sx={{
-        bgcolor: "#fef2f2", color: "#991b1b",
-        display: "flex", alignItems: "center", gap: 1.5, py: 2,
-      }}>
-        <WarningAmberIcon />
-        <span>Eliminar ayudantía</span>
+      sx={{ "& .MuiDialog-paper": { borderRadius: 3 } }}>
+      <DialogTitle sx={{ bgcolor: "#fef2f2", color: "#991b1b", display: "flex", alignItems: "center", gap: 1.5, py: 2 }}>
+        <WarningAmberIcon /><span>Eliminar ayudantía</span>
       </DialogTitle>
       <DialogContent sx={{ pt: 3, pb: 1 }}>
         <Typography variant="body2" sx={{ color: "#374151", mb: 1.5 }}>
           ¿Eliminar <strong>{ayudantia.nombre}</strong>?
         </Typography>
         <Typography variant="body2" sx={{ color: "#6b7280" }}>
-          Se eliminarán todos los recursos asociados (enunciado, solución, video, quiz).
-          Esta acción no se puede deshacer.
+          Se eliminarán todos los recursos asociados. Esta acción no se puede deshacer.
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
         <Button onClick={onClose} variant="outlined"
-          sx={{ borderColor: "#d1d5db", color: "#374151", borderRadius: 2 }}>
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleEliminar}
-          variant="contained"
-          disabled={eliminando}
+          sx={{ borderColor: "#d1d5db", color: "#374151", borderRadius: 2 }}>Cancelar</Button>
+        <Button onClick={handleEliminar} variant="contained" disabled={eliminando}
           startIcon={eliminando ? <CircularProgress size={14} color="inherit" /> : undefined}
-          sx={{ bgcolor: "#dc2626", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" } }}
-        >
+          sx={{ bgcolor: "#dc2626", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" } }}>
           {eliminando ? "Eliminando..." : "Sí, eliminar"}
         </Button>
       </DialogActions>
@@ -161,29 +122,30 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
+  // Recursos desde el store — buscados directamente por ayudantia_id
   const { soluciones } = useAppSelector((s) => s.solucionTextoMongo);
-  const { recursos }   = useAppSelector((s) => s.recursoMongo);
   const { videos }     = useAppSelector((s) => s.videoMongo);
   const { quizzes }    = useAppSelector((s) => s.quizMongo);
 
-  const recursosAyudantia = recursos.filter((r) => r.ayudantia_id === ayudantia._id);
-  const recursoVideo      = recursosAyudantia.find((r) => r.tipo === "video");
-  const recursoQuiz       = recursosAyudantia.find((r) => r.tipo === "quiz");
-  const solucion          = soluciones.find((s) => s.ayudantia_id === ayudantia._id);
-  const video             = videos.find((v) => recursoVideo && v.recurso_id === recursoVideo._id);
-  const quiz              = quizzes.find((q) => recursoQuiz && q.recurso_id === recursoQuiz._id);
+  const solucion = soluciones.find((s) => s.ayudantia_id === ayudantia._id);
+  const video    = videos.find((v) => v.ayudantia_id === ayudantia._id && v.contexto === "ayudantia");
+  const quiz     = quizzes.find((q) => q.ayudantia_id === ayudantia._id && q.contexto === "ayudantia") as IQuiz | undefined;
 
+  // ── Estado local ──────────────────────────────────────────────────────────
   const [modalEliminar,  setModalEliminar]  = useState(false);
   const [modalEnunciado, setModalEnunciado] = useState(false);
   const [modalSolucion,  setModalSolucion]  = useState(false);
-  const [modalVideo,     setModalVideo]     = useState<{ abierto: boolean; recurso_id: string }>({ abierto: false, recurso_id: "" });
+  const [modalVideo,     setModalVideo]     = useState(false);
   const [modalQuiz,      setModalQuiz]      = useState(false);
 
   const [editandoNombre,  setEditandoNombre]  = useState(false);
   const [nombre,          setNombre]          = useState(ayudantia.nombre);
   const [guardandoNombre, setGuardandoNombre] = useState(false);
-  const [toggling,        setToggling]        = useState(false);
+  const [togglingCanvas,  setTogglingCanvas]  = useState(false);
+  const [togglingApi,     setTogglingApi]     = useState(false);
   const [moviendo,        setMoviendo]        = useState(false);
+
+  // ── Handlers nombre ───────────────────────────────────────────────────────
 
   const handleAbrirNombre    = () => { setNombre(ayudantia.nombre); setEditandoNombre(true); };
   const handleCancelarNombre = () => { setNombre(ayudantia.nombre); setEditandoNombre(false); };
@@ -202,11 +164,21 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
     if (e.key === "Escape") handleCancelarNombre();
   };
 
-  const handleTogglePublished = async () => {
-    setToggling(true);
-    await dispatch(editarAyudantia({ ayudantia_id: ayudantia._id, published: !ayudantia.published }));
-    setToggling(false);
+  // ── Handlers published ────────────────────────────────────────────────────
+
+  const handleToggleCanvas = async () => {
+    setTogglingCanvas(true);
+    await dispatch(editarAyudantia({ ayudantia_id: ayudantia._id, published_canvas: !ayudantia.published_canvas }));
+    setTogglingCanvas(false);
   };
+
+  const handleToggleApi = async () => {
+    setTogglingApi(true);
+    await dispatch(editarAyudantia({ ayudantia_id: ayudantia._id, published_api: !ayudantia.published_api }));
+    setTogglingApi(false);
+  };
+
+  // ── Handler posición ──────────────────────────────────────────────────────
 
   const handleMover = async (direction: "up" | "down") => {
     if (moviendo) return;
@@ -215,59 +187,14 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
     setMoviendo(false);
   };
 
-  const handleCrearVideo = async () => {
-    if (recursoVideo) {
-      setModalVideo({ abierto: true, recurso_id: recursoVideo._id });
-      return;
-    }
-    const resultado = await dispatch(crearRecurso({
-      contexto:     "ayudantia",
-      ayudantia_id: ayudantia._id,
-      tipo:         "video",
-      titulo:       `Video · ${ayudantia.nombre}`,
-    })) as unknown as { ok: boolean; data?: IRecurso };
-    if (resultado.ok && resultado.data) {
-      setModalVideo({ abierto: true, recurso_id: resultado.data._id });
-    }
-  };
+  // ── Handler quiz ──────────────────────────────────────────────────────────
 
-  const handleAbrirQuiz = () => {
-    if (recursoQuiz && quiz) {
-      navigate(`/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${recursoQuiz._id}`);
-      return;
-    }
-    setModalQuiz(true);
-  };
-
-  const handleQuizCreado = async (quizData: {
-    titulo:        string;
-    descripcion:   string;
-    tiempo_limite: number | null;
-    intentos:      number;
-  }) => {
+  const handleQuizCreado = (quizData: IQuiz) => {
     setModalQuiz(false);
-    let rId = recursoQuiz?._id;
-    if (!rId) {
-      const resultadoRecurso = await dispatch(crearRecurso({
-        contexto:     "ayudantia",
-        ayudantia_id: ayudantia._id,
-        tipo:         "quiz",
-        titulo:       quizData.titulo,
-      })) as unknown as { ok: boolean; data?: IRecurso };
-      if (!resultadoRecurso.ok || !resultadoRecurso.data) return;
-      rId = resultadoRecurso.data._id;
-    }
-    const resultadoQuiz = await dispatch(crearQuiz({
-      recurso_id:    rId,
-      titulo:        quizData.titulo,
-      descripcion:   quizData.descripcion,
-      tiempo_limite: quizData.tiempo_limite,
-      intentos:      quizData.intentos,
-    })) as unknown as { ok: boolean; data?: IQuiz };
-    if (resultadoQuiz.ok && resultadoQuiz.data) {
-      navigate(`/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${rId}`);
-    }
+    navigate(`/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${quizData._id}`);
   };
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -313,15 +240,33 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
 
             {!editandoNombre && (
               <div className="flex items-center gap-0.5 shrink-0">
-                <Tooltip title={ayudantia.published ? "Publicada — click para ocultar" : "Oculta — click para publicar"}>
-                  <span>
-                    {toggling
+
+                {/* Toggle Canvas */}
+                <Tooltip title={`Canvas: ${ayudantia.published_canvas ? "publicada" : "oculta"}`}>
+                  <span className="flex items-center gap-0.5">
+                    <SchoolIcon sx={{ fontSize: 13, color: "#8daecb" }} />
+                    {togglingCanvas
                       ? <CircularProgress size={16} sx={{ color: "#4A6D8C", mx: 0.75 }} />
-                      : <Switch size="small" checked={ayudantia.published} onChange={handleTogglePublished} disabled={moviendo}
-                          sx={{ "& .MuiSwitch-thumb": { bgcolor: ayudantia.published ? "#4A6D8C" : "#ccc" }, "& .MuiSwitch-track": { bgcolor: ayudantia.published ? "#6793ba !important" : "#d9e4ee !important" } }} />
+                      : <Switch size="small" checked={ayudantia.published_canvas} onChange={handleToggleCanvas}
+                          disabled={moviendo || togglingApi}
+                          sx={{ "& .MuiSwitch-thumb": { bgcolor: ayudantia.published_canvas ? "#4A6D8C" : "#ccc" }, "& .MuiSwitch-track": { bgcolor: ayudantia.published_canvas ? "#6793ba !important" : "#d9e4ee !important" } }} />
                     }
                   </span>
                 </Tooltip>
+
+                {/* Toggle API */}
+                <Tooltip title={`Plataforma: ${ayudantia.published_api ? "publicada" : "oculta"}`}>
+                  <span className="flex items-center gap-0.5">
+                    <PublicIcon sx={{ fontSize: 13, color: "#8daecb" }} />
+                    {togglingApi
+                      ? <CircularProgress size={16} sx={{ color: "#4A6D8C", mx: 0.75 }} />
+                      : <Switch size="small" checked={ayudantia.published_api} onChange={handleToggleApi}
+                          disabled={moviendo || togglingCanvas}
+                          sx={{ "& .MuiSwitch-thumb": { bgcolor: ayudantia.published_api ? "#4A6D8C" : "#ccc" }, "& .MuiSwitch-track": { bgcolor: ayudantia.published_api ? "#6793ba !important" : "#d9e4ee !important" } }} />
+                    }
+                  </span>
+                </Tooltip>
+
                 <Tooltip title="Mover arriba"><span>
                   <IconButton size="small" disabled={esPrimero || moviendo} onClick={() => handleMover("up")}
                     sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" }, "&:disabled": { color: "#d9e4ee" } }}>
@@ -368,6 +313,8 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
 
           {/* ── Recursos ── */}
           <div className="px-5 py-3 flex items-center gap-4 flex-wrap">
+
+            {/* Solución */}
             <div className="flex items-center gap-2">
               <div style={{ width: 30, height: 30, borderRadius: 6, background: solucion ? "#4A6D8C" : "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <DescriptionIcon sx={{ fontSize: 16, color: solucion ? "white" : "#8daecb" }} />
@@ -378,30 +325,37 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
               </Button>
             </div>
 
+            {/* Video */}
             <div className="flex items-center gap-2">
               <div style={{ width: 30, height: 30, borderRadius: 6, background: video ? "#e67e22" : "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <PlayCircleOutlineIcon sx={{ fontSize: 16, color: video ? "white" : "#8daecb" }} />
               </div>
-              <Button size="small" onClick={handleCrearVideo}
+              <Button size="small" onClick={() => setModalVideo(true)}
                 sx={{ fontSize: "0.7rem", color: video ? "#e67e22" : "#8daecb", p: "2px 6px", "&:hover": { bgcolor: "#f0f4f8" } }}>
                 {video ? "Editar video" : "+ Video"}
               </Button>
             </div>
 
+            {/* Quiz */}
             <div className="flex items-center gap-2">
               <div style={{ width: 30, height: 30, borderRadius: 6, background: quiz ? "#2d5be3" : "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <QuizIcon sx={{ fontSize: 16, color: quiz ? "white" : "#8daecb" }} />
               </div>
-              <Button size="small" onClick={handleAbrirQuiz}
+              <Button size="small"
+                onClick={() => quiz
+                  ? navigate(`/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias/${ayudantia._id}/quiz/${quiz._id}`)
+                  : setModalQuiz(true)
+                }
                 sx={{ fontSize: "0.7rem", color: quiz ? "#2d5be3" : "#8daecb", p: "2px 6px", "&:hover": { bgcolor: "#f0f4f8" } }}>
                 {quiz ? "Editar preguntas" : "+ Quiz"}
               </Button>
             </div>
-          </div>
 
+          </div>
         </CardContent>
       </Card>
 
+      {/* ── Modales ── */}
       {modalEnunciado && <ModalEnunciado ayudantia={ayudantia} onClose={() => setModalEnunciado(false)} />}
       {modalEliminar  && <ModalEliminar  ayudantia={ayudantia} onClose={() => setModalEliminar(false)} />}
       {modalSolucion  && (
@@ -411,15 +365,23 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
           onClose={() => setModalSolucion(false)}
         />
       )}
-      {modalVideo.abierto && (
+      {modalVideo && (
         <ModalUrlVideo
-          recurso_id={modalVideo.recurso_id}
+          contexto="ayudantia"
+          ayudantia_id={ayudantia._id}
+          capitulo_id={capitulo_id}
+          curso_id={curso_id}
+          titulo={`Video · ${ayudantia.nombre}`}
           video={video}
-          onClose={() => setModalVideo({ abierto: false, recurso_id: "" })}
+          onClose={() => setModalVideo(false)}
         />
       )}
       {modalQuiz && (
-        <ModalCrearQuizAyudantia
+        <ModalCrearQuiz
+          contexto="ayudantia"
+          ayudantia_id={ayudantia._id}
+          capitulo_id={capitulo_id}
+          curso_id={curso_id}
           onClose={() => setModalQuiz(false)}
           onCreado={handleQuizCreado}
         />

@@ -16,8 +16,9 @@ const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
 export const obtenerCanvasCursos = () => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCanvasCurso());
+    
     try {
-      const resp = await fetchConToken("api/canvas/cursos");
+      const resp = await fetchConToken("api/admin/canvas/cursos");
       const body = await resp.json();
 
       if (body.ok) {
@@ -47,7 +48,7 @@ export const obtenerCanvasCursosDisponibles = ({
     dispatch(startLoadingCanvasCurso());
     try {
       const resp = await fetchConToken(
-        `api/canvas/cursos/disponibles/${curso_mongo_id}`
+        `api/admin/canvas/cursos/disponibles/${curso_mongo_id}`
       );
       const body = await resp.json();
 

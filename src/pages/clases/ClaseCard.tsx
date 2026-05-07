@@ -14,6 +14,7 @@ import CheckIcon             from "@mui/icons-material/Check";
 import CloseIcon             from "@mui/icons-material/Close";
 import WarningAmberIcon      from "@mui/icons-material/WarningAmber";
 import SchoolIcon            from "@mui/icons-material/School";
+import PublicIcon            from "@mui/icons-material/Public";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import {
   editarClase,
@@ -183,7 +184,8 @@ const ClaseCard = ({ clase, esPrimero, esUltimo }: Props) => {
   const [editando,        setEditando]        = useState(false);
   const [nombre,          setNombre]          = useState(clase.nombre);
   const [guardando,       setGuardando]       = useState(false);
-  const [toggling,        setToggling]        = useState(false);
+  const [togglingCanvas,  setTogglingCanvas]  = useState(false);
+  const [togglingApi,     setTogglingApi]     = useState(false);
   const [moviendo,        setMoviendo]        = useState(false);
   const [verDeploys,      setVerDeploys]      = useState(false);
   const [mostrarFormTema, setMostrarFormTema] = useState(false);
@@ -231,10 +233,16 @@ const ClaseCard = ({ clase, esPrimero, esUltimo }: Props) => {
 
   // ── Handlers published ─────────────────────────────────────────────────────
 
-  const handleTogglePublished = async () => {
-    setToggling(true);
-    await dispatch(editarClase({ clase_id: clase._id, published: !clase.published }));
-    setToggling(false);
+  const handleToggleCanvas = async () => {
+    setTogglingCanvas(true);
+    await dispatch(editarClase({ clase_id: clase._id, published_canvas: !clase.published_canvas }));
+    setTogglingCanvas(false);
+  };
+
+  const handleToggleApi = async () => {
+    setTogglingApi(true);
+    await dispatch(editarClase({ clase_id: clase._id, published_api: !clase.published_api }));
+    setTogglingApi(false);
   };
 
   // ── Handlers posición ──────────────────────────────────────────────────────
@@ -353,20 +361,43 @@ const ClaseCard = ({ clase, esPrimero, esUltimo }: Props) => {
             {!editando && (
               <div className="flex items-center gap-0.5 shrink-0">
 
-                {/* Switch published */}
-                <Tooltip title={clase.published ? "Publicada — click para ocultar" : "Oculta — click para publicar"}>
-                  <span>
-                    {toggling
+                {/* Toggle Canvas */}
+                <Tooltip title={`Canvas: ${clase.published_canvas ? "publicada" : "oculta"}`}>
+                  <span className="flex items-center gap-0.5">
+                    <SchoolIcon sx={{ fontSize: 13, color: "#8daecb" }} />
+                    {togglingCanvas
                       ? <CircularProgress size={16} sx={{ color: "#4A6D8C", mx: 0.75 }} />
                       : (
                         <Switch
                           size="small"
-                          checked={clase.published}
-                          onChange={handleTogglePublished}
-                          disabled={moviendo}
+                          checked={clase.published_canvas}
+                          onChange={handleToggleCanvas}
+                          disabled={moviendo || togglingApi}
                           sx={{
-                            "& .MuiSwitch-thumb": { bgcolor: clase.published ? "#4A6D8C" : "#ccc" },
-                            "& .MuiSwitch-track": { bgcolor: clase.published ? "#6793ba !important" : "#d9e4ee !important" },
+                            "& .MuiSwitch-thumb": { bgcolor: clase.published_canvas ? "#4A6D8C" : "#ccc" },
+                            "& .MuiSwitch-track": { bgcolor: clase.published_canvas ? "#6793ba !important" : "#d9e4ee !important" },
+                          }}
+                        />
+                      )
+                    }
+                  </span>
+                </Tooltip>
+
+                {/* Toggle API */}
+                <Tooltip title={`Plataforma: ${clase.published_api ? "publicada" : "oculta"}`}>
+                  <span className="flex items-center gap-0.5">
+                    <PublicIcon sx={{ fontSize: 13, color: "#8daecb" }} />
+                    {togglingApi
+                      ? <CircularProgress size={16} sx={{ color: "#4A6D8C", mx: 0.75 }} />
+                      : (
+                        <Switch
+                          size="small"
+                          checked={clase.published_api}
+                          onChange={handleToggleApi}
+                          disabled={moviendo || togglingCanvas}
+                          sx={{
+                            "& .MuiSwitch-thumb": { bgcolor: clase.published_api ? "#4A6D8C" : "#ccc" },
+                            "& .MuiSwitch-track": { bgcolor: clase.published_api ? "#6793ba !important" : "#d9e4ee !important" },
                           }}
                         />
                       )

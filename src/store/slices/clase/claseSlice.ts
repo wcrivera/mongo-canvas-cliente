@@ -16,7 +16,8 @@ export interface IClase {
   curso_id:           string;
   nombre:             string;
   position:           number;
-  published:          boolean;
+  published_canvas:   boolean;
+  published_api:      boolean;
   temas_count:        number;
   canvas_deployments: ICanvasDeploymentClase[];
   createdAt:          string;
@@ -56,11 +57,7 @@ export const claseMongoSlice = createSlice({
       if (idx !== -1) state.clases[idx] = action.payload;
     },
     intercambiarClases: (state, action) => {
-      action.payload.forEach((clase: IClase) => {
-        const idx = state.clases.findIndex(c => c._id === clase._id);
-        if (idx !== -1) state.clases[idx] = clase;
-      });
-      state.clases.sort((a, b) => a.position - b.position);
+      state.clases = action.payload;
     },
     eliminarClaseState: (state, action) => {
       state.clases = state.clases.filter(c => c._id !== action.payload);
