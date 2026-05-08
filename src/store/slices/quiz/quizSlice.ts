@@ -5,7 +5,7 @@ export type ContextoQuiz = "clase" | "ayudantia" | "ejercicio";
 export type TipoPregunta =
   | "multiple_choice" | "true_false" | "short_answer" | "essay"
   | "multiple_answers" | "matching" | "numerical" | "calculated"
-  | "fill_in_multiple_blanks" | "text_only_question";
+  | "fill_in_multiple_blanks" | "multiple_dropdowns" | "text_only_question";
 
 export interface ICanvasDeploymentQuiz {
   canvas_curso_id:  number;
@@ -22,6 +22,7 @@ export interface IOpcion {
   texto:       string;
   es_correcta: boolean;
   blank_id?:   string | null;
+  tipo_pimu?:  string | null;
   canvas_id?:  number;
 }
 

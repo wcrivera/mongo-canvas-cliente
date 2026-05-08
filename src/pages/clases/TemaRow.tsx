@@ -25,10 +25,10 @@ import type { ITema } from "../../store/slices/tema";
 import type { IQuiz } from "../../store/slices/quiz";
 import LatexRenderer          from "../../components/LaTeX/LatexRenderer";
 import { crearDiapositiva }    from "../../store/slices/diapositiva";
-import ModalElegirDiapositiva from "./ModalElegirDiapositiva";
-import ModalUrlDiapositiva    from "./ModalUrlDiapositiva";
-import ModalUrlVideo          from "./ModalUrlVideo";
-import ModalCrearQuiz         from "./ModalCrearQuiz";
+import ModalElegirDiapositiva from "./components/ModalElegirDiapositiva";
+import ModalUrlDiapositiva    from "./components/ModalUrlDiapositiva";
+import ModalUrlVideo          from "./components/ModalUrlVideo";
+import ModalCrearQuiz         from "./components/ModalCrearQuiz";
 
 // ─── Modal eliminar ───────────────────────────────────────────────────────────
 

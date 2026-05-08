@@ -25,6 +25,8 @@ import PreguntaEditor, {
   type IOpcionEditor,
   type IParEditor,
   type IRespuestaNumEditor,
+  type IBlancoEditor,
+  type IDropdownBlancoEditor,
   type TipoPreguntaEditor,
 } from "../../components/quiz/PreguntaEditor";
 import PreguntaViewer, {
@@ -43,6 +45,7 @@ const TIPO_LABEL: Record<string, string> = {
   numerical:               "Numérica",
   calculated:              "Calculada",
   fill_in_multiple_blanks: "Completar (LTI)",
+  multiple_dropdowns:      "Listas desplegables",
   text_only_question:      "Solo texto",
 };
 
@@ -56,6 +59,7 @@ const TIPO_COLOR: Record<string, string> = {
   numerical:               "#ea580c",
   calculated:              "#dc2626",
   fill_in_multiple_blanks: "#4A6D8C",
+  multiple_dropdowns:      "#0d9488",
   text_only_question:      "#94a3b8",
 };
 
@@ -123,8 +127,29 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
   // ── Estado del editor ─────────────────────────────────────────────────────
   const [enunciado,    setEnunciado]    = useState(pregunta.enunciado);
   const [puntos,       setPuntos]       = useState(pregunta.puntos);
-  const [tipoPimu,     setTipoPimu]     = useState<string>(pregunta.tipo_pimu ?? "numero");
-  const [respuestaLti, setRespuestaLti] = useState<string>(pregunta.respuesta_lti ?? "");
+  // Estado para fill_in_multiple_blanks — blancos con tipo_pimu individual
+  const [blancos, setBlancos] = useState<IBlancoEditor[]>(() => {
+    if (pregunta.tipo !== "fill_in_multiple_blanks" || pregunta.opciones.length === 0) {
+      return [{ blank_id: "blanco1", respuesta: "", tipoPimu: "numero" }];
+    }
+    // Reconstruir blancos únicos desde opciones
+    const vistos = new Set<string>();
+    return pregunta.opciones
+      .filter((op) => { const nuevo = !vistos.has(op.blank_id ?? ""); vistos.add(op.blank_id ?? ""); return nuevo; })
+      .map((op) => ({ blank_id: op.blank_id ?? "blanco1", respuesta: op.texto, tipoPimu: (op.tipo_pimu as string) ?? "numero" }));
+  });
+
+  // Estado para multiple_dropdowns — blancos con lista de opciones
+  const [dropdownBlancos, setDropdownBlancos] = useState<IDropdownBlancoEditor[]>(() => {
+    if (pregunta.tipo !== "multiple_dropdowns" || pregunta.opciones.length === 0) {
+      return [{ blank_id: "blanco1", opciones: [{ texto: "", es_correcta: true }, { texto: "", es_correcta: false }] }];
+    }
+    const blancoIds = [...new Set(pregunta.opciones.map((op) => op.blank_id ?? "blanco1"))];
+    return blancoIds.map((bid) => ({
+      blank_id: bid,
+      opciones: pregunta.opciones.filter((op) => op.blank_id === bid).map((op) => ({ texto: op.texto, es_correcta: op.es_correcta })),
+    }));
+  });
 
   const [opciones, setOpciones] = useState<IOpcionEditor[]>(
     pregunta.opciones.map((op) => ({
@@ -152,8 +177,25 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
   const handleAbrirEdicion = () => {
     setEnunciado(pregunta.enunciado);
     setPuntos(pregunta.puntos);
-    setTipoPimu(pregunta.tipo_pimu ?? "numero");
-    setRespuestaLti(pregunta.respuesta_lti ?? "");
+    // Resetear blancos LTI
+    if (pregunta.tipo === "fill_in_multiple_blanks" && pregunta.opciones.length > 0) {
+      const vistos = new Set<string>();
+      setBlancos(pregunta.opciones
+        .filter((op) => { const nuevo = !vistos.has(op.blank_id ?? ""); vistos.add(op.blank_id ?? ""); return nuevo; })
+        .map((op) => ({ blank_id: op.blank_id ?? "blanco1", respuesta: op.texto, tipoPimu: (op.tipo_pimu as string) ?? "numero" })));
+    } else {
+      setBlancos([{ blank_id: "blanco1", respuesta: "", tipoPimu: "numero" }]);
+    }
+    // Resetear dropdown blancos
+    if (pregunta.tipo === "multiple_dropdowns" && pregunta.opciones.length > 0) {
+      const blancoIds = [...new Set(pregunta.opciones.map((op) => op.blank_id ?? "blanco1"))];
+      setDropdownBlancos(blancoIds.map((bid) => ({
+        blank_id: bid,
+        opciones: pregunta.opciones.filter((op) => op.blank_id === bid).map((op) => ({ texto: op.texto, es_correcta: op.es_correcta })),
+      })));
+    } else {
+      setDropdownBlancos([{ blank_id: "blanco1", opciones: [{ texto: "", es_correcta: true }, { texto: "", es_correcta: false }] }]);
+    }
     setOpciones(pregunta.opciones.map((op) => ({
       texto:       op.texto,
       es_correcta: op.es_correcta,
@@ -197,11 +239,20 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
         payload.respuesta_numerica = respNum;
         break;
       case "fill_in_multiple_blanks":
-        payload.tipo_pimu     = tipoPimu;
-        payload.respuesta_lti = respuestaLti;
-        payload.opciones = [
-          { texto: respuestaLti, es_correcta: true, blank_id: "respuesta" },
-        ];
+        payload.tipo_pimu = blancos[0]?.tipoPimu ?? "numero";
+        payload.opciones  = blancos.map((b) => ({
+          texto:       b.respuesta,
+          es_correcta: true,
+          blank_id:    b.blank_id,
+          tipo_pimu:   b.tipoPimu,
+        }));
+        break;
+      case "multiple_dropdowns":
+        payload.opciones = dropdownBlancos.flatMap((b) =>
+          b.opciones
+            .filter((o) => o.texto.trim())
+            .map((o) => ({ texto: o.texto.trim(), es_correcta: o.es_correcta, blank_id: b.blank_id }))
+        );
         break;
     }
 
@@ -339,10 +390,10 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
                 onParesChange={setPares}
                 respNum={respNum}
                 onRespNumChange={setRespNum}
-                tipoPimu={tipoPimu}
-                onTipoPimuChange={setTipoPimu}
-                respuestaLti={respuestaLti}
-                onRespuestaLtiChange={setRespuestaLti}
+                blancos={blancos}
+                onBlancosChange={setBlancos}
+                dropdownBlancos={dropdownBlancos}
+                onDropdownBlancosChange={setDropdownBlancos}
               />
             ) : (
               <PreguntaViewer

@@ -20,9 +20,8 @@ import {
 import type { IQuiz } from "../../store/slices/quiz";
 import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
 import { obtenerCapitulos }  from "../../store/slices/capitulo";
-import { generarHtmlEjercicios } from "./generarHtmlEjercicios";
-import { desplegarPagina }       from "../../helpers/desplegarPagina";
-import ModalCrearQuiz            from "../clases/ModalCrearQuiz";
+import { fetchConToken }     from "../../helpers/fetch";
+import ModalCrearQuiz        from "../clases/components/ModalCrearQuiz";
 import FormPregunta              from "../quiz/FormPregunta";
 import ModalBanco                from "../../components/banco/ModalBanco";
 import PreguntaCard              from "../quiz/PreguntaCard";
@@ -86,23 +85,20 @@ const Ejercicios = () => {
   };
 
   const handleDesplegarPagina = async () => {
-    if (!cursoActivo || !capituloActivo) return;
-    const canvasActivos = cursoActivo.canvas_cursos.filter((c) => c.activo);
-    if (canvasActivos.length === 0) { setMsgDeploy("No hay cursos Canvas activos."); return; }
+    if (!capitulo_id) return;
     setDesplegando(true);
     setMsgDeploy(null);
-    await desplegarPagina({
-      canvasActivos,
-      generarBody: (canvas_id) => generarHtmlEjercicios({
-        curso: cursoActivo, capitulo: capituloActivo,
-        ejercicios, canvas_curso_id: canvas_id,
-      }),
-      titulo: `Capitulo ${capituloActivo.position} Ejercicios`,
-      slug:   `capitulo-${capituloActivo.position}-ejercicios`,
-    });
+    try {
+      const resp = await fetchConToken(`api/admin/publicar-pagina/ejercicios/${capitulo_id}`, {}, "POST");
+      const body = await resp.json();
+      const errores = (body.data ?? []).filter((r: { ok: boolean }) => !r.ok);
+      if (errores.length > 0) setMsgDeploy(`⚠ Error al publicar en ${errores.length} curso(s) Canvas`);
+      else setMsgDeploy("✓ Página publicada correctamente en Canvas");
+    } catch {
+      setMsgDeploy("⚠ Error de conexión");
+    }
     setDesplegando(false);
-    setMsgDeploy("✓ Página publicada en Canvas");
-  };
+  };;
 
   // Preguntas del ejercicio actualmente expandido
   const preguntasEjercicio = (quiz_id: string) =>

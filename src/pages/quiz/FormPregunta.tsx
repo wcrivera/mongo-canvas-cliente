@@ -20,6 +20,9 @@ interface Props {
 }
 
 interface IOpcionForm { texto: string; es_correcta: boolean; }
+interface IBlancoForm          { blank_id: string; respuesta: string; tipoPimu: TipoPimu; }
+interface IDropdownOpcionForm  { texto: string; es_correcta: boolean; }
+interface IDropdownBlancoForm  { blank_id: string; opciones: IDropdownOpcionForm[]; }
 interface IParForm    { izquierda: string; derecha: string; }
 interface IRespuestaNumForm {
   tipo:      "exact" | "range" | "precision";
@@ -37,6 +40,7 @@ const TIPOS: { value: TipoPregunta; label: string }[] = [
   { value: "multiple_answers",        label: "Respuestas múltiples" },
   { value: "true_false",              label: "Verdadero / Falso" },
   { value: "fill_in_multiple_blanks", label: "Completar respuesta (LTI)" },
+  { value: "multiple_dropdowns",        label: "Listas desplegables múltiples" },
   { value: "short_answer",            label: "Respuesta corta" },
   { value: "essay",                   label: "Ensayo / Desarrollo" },
   { value: "matching",                label: "Coincidencia" },
@@ -80,7 +84,7 @@ const TIPOS_PIMU: { value: TipoPimu; label: string; hint: string }[] = [
 const enunciadoVacio = (html: string) =>
   !html || html.replace(/<[^>]*>/g, "").trim() === "";
 
-const HINT_BLANK = "Agrega [respuesta] en el enunciado donde el alumno debe completar. Ej: «La derivada de x² es [respuesta]»";
+const HINT_BLANK = "Usa [blanco1], [blanco2], etc. en el enunciado para marcar cada espacio en blanco. Ej: «La derivada de x² es [blanco1] y su integral es [blanco2]»";
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
@@ -89,8 +93,10 @@ const FormPregunta = ({ quiz_id, onCreada }: Props) => {
   const siglaCurso = useAppSelector(s => s.mongoCurso.cursoActivo?.codigo ?? "");
 
   const [tipo,         setTipo]        = useState<TipoPregunta>("multiple_choice");
-  const [tipoPimu,     setTipoPimu]    = useState<TipoPimu>("numero");
-  const [respuestaLti, setRespuestaLti]= useState("");
+  const [blancos,          setBlancos]          = useState<IBlancoForm[]>([{ blank_id: "blanco1", respuesta: "", tipoPimu: "numero" }]);
+  const [dropdownBlancos,  setDropdownBlancos]  = useState<IDropdownBlancoForm[]>([
+    { blank_id: "blanco1", opciones: [{ texto: "", es_correcta: true }, { texto: "", es_correcta: false }] },
+  ]);
   const [enunciado,    setEnunciado]   = useState("");
   const [puntos,       setPuntos]      = useState(1);
   const [guardando,    setGuardando]   = useState(false);
@@ -152,13 +158,31 @@ const FormPregunta = ({ quiz_id, onCreada }: Props) => {
 
     // Validaciones específicas para fill_in_multiple_blanks
     if (tipo === "fill_in_multiple_blanks") {
-      if (!enunciado.includes("[respuesta]")) {
-        setError("El enunciado debe contener [respuesta] para marcar el blank.");
+      const blancosSinRespuesta = blancos.filter((b) => !b.respuesta.trim());
+      if (blancosSinRespuesta.length > 0) {
+        setError("Todos los espacios en blanco deben tener una respuesta.");
         return;
       }
-      if (!respuestaLti.trim()) {
-        setError("La respuesta LTI es requerida para este tipo de pregunta.");
-        return;
+      for (const b of blancos) {
+        if (!enunciado.includes(`[${b.blank_id}]`)) {
+          setError(`El enunciado debe contener [${b.blank_id}] para marcar el espacio en blanco.`);
+          return;
+        }
+      }
+    }
+
+    // Validación multiple_dropdowns
+    if (tipo === "multiple_dropdowns") {
+      for (const b of dropdownBlancos) {
+        if (!enunciado.includes(`[${b.blank_id}]`)) {
+          setError(`El enunciado debe contener [${b.blank_id}].`); return;
+        }
+        if (b.opciones.filter((o) => o.texto.trim()).length < 2) {
+          setError(`El blanco [${b.blank_id}] debe tener al menos 2 opciones.`); return;
+        }
+        if (!b.opciones.some((o) => o.es_correcta && o.texto.trim())) {
+          setError(`El blanco [${b.blank_id}] debe tener una opción correcta.`); return;
+        }
       }
     }
 
@@ -193,12 +217,22 @@ const FormPregunta = ({ quiz_id, onCreada }: Props) => {
         };
         break;
       case "fill_in_multiple_blanks":
-        // Un solo blank con la respuesta LTI como texto de referencia para Canvas
-        payload.tipo_pimu     = tipoPimu;
-        payload.respuesta_lti = respuestaLti.trim();
-        payload.opciones = [
-          { texto: respuestaLti.trim(), es_correcta: true, blank_id: "respuesta" },
-        ];
+        // tipo_pimu del primer blanco como valor global (compatibilidad Canvas)
+        payload.tipo_pimu = blancos[0]?.tipoPimu ?? "numero";
+        payload.opciones  = blancos.map((b) => ({
+          texto:       b.respuesta.trim(),
+          es_correcta: true,
+          blank_id:    b.blank_id,
+          tipo_pimu:   b.tipoPimu,
+        }));
+        break;
+      case "multiple_dropdowns":
+        // Cada blanco tiene sus opciones, se aplanan en un array con blank_id
+        payload.opciones = dropdownBlancos.flatMap((b) =>
+          b.opciones
+            .filter((o) => o.texto.trim())
+            .map((o) => ({ texto: o.texto.trim(), es_correcta: o.es_correcta, blank_id: b.blank_id }))
+        );
         break;
       case "text_only_question":
       case "essay":
@@ -211,7 +245,8 @@ const FormPregunta = ({ quiz_id, onCreada }: Props) => {
     setGuardando(false);
     if (result.ok) {
       setEnunciado("");
-      setRespuestaLti("");
+      setBlancos([{ blank_id: "blanco1", respuesta: "", tipoPimu: "numero" }]);
+      setDropdownBlancos([{ blank_id: "blanco1", opciones: [{ texto: "", es_correcta: true }, { texto: "", es_correcta: false }] }]);
       setOpciones([{ texto: "", es_correcta: false }, { texto: "", es_correcta: false }]);
       onCreada();
     } else {
@@ -221,9 +256,6 @@ const FormPregunta = ({ quiz_id, onCreada }: Props) => {
 
   const esMultiple = tipo === "multiple_answers";
   const esFib      = tipo === "fill_in_multiple_blanks";
-
-  // Hint del tipo PIMU seleccionado
-  const hintPimu = TIPOS_PIMU.find(t => t.value === tipoPimu)?.hint ?? "";
 
   return (
     <div className="flex flex-col gap-4 p-4 bg-white rounded-2xl border border-[#d9e4ee]">
@@ -255,39 +287,60 @@ const FormPregunta = ({ quiz_id, onCreada }: Props) => {
             Configuración LTI — validación matemática
           </Typography>
 
-          {/* Tipo PIMU */}
-          <FormControl size="small" fullWidth>
-            <InputLabel>Tipo matemático</InputLabel>
-            <Select
-              value={tipoPimu}
-              label="Tipo matemático"
-              onChange={e => setTipoPimu(e.target.value as TipoPimu)}
-              sx={{ borderRadius: 2, background: "white" }}
-            >
-              {TIPOS_PIMU.map(t => (
-                <MenuItem key={t.value} value={t.value}>
-                  <div>
-                    <span style={{ fontWeight: 600 }}>{t.label}</span>
-                    <span style={{ color: "#94a3b8", fontSize: 12, marginLeft: 8 }}>{t.hint}</span>
+          {/* Blancos dinámicos */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Typography variant="caption" sx={{ color: "#4A6D8C", fontWeight: 600 }}>
+              Espacios en blanco y sus respuestas
+            </Typography>
+            {blancos.map((b, idx) => {
+              const hintBlanco = TIPOS_PIMU.find(t => t.value === b.tipoPimu)?.hint ?? "";
+              return (
+                <div key={idx} style={{ background: "white", border: "1px solid #d9e4ee", borderRadius: 8, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Typography variant="caption"
+                      sx={{ color: "#4A6D8C", fontWeight: 700, fontFamily: "monospace",
+                        background: "#dbeafe", borderRadius: 1, px: 1, py: 0.5, fontSize: 12 }}>
+                      [{b.blank_id}]
+                    </Typography>
+                    <IconButton size="small"
+                      onClick={() => setBlancos(bs => bs.filter((_, i) => i !== idx))}
+                      disabled={blancos.length <= 1}
+                      sx={{ color: "#8daecb", "&:hover": { color: "#ef4444" } }}>
+                      <DeleteIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
                   </div>
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <FormControl size="small" sx={{ minWidth: 160 }}>
+                      <InputLabel>Tipo</InputLabel>
+                      <Select value={b.tipoPimu} label="Tipo"
+                        onChange={e => setBlancos(bs => bs.map((x, i) => i === idx ? { ...x, tipoPimu: e.target.value as TipoPimu } : x))}
+                        sx={{ borderRadius: 2, background: "white", fontSize: 13 }}>
+                        {TIPOS_PIMU.map(t => (
+                          <MenuItem key={t.value} value={t.value} sx={{ fontSize: 13 }}>
+                            {t.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      placeholder={hintBlanco || `Respuesta para [${b.blank_id}]`}
+                      value={b.respuesta}
+                      onChange={e => setBlancos(bs => bs.map((x, i) => i === idx ? { ...x, respuesta: e.target.value } : x))}
+                      size="small" fullWidth
+                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, background: "white" } }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            <Button size="small" startIcon={<AddIcon />}
+              onClick={() => setBlancos(bs => [...bs, { blank_id: `blanco${bs.length + 1}`, respuesta: "", tipoPimu: "numero" }])}
+              sx={{ color: "#4A6D8C", alignSelf: "flex-start", textTransform: "none" }}>
+              Agregar espacio en blanco
+            </Button>
+          </div>
 
-          {/* Respuesta LTI */}
-          <TextField
-            label="Respuesta correcta (LTI)"
-            placeholder={hintPimu}
-            value={respuestaLti}
-            onChange={e => setRespuestaLti(e.target.value)}
-            size="small"
-            fullWidth
-            helperText="Escríbela exactamente como la usará el LTI para validar"
-            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, background: "white" } }}
-          />
-
-          {/* Instrucción sobre el blank */}
+          {/* Instrucción sobre los blanks */}
           <Alert severity="info" sx={{ py: 0.5, fontSize: 12, borderRadius: 2 }}>
             {HINT_BLANK}
           </Alert>
@@ -297,7 +350,7 @@ const FormPregunta = ({ quiz_id, onCreada }: Props) => {
       {/* Enunciado */}
       <div>
         <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600, display: "block", mb: 1 }}>
-          Enunciado{esFib ? " — incluye [respuesta] donde corresponda" : ""}
+          Enunciado{(esFib || tipo === "multiple_dropdowns") ? " — usa [blanco1], [blanco2], etc. donde corresponda" : ""}
         </Typography>
         <MathTextEditor
           initialData={enunciado}
@@ -312,6 +365,78 @@ const FormPregunta = ({ quiz_id, onCreada }: Props) => {
       </div>
 
       <Divider />
+
+      {/* ── Listas desplegables múltiples ── */}
+      {tipo === "multiple_dropdowns" && (
+        <div className="flex flex-col gap-3">
+          <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
+            Espacios en blanco — define las opciones de cada lista desplegable
+          </Typography>
+          <Alert severity="info" sx={{ py: 0.5, fontSize: 12, borderRadius: 2 }}>
+            Usa [blanco1], [blanco2], etc. en el enunciado. Cada blanco tendrá su propia lista desplegable.
+          </Alert>
+          {dropdownBlancos.map((b, bidx) => (
+            <div key={bidx} style={{ background: "#f0f7ff", border: "1px solid #d9e4ee", borderRadius: 8, padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <Typography variant="caption"
+                  sx={{ color: "#4A6D8C", fontWeight: 700, fontFamily: "monospace",
+                    background: "#dbeafe", borderRadius: 1, px: 1, py: 0.5, fontSize: 12 }}>
+                  [{b.blank_id}]
+                </Typography>
+                <IconButton size="small"
+                  onClick={() => setDropdownBlancos((bs) => bs.filter((_, i) => i !== bidx))}
+                  disabled={dropdownBlancos.length <= 1}
+                  sx={{ color: "#8daecb", "&:hover": { color: "#ef4444" } }}>
+                  <DeleteIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+              </div>
+              {/* Opciones del blanco */}
+              {b.opciones.map((op, oidx) => (
+                <div key={oidx} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input type="radio"
+                    name={`dropdown-correcta-${bidx}`}
+                    checked={op.es_correcta}
+                    onChange={() => setDropdownBlancos((bs) => bs.map((x, i) => i !== bidx ? x : {
+                      ...x, opciones: x.opciones.map((o, j) => ({ ...o, es_correcta: j === oidx })),
+                    }))}
+                    style={{ accentColor: "#4A6D8C", flexShrink: 0 }} />
+                  <TextField
+                    value={op.texto}
+                    onChange={(e) => setDropdownBlancos((bs) => bs.map((x, i) => i !== bidx ? x : {
+                      ...x, opciones: x.opciones.map((o, j) => j === oidx ? { ...o, texto: e.target.value } : o),
+                    }))}
+                    placeholder={`Opción ${oidx + 1}`}
+                    size="small" fullWidth
+                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, background: "white" } }} />
+                  <IconButton size="small"
+                    onClick={() => setDropdownBlancos((bs) => bs.map((x, i) => i !== bidx ? x : {
+                      ...x, opciones: x.opciones.filter((_, j) => j !== oidx),
+                    }))}
+                    disabled={b.opciones.length <= 2}
+                    sx={{ color: "#8daecb", "&:hover": { color: "#ef4444" }, flexShrink: 0 }}>
+                    <DeleteIcon sx={{ fontSize: 14 }} />
+                  </IconButton>
+                </div>
+              ))}
+              <Button size="small" startIcon={<AddIcon />}
+                onClick={() => setDropdownBlancos((bs) => bs.map((x, i) => i !== bidx ? x : {
+                  ...x, opciones: [...x.opciones, { texto: "", es_correcta: false }],
+                }))}
+                sx={{ color: "#4A6D8C", alignSelf: "flex-start", textTransform: "none", fontSize: 12 }}>
+                Agregar opción
+              </Button>
+            </div>
+          ))}
+          <Button size="small" startIcon={<AddIcon />}
+            onClick={() => setDropdownBlancos((bs) => [...bs, {
+              blank_id: `blanco${bs.length + 1}`,
+              opciones: [{ texto: "", es_correcta: true }, { texto: "", es_correcta: false }],
+            }])}
+            sx={{ color: "#4A6D8C", alignSelf: "flex-start", textTransform: "none" }}>
+            Agregar blanco
+          </Button>
+        </div>
+      )}
 
       {/* ── Opciones ── */}
       {(tipo === "multiple_choice" || tipo === "multiple_answers" || tipo === "true_false") && (

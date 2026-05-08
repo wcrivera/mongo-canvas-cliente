@@ -28,8 +28,8 @@ import type { IAyudantia } from "../../store/slices/ayudantia";
 import type { IQuiz } from "../../store/slices/quiz";
 import MathTextEditor     from "../../components/CKEditor/MathTextEditor";
 import ModalSolucionTexto from "./components/ModalSolucionTexto";
-import ModalUrlVideo      from "../clases/ModalUrlVideo";
-import ModalCrearQuiz     from "../clases/ModalCrearQuiz";
+import ModalUrlVideo      from "../clases/components/ModalUrlVideo";
+import ModalCrearQuiz     from "../clases/components/ModalCrearQuiz";
 import TiptapRenderer     from "../../components/CKEditor/TiptapRenderer";
 
 interface Props {
