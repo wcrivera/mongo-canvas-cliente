@@ -20,6 +20,7 @@ import AuthCallback      from "../pages/auth/AuthCallback";
 import Login             from "../pages/auth/Login";
 import TokenCanvas       from "../pages/auth/TokenCanvas";
 import TestEditor        from "../pages/test/TestEditor";
+import QuizLti           from "../pages/lti/QuizLti";
 
 const Router = () => {
   return (
@@ -28,6 +29,9 @@ const Router = () => {
         {/* ── Rutas públicas ─────────────────────────────────────────────── */}
         <Route path="/login"         element={<Login />} />
         <Route path="/auth/callback" element={<AuthCallback />} />
+
+        {/* LTI — embebido en iframe de Canvas, autenticado con JWT LTI propio */}
+        <Route path="/lti/quiz" element={<QuizLti />} />
 
         {/* Token Canvas: cualquier autenticado */}
         <Route

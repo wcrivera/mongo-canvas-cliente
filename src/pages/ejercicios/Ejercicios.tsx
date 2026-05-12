@@ -22,9 +22,11 @@ import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
 import { obtenerCapitulos }  from "../../store/slices/capitulo";
 import { fetchConToken }     from "../../helpers/fetch";
 import ModalCrearQuiz        from "../clases/components/ModalCrearQuiz";
-import FormPregunta              from "../quiz/FormPregunta";
-import ModalBanco                from "../../components/banco/ModalBanco";
-import PreguntaCard              from "../quiz/PreguntaCard";
+import FormPregunta          from "../quiz/FormPregunta";
+import ModalBanco            from "../../components/banco/ModalBanco";
+import PreguntaCardFIB       from "../quiz/PreguntaCardFIB";
+import PreguntaViewer        from "../../components/quiz/PreguntaViewer";
+import type { TipoPreguntaViewer } from "../../components/quiz/PreguntaViewer";
 
 const Ejercicios = () => {
   const { curso_id, capitulo_id } = useParams<{ curso_id: string; capitulo_id: string }>();
@@ -41,16 +43,16 @@ const Ejercicios = () => {
 
   const capituloActivo = capitulos.find((c) => c._id === capitulo_id);
 
-  const [modalQuiz,       setModalQuiz]       = useState(false);
-  const [quizEditar,      setQuizEditar]       = useState<IQuiz | undefined>(undefined);
-  const [quizExpandido,   setQuizExpandido]    = useState<string | null>(null); // card expandido mostrando opciones
-  const [quizFormPregunta,setQuizFormPregunta] = useState<string | null>(null); // FormPregunta inline
-  const [quizModalBanco,  setQuizModalBanco]   = useState<string | null>(null); // ModalBanco
-  const [togglingCanvas,  setTogglingCanvas]   = useState<string | null>(null);
-  const [togglingApi,     setTogglingApi]      = useState<string | null>(null);
-  const [desplegando,     setDesplegando]      = useState(false);
-  const [msgDeploy,       setMsgDeploy]        = useState<string | null>(null);
+  const [modalQuiz,        setModalQuiz]        = useState(false);
+  const [quizEditar,       setQuizEditar]        = useState<IQuiz | undefined>(undefined);
+  const [quizFormPregunta, setQuizFormPregunta]  = useState<string | null>(null);
+  const [quizModalBanco,   setQuizModalBanco]    = useState<string | null>(null);
+  const [togglingCanvas,   setTogglingCanvas]    = useState<string | null>(null);
+  const [togglingApi,      setTogglingApi]        = useState<string | null>(null);
+  const [desplegando,      setDesplegando]        = useState(false);
+  const [msgDeploy,        setMsgDeploy]          = useState<string | null>(null);
 
+  // Cargar datos al montar
   useEffect(() => {
     if (!curso_id || !capitulo_id) return;
     dispatch(obtenerMongoCurso({ curso_id }));
@@ -58,18 +60,19 @@ const Ejercicios = () => {
     dispatch(obtenerEjercicios({ capitulo_id }));
   }, [curso_id, capitulo_id, dispatch]);
 
-  // Cuando se selecciona un ejercicio, cargar sus preguntas
+  // Cargar preguntas de TODOS los ejercicios cuando llegan
+  const ejIds = ejercicios.map((e) => e._id).join(",");
   useEffect(() => {
-    if (quizExpandido) {
-      dispatch(obtenerPreguntas({ quiz_id: quizExpandido }));
-    }
-  }, [quizExpandido, dispatch]);
+    if (!ejIds) return;
+    ejIds.split(",").forEach((quiz_id) => {
+      dispatch(obtenerPreguntas({ quiz_id }));
+    });
+  }, [ejIds, dispatch]);
 
   const handleCreado = (quiz: IQuiz) => {
     setModalQuiz(false);
     setQuizEditar(undefined);
-    // Solo expandir el card — el usuario elige crear o banco
-    setQuizExpandido(quiz._id);
+    setQuizFormPregunta(quiz._id);
   };
 
   const handleToggleCanvas = async (ej: IQuiz) => {
@@ -98,11 +101,10 @@ const Ejercicios = () => {
       setMsgDeploy("⚠ Error de conexión");
     }
     setDesplegando(false);
-  };;
+  };
 
-  // Preguntas del ejercicio actualmente expandido
   const preguntasEjercicio = (quiz_id: string) =>
-    preguntas.filter((p) => p.quiz_id === quiz_id);
+    preguntas.filter((p) => p.quiz_id === quiz_id).sort((a, b) => a.position - b.position);
 
   return (
     <div className="min-h-screen bg-[#f0f4f8] p-6">
@@ -191,7 +193,6 @@ const Ejercicios = () => {
         <div className="flex flex-col gap-4 animate-fadeIn">
           {ejercicios.map((ej, idx) => {
             const pqs = preguntasEjercicio(ej._id);
-            const expandido = quizExpandido === ej._id;
 
             return (
               <Card key={ej._id} elevation={0}
@@ -208,7 +209,7 @@ const Ejercicios = () => {
 
                     <div className="flex-1 min-w-0">
                       <Typography variant="subtitle2" sx={{ color: "#1f2c38", fontWeight: 600 }} noWrap>
-                        {ej.titulo}
+                        Ejercicio
                       </Typography>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                         <Typography variant="caption" sx={{ color: "#8daecb" }}>
@@ -263,69 +264,73 @@ const Ejercicios = () => {
                           <EditOutlinedIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
-
-                      {/* Agregar/ver pregunta */}
-                      <Tooltip title={expandido ? "Cerrar" : pqs.length > 0 ? "Ver / editar pregunta" : "Agregar pregunta"}>
-                        <Button size="small"
-                          onClick={() => {
-                            if (expandido) {
-                              setQuizExpandido(null);
-                              setQuizFormPregunta(null);
-                            } else {
-                              dispatch(obtenerPreguntas({ quiz_id: ej._id }));
-                              setQuizExpandido(ej._id);
-                            }
-                          }}
-                          sx={{ fontSize: "0.65rem", color: expandido ? "#8daecb" : "#2d5be3",
-                            borderRadius: 2, px: 1.5, minWidth: 0,
-                            "&:hover": { bgcolor: "#f0f3ff" } }}>
-                          {expandido ? "Cerrar" : pqs.length > 0 ? "Pregunta" : "+ Pregunta"}
-                        </Button>
-                      </Tooltip>
                     </div>
                   </div>
 
-                  {/* ── Pregunta existente / opciones agregar ── */}
-                  {expandido && (
-                    <div className="px-4 pb-4 pt-2 border-t border-[#f0f0f0]">
-                      {pqs.length > 0 ? (
-                        // Ya tiene pregunta — mostrar con PreguntaCard
-                        <div className="flex flex-col gap-3">
-                          {pqs.map((p, pidx) => (
-                            <PreguntaCard key={p._id} pregunta={p}
-                              esPrimero={pidx === 0} esUltimo={pidx === pqs.length - 1} />
-                          ))}
-                        </div>
-                      ) : quizFormPregunta === ej._id ? (
-                        // Mostrar FormPregunta
+                  {/* ── Preguntas — siempre visibles ── */}
+                  <div className="px-4 pb-4 border-t border-[#f0f0f0]">
+
+                    {/* Preguntas existentes */}
+                    {pqs.length > 0 && (
+                      <div className="flex flex-col gap-4 pt-3">
+                        {pqs.map((p) => {
+                          const esFIBConItems =
+                            p.tipo === "fill_in_multiple_blanks" &&
+                            Array.isArray(p.items) &&
+                            p.items.length > 0;
+
+                          return (
+                            <div key={p._id}>
+                              {esFIBConItems ? (
+                                <PreguntaCardFIB pregunta={p} />
+                              ) : (
+                                <PreguntaViewer
+                                  tipo={p.tipo as TipoPreguntaViewer}
+                                  enunciado={p.enunciado}
+                                  opciones={p.opciones}
+                                  pares={p.pares}
+                                  respuesta_numerica={p.respuesta_numerica}
+                                  tipo_pimu={p.tipo_pimu}
+                                  respuesta_lti={p.respuesta_lti}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Sin preguntas — mostrar botones de agregar */}
+                    {pqs.length === 0 && quizFormPregunta !== ej._id && (
+                      <div className="flex gap-3 pt-3">
+                        <Button variant="outlined" startIcon={<AddIcon />}
+                          onClick={() => setQuizFormPregunta(ej._id)}
+                          sx={{ borderColor: "#4A6D8C", color: "#4A6D8C", borderRadius: 2,
+                            fontWeight: 600, fontSize: "0.75rem", "&:hover": { bgcolor: "#f0f4f8" } }}>
+                          Nueva pregunta
+                        </Button>
+                        <Button variant="outlined"
+                          onClick={() => setQuizModalBanco(ej._id)}
+                          sx={{ borderColor: "#6b46c1", color: "#6b46c1", borderRadius: 2,
+                            fontWeight: 600, fontSize: "0.75rem", "&:hover": { bgcolor: "#f5f0ff" } }}>
+                          Del banco
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* FormPregunta inline */}
+                    {quizFormPregunta === ej._id && (
+                      <div className="mt-3">
                         <FormPregunta quiz_id={ej._id}
                           onCreada={() => {
                             dispatch(obtenerPreguntas({ quiz_id: ej._id }));
                             setQuizFormPregunta(null);
                           }} />
-                      ) : (
-                        // Sin pregunta — mostrar dos opciones
-                        <div className="flex gap-3 py-2">
-                          <Button variant="outlined" startIcon={<AddIcon />}
-                            onClick={() => setQuizFormPregunta(ej._id)}
-                            sx={{ borderColor: "#4A6D8C", color: "#4A6D8C", borderRadius: 2,
-                              fontWeight: 600, fontSize: "0.75rem",
-                              "&:hover": { bgcolor: "#f0f4f8" } }}>
-                            Nueva pregunta
-                          </Button>
-                          <Button variant="outlined"
-                            onClick={() => setQuizModalBanco(ej._id)}
-                            sx={{ borderColor: "#6b46c1", color: "#6b46c1", borderRadius: 2,
-                              fontWeight: 600, fontSize: "0.75rem",
-                              "&:hover": { bgcolor: "#f5f0ff" } }}>
-                            Del banco
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
 
-                  {/* ── ModalBanco para este ejercicio ── */}
+                  {/* ModalBanco */}
                   {quizModalBanco === ej._id && (
                     <ModalBanco
                       modo="pregunta"
@@ -345,7 +350,7 @@ const Ejercicios = () => {
         </div>
       )}
 
-      {/* ── Modal crear/editar quiz ── */}
+      {/* Modal crear/editar quiz */}
       {modalQuiz && capitulo_id && curso_id && (
         <ModalCrearQuiz
           contexto="ejercicio"

@@ -33,7 +33,10 @@ import PreguntaViewer, {
   type TipoPreguntaViewer,
 } from "../../components/quiz/PreguntaViewer";
 
-// ── Labels y colores por tipo ────────────────────────────────────────────────
+// ── Nuevo: vista FIB con items[] ──────────────────────────────────────────────
+import PreguntaCardFIB from "./PreguntaCardFIB";
+
+// ── Labels y colores por tipo ─────────────────────────────────────────────────
 
 const TIPO_LABEL: Record<string, string> = {
   multiple_choice:         "Opción múltiple",
@@ -72,7 +75,7 @@ const ModalEliminar = ({
   pregunta: IPregunta;
   onClose:  () => void;
 }) => {
-  const dispatch   = useAppDispatch();
+  const dispatch     = useAppDispatch();
   const [eliminando, setEliminando] = useState(false);
 
   const handleEliminar = async () => {
@@ -125,21 +128,19 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
   const [modalEliminar, setModalEliminar] = useState(false);
 
   // ── Estado del editor ─────────────────────────────────────────────────────
-  const [enunciado,    setEnunciado]    = useState(pregunta.enunciado);
-  const [puntos,       setPuntos]       = useState(pregunta.puntos);
-  // Estado para fill_in_multiple_blanks — blancos con tipo_pimu individual
+  const [enunciado, setEnunciado] = useState(pregunta.enunciado);
+  const [puntos,    setPuntos]    = useState(pregunta.puntos);
+
   const [blancos, setBlancos] = useState<IBlancoEditor[]>(() => {
     if (pregunta.tipo !== "fill_in_multiple_blanks" || pregunta.opciones.length === 0) {
       return [{ blank_id: "blanco1", respuesta: "", tipoPimu: "numero" }];
     }
-    // Reconstruir blancos únicos desde opciones
     const vistos = new Set<string>();
     return pregunta.opciones
       .filter((op) => { const nuevo = !vistos.has(op.blank_id ?? ""); vistos.add(op.blank_id ?? ""); return nuevo; })
       .map((op) => ({ blank_id: op.blank_id ?? "blanco1", respuesta: op.texto, tipoPimu: (op.tipo_pimu as string) ?? "numero" }));
   });
 
-  // Estado para multiple_dropdowns — blancos con lista de opciones
   const [dropdownBlancos, setDropdownBlancos] = useState<IDropdownBlancoEditor[]>(() => {
     if (pregunta.tipo !== "multiple_dropdowns" || pregunta.opciones.length === 0) {
       return [{ blank_id: "blanco1", opciones: [{ texto: "", es_correcta: true }, { texto: "", es_correcta: false }] }];
@@ -152,17 +153,10 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
   });
 
   const [opciones, setOpciones] = useState<IOpcionEditor[]>(
-    pregunta.opciones.map((op) => ({
-      texto:       op.texto,
-      es_correcta: op.es_correcta,
-      blank_id:    op.blank_id ?? null,
-    })),
+    pregunta.opciones.map((op) => ({ texto: op.texto, es_correcta: op.es_correcta, blank_id: op.blank_id ?? null })),
   );
   const [pares, setPares] = useState<IParEditor[]>(
-    (pregunta.pares ?? []).map((p) => ({
-      izquierda: p.izquierda,
-      derecha:   p.derecha,
-    })),
+    (pregunta.pares ?? []).map((p) => ({ izquierda: p.izquierda, derecha: p.derecha })),
   );
   const [respNum, setRespNum] = useState<IRespuestaNumEditor>({
     tipo:      pregunta.respuesta_numerica?.tipo      ?? "exact",
@@ -173,11 +167,17 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
     precision: pregunta.respuesta_numerica?.precision ?? 2,
   });
 
-  // ── Abrir edición — resetear al estado actual del servidor ────────────────
+  // ── ¿Es FIB con items[]? ──────────────────────────────────────────────────
+  // Las preguntas FIB de ejercicios tienen items[]; las de clase/ayudantía no.
+  const esFIBConItems =
+    pregunta.tipo === "fill_in_multiple_blanks" &&
+    Array.isArray(pregunta.items) &&
+    pregunta.items.length > 0;
+
+  // ── Abrir edición ─────────────────────────────────────────────────────────
   const handleAbrirEdicion = () => {
     setEnunciado(pregunta.enunciado);
     setPuntos(pregunta.puntos);
-    // Resetear blancos LTI
     if (pregunta.tipo === "fill_in_multiple_blanks" && pregunta.opciones.length > 0) {
       const vistos = new Set<string>();
       setBlancos(pregunta.opciones
@@ -186,7 +186,6 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
     } else {
       setBlancos([{ blank_id: "blanco1", respuesta: "", tipoPimu: "numero" }]);
     }
-    // Resetear dropdown blancos
     if (pregunta.tipo === "multiple_dropdowns" && pregunta.opciones.length > 0) {
       const blancoIds = [...new Set(pregunta.opciones.map((op) => op.blank_id ?? "blanco1"))];
       setDropdownBlancos(blancoIds.map((bid) => ({
@@ -196,15 +195,8 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
     } else {
       setDropdownBlancos([{ blank_id: "blanco1", opciones: [{ texto: "", es_correcta: true }, { texto: "", es_correcta: false }] }]);
     }
-    setOpciones(pregunta.opciones.map((op) => ({
-      texto:       op.texto,
-      es_correcta: op.es_correcta,
-      blank_id:    op.blank_id ?? null,
-    })));
-    setPares((pregunta.pares ?? []).map((p) => ({
-      izquierda: p.izquierda,
-      derecha:   p.derecha,
-    })));
+    setOpciones(pregunta.opciones.map((op) => ({ texto: op.texto, es_correcta: op.es_correcta, blank_id: op.blank_id ?? null })));
+    setPares((pregunta.pares ?? []).map((p) => ({ izquierda: p.izquierda, derecha: p.derecha })));
     setRespNum({
       tipo:      pregunta.respuesta_numerica?.tipo      ?? "exact",
       exacto:    pregunta.respuesta_numerica?.exacto    ?? 0,
@@ -239,6 +231,8 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
         payload.respuesta_numerica = respNum;
         break;
       case "fill_in_multiple_blanks":
+        // FIB con items[] → los items se editan por separado con ⚙️ por ítem.
+        // Aquí solo se actualizan puntos y enunciado_contexto si aplica.
         payload.tipo_pimu = blancos[0]?.tipoPimu ?? "numero";
         payload.opciones  = blancos.map((b) => ({
           texto:       b.respuesta,
@@ -292,7 +286,7 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
             </div>
 
             {/* Tipo + puntos */}
-            <div className="flex items-center gap-2 flex-1">
+            <div className="flex items-center gap-2 flex-1 flex-wrap">
               <Chip
                 label={TIPO_LABEL[pregunta.tipo] ?? pregunta.tipo}
                 size="small"
@@ -306,33 +300,34 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
               <Typography variant="caption" sx={{ color: "#8daecb" }}>
                 {pregunta.puntos} pt{pregunta.puntos !== 1 ? "s" : ""}
               </Typography>
-              {/* Badge LTI si aplica */}
-              {pregunta.tipo === "fill_in_multiple_blanks" && pregunta.tipo_pimu && (
+              {/* Badge LTI con tipo_pimu — solo FIB sin items[] */}
+              {pregunta.tipo === "fill_in_multiple_blanks" && !esFIBConItems && pregunta.tipo_pimu && (
+                <Chip label={`LTI · ${pregunta.tipo_pimu}`} size="small"
+                  sx={{ fontSize: "0.6rem", height: 18, bgcolor: "#e0f0ff", color: "#1d4ed8" }} />
+              )}
+              {/* Badge FIB con items */}
+              {esFIBConItems && (
                 <Chip
-                  label={`LTI · ${pregunta.tipo_pimu}`}
+                  label={`${pregunta.items.length} blancos · ${pregunta.columnas ?? 1} col`}
                   size="small"
-                  sx={{ fontSize: "0.6rem", height: 18, bgcolor: "#e0f0ff", color: "#1d4ed8" }}
+                  sx={{ fontSize: "0.6rem", height: 18, bgcolor: "#f0fdf4", color: "#16a34a" }}
                 />
               )}
             </div>
 
-            {/* Controles */}
+            {/* Controles — FIB con items no tiene botón editar (se edita por ítem) */}
             <div className="flex items-center gap-0.5">
               {editando ? (
                 <>
-                  <Tooltip title="Guardar cambios">
-                    <span>
-                      <IconButton size="small" onClick={handleGuardar} disabled={guardando}
-                        sx={{ color: "#1a9e5c", "&:hover": { bgcolor: "#d1fae5" } }}>
-                        {guardando
-                          ? <CircularProgress size={14} sx={{ color: "#1a9e5c" }} />
-                          : <CheckIcon fontSize="small" />}
-                      </IconButton>
-                    </span>
+                  <Tooltip title="Guardar">
+                    <IconButton size="small" onClick={handleGuardar} disabled={guardando}
+                      sx={{ color: "#16a34a", "&:hover": { color: "#15803d" } }}>
+                      {guardando ? <CircularProgress size={14} sx={{ color: "#16a34a" }} /> : <CheckIcon fontSize="small" />}
+                    </IconButton>
                   </Tooltip>
                   <Tooltip title="Cancelar">
                     <IconButton size="small" onClick={() => setEditando(false)}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#ef4444" } }}>
+                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" } }}>
                       <CloseIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
@@ -340,32 +335,30 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
               ) : (
                 <>
                   <Tooltip title="Mover arriba"><span>
-                    <IconButton size="small" disabled={esPrimero || moviendo}
-                      onClick={() => handleMover("up")}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" },
-                        "&:disabled": { color: "#d9e4ee" } }}>
-                      {moviendo
-                        ? <CircularProgress size={14} sx={{ color: "#8daecb" }} />
-                        : <KeyboardArrowUpIcon fontSize="small" />}
+                    <IconButton size="small" disabled={esPrimero || moviendo} onClick={() => handleMover("up")}
+                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" }, "&:disabled": { color: "#d9e4ee" } }}>
+                      {moviendo ? <CircularProgress size={14} sx={{ color: "#8daecb" }} /> : <KeyboardArrowUpIcon fontSize="small" />}
                     </IconButton>
                   </span></Tooltip>
                   <Tooltip title="Mover abajo"><span>
-                    <IconButton size="small" disabled={esUltimo || moviendo}
-                      onClick={() => handleMover("down")}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" },
-                        "&:disabled": { color: "#d9e4ee" } }}>
+                    <IconButton size="small" disabled={esUltimo || moviendo} onClick={() => handleMover("down")}
+                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" }, "&:disabled": { color: "#d9e4ee" } }}>
                       <KeyboardArrowDownIcon fontSize="small" />
                     </IconButton>
                   </span></Tooltip>
-                  <Tooltip title="Editar">
-                    <IconButton size="small" onClick={handleAbrirEdicion} disabled={moviendo}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" } }}>
-                      <EditOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
+
+                  {/* Botón editar — oculto para FIB con items (se edita por ítem con ⚙️) */}
+                  {!esFIBConItems && (
+                    <Tooltip title="Editar">
+                      <IconButton size="small" onClick={handleAbrirEdicion} disabled={moviendo}
+                        sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" } }}>
+                        <EditOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  )}
+
                   <Tooltip title="Eliminar">
-                    <IconButton size="small" onClick={() => setModalEliminar(true)}
-                      disabled={moviendo}
+                    <IconButton size="small" onClick={() => setModalEliminar(true)} disabled={moviendo}
                       sx={{ color: "#8daecb", "&:hover": { color: "#ef4444" } }}>
                       <DeleteOutlineIcon fontSize="small" />
                     </IconButton>
@@ -377,7 +370,10 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
 
           {/* ── Contenido ── */}
           <div className="px-5 py-4">
-            {editando ? (
+            {/* FIB con items[] → componente especializado con grid de blancos */}
+            {esFIBConItems && !editando ? (
+              <PreguntaCardFIB pregunta={pregunta} />
+            ) : editando ? (
               <PreguntaEditor
                 tipo={pregunta.tipo as TipoPreguntaEditor}
                 enunciado={enunciado}

@@ -160,7 +160,7 @@ const Ayudantias = () => {
           style={{ background: "white", border: "1px solid #d9e4ee" }}>
           <Typography variant="subtitle2" sx={{ color: "#2e4154", mb: 2, fontWeight: 600 }}>Nueva ayudantía</Typography>
           <div className="flex gap-3 items-start">
-            <TextField label="Nombre *" placeholder="ej: Ayudantía 1 — Límites"
+            <TextField label="Nombre de la ayudantía" placeholder="ej: Ayudantía 1 — Límites"
               value={nombre} onChange={(e) => setNombre(e.target.value)}
               required size="small" fullWidth autoFocus
               sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />

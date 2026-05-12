@@ -25,6 +25,7 @@ export interface IRespuestaNumerica {
   precision?: number;
 }
 
+// Incluye todos los tipos posibles — igual que TipoPreguntaEditor
 export type TipoPreguntaViewer =
   | "multiple_choice"
   | "multiple_answers"
@@ -33,34 +34,35 @@ export type TipoPreguntaViewer =
   | "essay"
   | "matching"
   | "numerical"
+  | "calculated"
   | "fill_in_multiple_blanks"
+  | "multiple_dropdowns"   // ← agregado
   | "text_only_question";
 
 // Etiquetas para tipo PIMU
 const PIMU_LABELS: Record<string, string> = {
-  numero:            "Número",
-  formula:           "Fórmula",
-  antiderivada:      "Antiderivada",
-  conjunto:          "Conjunto",
-  intervalo:         "Intervalo",
-  ecuacion:          "Ecuación",
-  punto:             "Punto",
-  factorizacion:     "Factorización",
-  formulaN:          "Fórmula (n)",
-  formulaT:          "Fórmula (t)",
-  vector:            "Vector",
+  numero:              "Número",
+  formula:             "Fórmula",
+  antiderivada:        "Antiderivada",
+  conjunto:            "Conjunto",
+  intervalo:           "Intervalo",
+  ecuacion:            "Ecuación",
+  punto:               "Punto",
+  factorizacion:       "Factorización",
+  formulaN:            "Fórmula (n)",
+  formulaT:            "Fórmula (t)",
+  vector:              "Vector",
   "conjunto-vectores": "Conjunto vectores",
 };
 
 interface Props {
-  tipo:               TipoPreguntaViewer;
-  enunciado:          string;
-  opciones?:          IOpcion[];
-  pares?:             IPar[];
+  tipo:                TipoPreguntaViewer;
+  enunciado:           string;
+  opciones?:           IOpcion[];
+  pares?:              IPar[];
   respuesta_numerica?: IRespuestaNumerica;
-  // Campos LTI — solo para fill_in_multiple_blanks
-  tipo_pimu?:         string | null;
-  respuesta_lti?:     string | null;
+  tipo_pimu?:          string | null;
+  respuesta_lti?:      string | null;
 }
 
 const PreguntaViewer = ({
@@ -80,6 +82,8 @@ const PreguntaViewer = ({
     tipo === "multiple_answers" ||
     tipo === "true_false";
 
+  const esDropdown = tipo === "multiple_dropdowns";
+
   return (
     <div className="flex flex-col gap-2">
 
@@ -92,48 +96,14 @@ const PreguntaViewer = ({
         )}
       </div>
 
-      {/* ── Info LTI para fill_in_multiple_blanks ── */}
-      {esFib && (
-        <>
-          <Divider sx={{ borderColor: "#f0f0f0" }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-            <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
-              Validación LTI:
-            </Typography>
-            {tipo_pimu && (
-              <Chip
-                label={PIMU_LABELS[tipo_pimu] ?? tipo_pimu}
-                size="small"
-                sx={{ fontSize: "0.65rem", height: 20, bgcolor: "#e0f0ff", color: "#1d4ed8", fontWeight: 600 }}
-              />
-            )}
-            {respuesta_lti && (
-              <code style={{
-                background: "#f1f5f9",
-                padding: "2px 8px",
-                borderRadius: 4,
-                fontSize: 12,
-                color: "#0f172a",
-                fontFamily: "monospace",
-              }}>
-                {respuesta_lti}
-              </code>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* ── Opciones ── */}
+      {/* ── Opciones multiple_choice / multiple_answers / true_false ── */}
       {mostrarOpciones && opciones.length > 0 && (
         <>
           <Divider sx={{ borderColor: "#f0f0f0" }} />
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1">
             {opciones.map((op, idx) => (
-              <div key={idx} className="flex items-center gap-2 rounded-lg px-3 py-2"
-                style={{
-                  background: op.es_correcta ? "#d1fae5" : "#f9f9f9",
-                  border: `1px solid ${op.es_correcta ? "#6ee7b7" : "#e0e0e0"}`,
-                }}>
+              <div key={idx} className="flex items-center gap-2 px-2 py-1 rounded-lg"
+                style={{ background: op.es_correcta ? "#f0fdf4" : "transparent" }}>
                 <div style={{
                   width: 12, height: 12, flexShrink: 0,
                   borderRadius: esMultiple ? "3px" : "50%",
@@ -147,6 +117,56 @@ const PreguntaViewer = ({
                 </Typography>
               </div>
             ))}
+          </div>
+        </>
+      )}
+
+      {/* ── multiple_dropdowns ── */}
+      {esDropdown && opciones.length > 0 && (
+        <>
+          <Divider sx={{ borderColor: "#f0f0f0" }} />
+          <div className="flex flex-col gap-1">
+            {[...new Set(opciones.map((o) => o.blank_id ?? ""))].map((bid) => (
+              <div key={bid} className="flex flex-col gap-0.5">
+                <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
+                  [{bid}]
+                </Typography>
+                {opciones.filter((o) => o.blank_id === bid).map((op, idx) => (
+                  <div key={idx} className="flex items-center gap-2 px-2 py-0.5"
+                    style={{ background: op.es_correcta ? "#f0fdf4" : "transparent", borderRadius: 4 }}>
+                    <div style={{
+                      width: 10, height: 10, borderRadius: 2, flexShrink: 0,
+                      border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`,
+                      background: op.es_correcta ? "#1a9e5c" : "transparent",
+                    }} />
+                    <Typography variant="body2" sx={{ fontSize: 12, color: op.es_correcta ? "#065f46" : "#64748b" }}>
+                      {op.texto}
+                    </Typography>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ── Info LTI para fill_in_multiple_blanks ── */}
+      {esFib && (
+        <>
+          <Divider sx={{ borderColor: "#f0f0f0" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
+              Validación LTI:
+            </Typography>
+            {tipo_pimu && (
+              <Chip label={PIMU_LABELS[tipo_pimu] ?? tipo_pimu} size="small"
+                sx={{ bgcolor: "#e0f0ff", color: "#1d4ed8", fontWeight: 600, fontSize: "0.65rem" }} />
+            )}
+            {respuesta_lti && (
+              <Typography variant="caption" sx={{ color: "#64748b" }}>
+                Respuesta: <strong>{respuesta_lti}</strong>
+              </Typography>
+            )}
           </div>
         </>
       )}
@@ -191,6 +211,7 @@ const PreguntaViewer = ({
           </Typography>
         </>
       )}
+
     </div>
   );
 };

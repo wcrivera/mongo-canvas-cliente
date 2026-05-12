@@ -1,3 +1,4 @@
+// src/store/slices/quiz/quizSlice.ts
 import { createSlice } from "@reduxjs/toolkit";
 
 export type ContextoQuiz = "clase" | "ayudantia" | "ejercicio";
@@ -48,12 +49,25 @@ export interface IVariableFormula {
   decimales: number;
 }
 
+// ── Ítem individual de fill_in_multiple_blanks ────────────────────────────────
+export interface IItemFIB {
+  id:        string;   // "blanco1", "blanco2", ...
+  enunciado: string;   // enunciado del sub-ítem (vacío si = enunciado_contexto)
+  respuesta: string;   // respuesta esperada
+  tipo_pimu: string;   // tipo de validación LTI
+}
+
 export interface IPregunta {
   _id:                 string;
   quiz_id:             string;
   capitulo_id:         string;
   curso_id:            string;
   enunciado:           string;
+  // ── Campos FIB ────────────────────────────────────────────────────────────
+  enunciado_contexto:  string;
+  items:               IItemFIB[];
+  columnas:            number;
+  // ─────────────────────────────────────────────────────────────────────────
   tipo:                TipoPregunta;
   tipo_pimu?:          string | null;
   respuesta_lti?:      string | null;
@@ -106,27 +120,74 @@ export const quizMongoSlice = createSlice({
   name: "quizMongo",
   initialState,
   reducers: {
-    setQuizzes:             (state, action) => { state.quizzes = Array.isArray(action.payload) ? action.payload : []; },
-    agregarQuiz:            (state, action) => { state.quizzes.push(action.payload); },
-    actualizarQuiz:         (state, action) => { state.quizActivo = action.payload; const idx = state.quizzes.findIndex((q) => q._id === action.payload._id); if (idx !== -1) state.quizzes[idx] = action.payload; },
-    eliminarQuizState:      (state, action) => { state.quizzes = state.quizzes.filter((q) => q._id !== action.payload); if (state.quizActivo?._id === action.payload) state.quizActivo = null; },
-    setQuizActivo:          (state, action) => { state.quizActivo = action.payload; },
-    limpiarQuizActivo:      (state)         => { state.quizActivo = null; state.preguntas = []; },
-    limpiarQuizzes:         (state)         => { state.quizzes = []; state.quizActivo = null; state.preguntas = []; },
-    setPreguntas:           (state, action) => { state.preguntas = action.payload; },
-    agregarPregunta:        (state, action) => { state.preguntas.push(action.payload); },
-    actualizarPreguntaState:(state, action) => { const idx = state.preguntas.findIndex((p) => p._id === action.payload._id); if (idx !== -1) state.preguntas[idx] = action.payload; },
-    intercambiarPreguntas:  (state, action) => { action.payload.forEach((p: IPregunta) => { const idx = state.preguntas.findIndex((q) => q._id === p._id); if (idx !== -1) state.preguntas[idx] = p; }); state.preguntas.sort((a, b) => a.position - b.position); },
-    eliminarPreguntaState:  (state, action) => { state.preguntas = state.preguntas.filter((p) => p._id !== action.payload); },
-    startLoadingQuiz:       (state)         => { state.isLoading = true; state.error = null; },
-    endLoadingQuiz:         (state)         => { state.isLoading = false; },
-    setErrorQuiz:           (state, action) => { state.isLoading = false; state.error = action.payload; },
+    setQuizzes: (state, action) => {
+      // Upsert por _id: para cada quiz que llega, reemplaza si ya existe,
+      // agrega si no existe. No borra nada que no esté en el payload.
+      const nuevos: IQuiz[] = Array.isArray(action.payload) ? action.payload : [action.payload];
+      const nuevosIds = new Set(nuevos.map((q) => q._id));
+      // Mantener los que NO vienen en el payload + reemplazar los que sí vienen
+      state.quizzes = [
+        ...state.quizzes.filter((q) => !nuevosIds.has(q._id)),
+        ...nuevos,
+      ];
+    },
+    agregarQuiz:   (state, action) => { state.quizzes.push(action.payload); },
+    actualizarQuiz:(state, action) => {
+      const idx = state.quizzes.findIndex((q) => q._id === action.payload._id);
+      if (idx !== -1) state.quizzes[idx] = action.payload;
+      if (state.quizActivo?._id === action.payload._id) state.quizActivo = action.payload;
+    },
+    eliminarQuizState: (state, action) => {
+      state.quizzes = state.quizzes.filter((q) => q._id !== action.payload);
+      if (state.quizActivo?._id === action.payload) state.quizActivo = null;
+    },
+    setQuizActivo:     (state, action) => { state.quizActivo = action.payload; },
+    limpiarQuizActivo: (state)         => { state.quizActivo = null; state.preguntas = []; },
+    limpiarQuizzes:    (state)         => { state.quizzes = []; state.preguntas = []; },
+    setPreguntas: (state, action) => {
+      // action.payload = IPregunta[] de un quiz específico
+      // Hacer upsert: reemplazar las de ese quiz_id, mantener las demás
+      const nuevas: IPregunta[] = action.payload;
+      if (nuevas.length === 0) return;
+      const quiz_id = nuevas[0].quiz_id;
+      // Eliminar las existentes de ese quiz y agregar las nuevas
+      state.preguntas = [
+        ...state.preguntas.filter((p) => p.quiz_id !== quiz_id),
+        ...nuevas,
+      ];
+    },
+    agregarPregunta:   (state, action) => { state.preguntas.push(action.payload); },
+    actualizarPreguntaState: (state, action) => {
+      // Puede recibir una sola pregunta o array (cuando viene de editarItemFIB)
+      const updated = Array.isArray(action.payload) ? action.payload : [action.payload];
+      for (const p of updated) {
+        const idx = state.preguntas.findIndex((pr) => pr._id === p._id);
+        if (idx !== -1) state.preguntas[idx] = p;
+      }
+    },
+    intercambiarPreguntas: (state, action) => {
+      const [p1, p2] = action.payload as IPregunta[];
+      const i1 = state.preguntas.findIndex((p) => p._id === p1._id);
+      const i2 = state.preguntas.findIndex((p) => p._id === p2._id);
+      if (i1 !== -1) state.preguntas[i1] = p1;
+      if (i2 !== -1) state.preguntas[i2] = p2;
+      state.preguntas.sort((a, b) => a.position - b.position);
+    },
+    eliminarPreguntaState: (state, action) => {
+      state.preguntas = state.preguntas.filter((p) => p._id !== action.payload);
+    },
+    startLoadingQuiz: (state)         => { state.isLoading = true;  state.error = null; },
+    endLoadingQuiz:   (state)         => { state.isLoading = false; },
+    setErrorQuiz:     (state, action) => { state.isLoading = false; state.error = action.payload; },
   },
 });
 
 export const {
-  setQuizzes, agregarQuiz, actualizarQuiz, eliminarQuizState, setQuizActivo,
-  limpiarQuizActivo, limpiarQuizzes, setPreguntas, agregarPregunta,
-  actualizarPreguntaState, intercambiarPreguntas, eliminarPreguntaState,
+  setQuizzes, agregarQuiz, actualizarQuiz, eliminarQuizState,
+  setQuizActivo, limpiarQuizActivo, limpiarQuizzes,
+  setPreguntas, agregarPregunta, actualizarPreguntaState,
+  intercambiarPreguntas, eliminarPreguntaState,
   startLoadingQuiz, endLoadingQuiz, setErrorQuiz,
 } = quizMongoSlice.actions;
+
+export default quizMongoSlice.reducer;

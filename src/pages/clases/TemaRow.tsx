@@ -24,7 +24,7 @@ import { editarTema, eliminarTema, cambiarPositionTema } from "../../store/slice
 import type { ITema } from "../../store/slices/tema";
 import type { IQuiz } from "../../store/slices/quiz";
 import LatexRenderer          from "../../components/LaTeX/LatexRenderer";
-import { crearDiapositiva }    from "../../store/slices/diapositiva";
+import { crearDiapositiva }   from "../../store/slices/diapositiva";
 import ModalElegirDiapositiva from "./components/ModalElegirDiapositiva";
 import ModalUrlDiapositiva    from "./components/ModalUrlDiapositiva";
 import ModalUrlVideo          from "./components/ModalUrlVideo";
@@ -33,7 +33,7 @@ import ModalCrearQuiz         from "./components/ModalCrearQuiz";
 // ─── Modal eliminar ───────────────────────────────────────────────────────────
 
 const ModalEliminar = ({ tema, onClose }: { tema: ITema; onClose: () => void }) => {
-  const dispatch    = useAppDispatch();
+  const dispatch     = useAppDispatch();
   const [eliminando, setEliminando] = useState(false);
 
   const handleEliminar = async () => {
@@ -62,7 +62,8 @@ const ModalEliminar = ({ tema, onClose }: { tema: ITema; onClose: () => void }) 
           sx={{ borderColor: "#d1d5db", color: "#374151", borderRadius: 2 }}>Cancelar</Button>
         <Button onClick={handleEliminar} variant="contained" disabled={eliminando}
           startIcon={eliminando ? <CircularProgress size={14} color="inherit" /> : undefined}
-          sx={{ bgcolor: "#dc2626", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" } }}>
+          sx={{ bgcolor: "#dc2626", borderRadius: 2, px: 3, fontWeight: 600,
+            boxShadow: "none", "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" } }}>
           {eliminando ? "Eliminando..." : "Sí, eliminar"}
         </Button>
       </DialogActions>
@@ -85,20 +86,26 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
   // Recursos del tema desde el store
   const { diapositivas } = useAppSelector((s) => s.diapositivaMongo);
   const { videos }       = useAppSelector((s) => s.videoMongo);
-  const quizzesSafe      = useAppSelector((s) => Array.isArray(s.quizMongo.quizzes) ? s.quizMongo.quizzes : []);
+  const quizzesSafe      = useAppSelector((s) =>
+    Array.isArray(s.quizMongo.quizzes) ? s.quizMongo.quizzes : [],
+  );
 
-  const diapoTema  = diapositivas.find((d) => d.tema_id === tema._id && d.contexto === "clase");
-  const videoTema  = videos.find((v) => v.tema_id === tema._id && v.contexto === "clase");
-  const quizTema   = quizzesSafe.find((q) => q.tema_id === tema._id && q.contexto === "clase") as IQuiz | undefined;
+  const diapoTema = diapositivas.find((d) => d.tema_id === tema._id && d.contexto === "clase");
+  const videoTema = videos.find((v) => v.tema_id === tema._id && v.contexto === "clase");
+  const quizTema  = quizzesSafe.find(
+    (q) => q.tema_id?.toString() === tema._id.toString() && q.contexto === "clase",
+  ) as IQuiz | undefined;
+
+  console.log(quizzesSafe)
 
   // ── Estado local ──────────────────────────────────────────────────────────
-  const [editando,        setEditando]        = useState(false);
-  const [nombre,          setNombre]          = useState(tema.nombre);
-  const [guardando,       setGuardando]       = useState(false);
-  const [togglingCanvas,  setTogglingCanvas]  = useState(false);
-  const [togglingApi,     setTogglingApi]     = useState(false);
-  const [moviendo,        setMoviendo]        = useState(false);
-  const [modalEliminar,   setModalEliminar]   = useState(false);
+  const [editando,       setEditando]       = useState(false);
+  const [nombre,         setNombre]         = useState(tema.nombre);
+  const [guardando,      setGuardando]      = useState(false);
+  const [togglingCanvas, setTogglingCanvas] = useState(false);
+  const [togglingApi,    setTogglingApi]    = useState(false);
+  const [moviendo,       setMoviendo]       = useState(false);
+  const [modalEliminar,  setModalEliminar]  = useState(false);
 
   // Modales de recursos
   const [modalElegir, setModalElegir] = useState(false);
@@ -160,10 +167,8 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
   const handleElegirEditor = async () => {
     setModalElegir(false);
     if (diapoTema) {
-      // Ya existe — navegar directo al editor
       navigate(`/cursos/${tema.curso_id}/capitulos/${tema.capitulo_id}/clases/${tema.clase_id}/diapositiva/${diapoTema._id}`);
     } else {
-      // No existe — crear primero en Mongo con url vacía, luego navegar
       const resultado = await dispatch(crearDiapositiva({
         contexto:    "clase",
         tema_id:     tema._id,
@@ -179,9 +184,14 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
     }
   };
 
-  const handleQuizCreado = (quiz: IQuiz) => {
+  // ── FIX: no navegar al crear quiz ─────────────────────────────────────────
+  // El quiz se agrega al store con agregarQuiz (en el thunk crearQuiz).
+  // Al cerrar el modal, quizTema lo detecta reactivamente en el siguiente
+  // render y el botón "Quiz →" aparece inmediatamente sin recargar nada.
+  // Antes: navigate(...) sacaba al usuario de la página antes de que React
+  // pudiera renderizar el quiz nuevo, por eso nunca se veía.
+  const handleQuizCreado = () => {
     setModalQuiz(false);
-    navigate(`/cursos/${tema.curso_id}/capitulos/${tema.capitulo_id}/clases/${tema.clase_id}/quiz/${quiz._id}`);
   };
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -191,9 +201,9 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
       <div
         className="animate-fadeIn"
         style={{
-          background: tieneErrores ? "#fff5f5" : tienePending ? "#fffdf0" : "#fafcff",
+          background:   tieneErrores ? "#fff5f5" : tienePending ? "#fffdf0" : "#fafcff",
           borderRadius: 8,
-          border: tieneErrores ? "1px solid #fecaca" : tienePending ? "1px solid #fde68a" : "1px solid #e8f0f8",
+          border:       tieneErrores ? "1px solid #fecaca" : tienePending ? "1px solid #fde68a" : "1px solid #e8f0f8",
           marginBottom: 4,
         }}
       >
@@ -208,9 +218,7 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  size="small"
-                  autoFocus
-                  fullWidth
+                  size="small" autoFocus fullWidth
                   sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2, fontSize: "0.8rem", bgcolor: "white" } }}
                 />
                 <Tooltip title="Guardar (Enter)"><span>
@@ -319,14 +327,12 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
 
           {/* Diapositiva */}
           {diapoTema ? (
-            <Tooltip title={diapoTema.url ? "Editar URL" : "Editar en editor"}>
+            <Tooltip title={diapoTema.url && !diapoTema.slides?.length ? "Editar URL" : "Editar en editor"}>
               <Button size="small" startIcon={<SlideshowIcon />}
                 onClick={() => {
                   if (diapoTema.url && !diapoTema.slides?.length) {
-                    // Modo URL — abrir modal de edición de URL
                     setModalUrl(true);
                   } else {
-                    // Modo editor — navegar al editor
                     navigate(`/cursos/${tema.curso_id}/capitulos/${tema.capitulo_id}/clases/${tema.clase_id}/diapositiva/${diapoTema._id}`);
                   }
                 }}
@@ -372,7 +378,8 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
               <Tooltip title="Ver preguntas">
                 <Button size="small"
                   onClick={() => navigate(`/cursos/${tema.curso_id}/capitulos/${tema.capitulo_id}/clases/${tema.clase_id}/quiz/${quizTema._id}`)}
-                  sx={{ color: "#8daecb", fontSize: "0.65rem", py: 0.25, px: 0.5, minWidth: 0, "&:hover": { color: "#2d5be3", bgcolor: "#f0f3ff" } }}>
+                  sx={{ color: "#8daecb", fontSize: "0.65rem", py: 0.25, px: 0.5, minWidth: 0,
+                    "&:hover": { color: "#2d5be3", bgcolor: "#f0f3ff" } }}>
                   →
                 </Button>
               </Tooltip>
@@ -380,7 +387,8 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
           ) : (
             <Button size="small" startIcon={<AddIcon />}
               onClick={() => setModalQuiz(true)}
-              sx={{ color: "#8daecb", fontSize: "0.65rem", py: 0.25, px: 1, "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}>
+              sx={{ color: "#8daecb", fontSize: "0.65rem", py: 0.25, px: 1,
+                "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}>
               Quiz
             </Button>
           )}
@@ -431,7 +439,7 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
           curso_id={tema.curso_id}
           quiz={quizTema}
           onClose={() => setModalQuiz(false)}
-          onCreado={handleQuizCreado}
+          onCreado={handleQuizCreado as (quiz: IQuiz) => void}
         />
       )}
     </>

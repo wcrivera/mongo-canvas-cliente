@@ -229,11 +229,11 @@ const AyudantiaCard = ({ ayudantia, curso_id, capitulo_id, esPrimero, esUltimo }
               ) : (
                 <>
                   <Typography variant="caption" sx={{ color: "#a0a0a0", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    Ayudantía {ayudantia.position}
+                    Ayudantía 
                   </Typography>
-                  <Typography variant="body2" sx={{ color: "#1f2c38", fontWeight: 600, mt: 0.3 }} noWrap>
-                    {ayudantia.nombre}
-                  </Typography>
+                  {/* <Typography variant="body2" sx={{ color: "#1f2c38", fontWeight: 600, mt: 0.3 }} noWrap>
+                    Ejercicio {ayudantia.position}
+                  </Typography> */}
                 </>
               )}
             </div>
