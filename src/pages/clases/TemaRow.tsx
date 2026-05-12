@@ -96,8 +96,6 @@ const TemaRow = ({ tema, esPrimero, esUltimo }: Props) => {
     (q) => q.tema_id?.toString() === tema._id.toString() && q.contexto === "clase",
   ) as IQuiz | undefined;
 
-  console.log(quizzesSafe)
-
   // ── Estado local ──────────────────────────────────────────────────────────
   const [editando,       setEditando]       = useState(false);
   const [nombre,         setNombre]         = useState(tema.nombre);
