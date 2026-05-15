@@ -1,270 +1,435 @@
-// src/pages/inicio/MongoCursoCard.tsx
-import { useState }    from "react";
+// src/pages/inicio/components/MongoCursoCard.tsx
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Card, CardContent, IconButton,
-  Tooltip, Typography, Divider, Button, Switch, CircularProgress,
+  Card,
+  CardContent,
+  IconButton,
+  Tooltip,
+  Typography,
+  Divider,
+  Button,
+  CircularProgress,
+  Menu,
+  MenuItem,
+  ListItemIcon,
 } from "@mui/material";
-import EditOutlinedIcon              from "@mui/icons-material/EditOutlined";
-import ArrowForwardIcon              from "@mui/icons-material/ArrowForward";
-import SchoolIcon                    from "@mui/icons-material/School";
-import PublicIcon                    from "@mui/icons-material/Public";
-import SyncIcon                      from "@mui/icons-material/Sync";
-import { AddCircleOutlineOutlined, DeleteOutlineOutlined } from "@mui/icons-material";
-import { useAppDispatch }            from "../../../store/hooks";
-import { editarPublishedApiCurso }   from "../../../store/slices/mongoCurso";
-import type { IMongoCurso }          from "../../../store/slices/mongoCurso";
-import CanvasCursoChip               from "./CanvasCursoChip";
-import ModalAsociarCanvas            from "./ModalAsociarCanvas";
-import ModalSincronizar              from "./ModalSincronizar";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import SchoolIcon from "@mui/icons-material/School";
+import PublicIcon from "@mui/icons-material/Public";
+import PublicOffIcon from "@mui/icons-material/PublicOff";
+import SyncIcon from "@mui/icons-material/Sync";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import { AddCircleOutlineOutlined } from "@mui/icons-material";
+
+import { useAppDispatch } from "../../../store/hooks";
+import { editarPublishedApiCurso } from "../../../store/slices/mongoCurso";
+import type { IMongoCurso } from "../../../store/slices/mongoCurso";
+import CanvasCursoChip from "./CanvasCursoChip";
+import ModalAsociarCanvas from "./ModalAsociarCanvas";
+import ModalSincronizar from "./ModalSincronizar";
 
 interface Props {
-  curso:      IMongoCurso;
-  onEditar:   (curso: IMongoCurso) => void;
+  curso: IMongoCurso;
+  onEditar: (curso: IMongoCurso) => void;
   onEliminar: (curso: IMongoCurso) => void;
 }
+
+// Estilos compartidos para los icon-buttons con borde
+const iconBtnSx = {
+  width: 32,
+  height: 32,
+  borderRadius: "8px",
+  border: "0.5px solid #E2E8F0",
+  bgcolor: "#F8FAFC",
+  color: "#94A3B8",
+  "&:hover": { bgcolor: "#F1F5F9", color: "#475569", borderColor: "#CBD5E1" },
+};
+
+const iconBtnActiveSx = {
+  ...iconBtnSx,
+  color: "#16A34A",
+  bgcolor: "#EFF6FF",
+  borderColor: "#BFDBFE",
+  "&:hover": { bgcolor: "#DBEAFE", color: "#16A34A", borderColor: "#93C5FD" },
+};
+
+const syncBtnSx = {
+  width: 28,
+  height: 28,
+  borderRadius: "6px",
+  border: "0.5px solid #E2E8F0",
+  bgcolor: "#F8FAFC",
+  color: "#94A3B8",
+  flexShrink: 0,
+  "&:hover": { bgcolor: "#EFF6FF", color: "#16A34A", borderColor: "#BFDBFE" },
+};
 
 const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   const [modalAsociar, setModalAsociar] = useState(false);
-  const [verInactivos, setVerInactivos] = useState(false);
-  const [togglingApi,  setTogglingApi]  = useState(false);
+  const [togglingApi, setTogglingApi] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [modalSync, setModalSync] = useState<{
-    abierto:         boolean;
+    abierto: boolean;
     canvas_curso_id: number;
-    canvas_nombre:   string;
+    canvas_nombre: string;
   }>({ abierto: false, canvas_curso_id: 0, canvas_nombre: "" });
 
-  const canvasActivos   = curso.canvas_cursos.filter((c) => c.activo);
+  const canvasActivos = curso.canvas_cursos.filter((c) => c.activo);
   const canvasInactivos = curso.canvas_cursos.filter((c) => !c.activo);
+  const totalCanvas = curso.canvas_cursos.length;
 
   const handleToggleApi = async () => {
     setTogglingApi(true);
-    await dispatch(editarPublishedApiCurso({
-      curso_id:     curso._id,
-      published_api: !curso.published_api,
-    }));
+    await dispatch(
+      editarPublishedApiCurso({
+        curso_id: curso._id,
+        published_api: !curso.published_api,
+      }),
+    );
     setTogglingApi(false);
+  };
+
+  const handleEditar = () => {
+    setMenuAnchor(null);
+    onEditar(curso);
+  };
+
+  const handleEliminar = () => {
+    setMenuAnchor(null);
+    onEliminar(curso);
+  };
+
+  const handleSync = (canvas_curso_id: number, canvas_nombre: string) => {
+    setModalSync({ abierto: true, canvas_curso_id, canvas_nombre });
   };
 
   return (
     <>
       <Card
         elevation={0}
-        className="animate-fadeIn"
         sx={{
-          borderRadius: 3,
-          border: "1px solid #d9e4ee",
-          transition: "box-shadow 0.2s, transform 0.2s",
+          borderRadius: "12px",
+          border: "0.5px solid #E2E8F0",
+          bgcolor: "white",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          transition: "box-shadow 0.15s, transform 0.15s",
           "&:hover": {
-            boxShadow: "0 8px 24px rgba(74,109,140,0.12)",
-            transform: "translateY(-2px)",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.07)",
+            transform: "translateY(-1px)",
           },
         }}
       >
-        <CardContent sx={{ p: 0 }}>
-
-          {/* ── Zona superior: datos Mongo ── */}
-          <div
-            className="flex items-start justify-between gap-2 px-5 pt-5 pb-4"
-            style={{
-              background: "linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)",
-            }}
-          >
-            <div className="flex flex-col gap-1 min-w-0">
-              <span
-                className="inline-flex items-center self-start rounded-full px-3 py-0.5 text-xs font-semibold"
-                style={{ backgroundColor: "#d9e4ee", color: "#3c5770" }}
-              >
+        <CardContent
+          sx={{ p: 0, display: "flex", flexDirection: "column", flex: 1 }}
+        >
+          {/* ── Header ── */}
+          <div className="px-4 pt-4 pb-3">
+            {/* Fila: código + acciones */}
+            <div className="flex items-center justify-between gap-2 mb-2.5">
+              <span className="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold tracking-wide bg-[#EFF6FF] text-[#0C447C]">
                 {curso.codigo}
               </span>
-              <Typography
-                variant="subtitle1"
-                sx={{ color: "#1f2c38", lineHeight: 1.3, fontWeight: 600 }}
-              >
-                {curso.nombre}
-              </Typography>
-              {curso.descripcion && (
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "#6793ba",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
+
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* Toggle visibilidad */}
+                <Tooltip
+                  title={
+                    curso.published_api
+                      ? "Publicado — click para ocultar"
+                      : "Oculto — click para publicar"
+                  }
+                >
+                  <span className="flex items-center">
+                    {togglingApi ? (
+                      <CircularProgress
+                        size={14}
+                        sx={{ color: "#2563EB", mx: 1 }}
+                      />
+                    ) : (
+                      <IconButton
+                        size="small"
+                        onClick={handleToggleApi}
+                        sx={curso.published_api ? iconBtnActiveSx : iconBtnSx}
+                      >
+                        {curso.published_api ? (
+                          <PublicIcon sx={{ fontSize: 17 }} />
+                        ) : (
+                          <PublicOffIcon sx={{ fontSize: 17 }} />
+                        )}
+                      </IconButton>
+                    )}
+                  </span>
+                </Tooltip>
+
+                {/* Menú ⋯ */}
+                <IconButton
+                  size="small"
+                  onClick={(e) => setMenuAnchor(e.currentTarget)}
+                  sx={iconBtnSx}
+                >
+                  <MoreHorizIcon sx={{ fontSize: 17 }} />
+                </IconButton>
+
+                <Menu
+                  anchorEl={menuAnchor}
+                  open={Boolean(menuAnchor)}
+                  onClose={() => setMenuAnchor(null)}
+                  transformOrigin={{ horizontal: "right", vertical: "top" }}
+                  anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                  slotProps={{
+                    paper: {
+                      sx: {
+                        mt: 0.5,
+                        minWidth: 150,
+                        borderRadius: "8px",
+                        border: "0.5px solid #E2E8F0",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                      },
+                    },
                   }}
                 >
-                  {curso.descripcion}
-                </Typography>
-              )}
-            </div>
-
-            {/* Acciones */}
-            <div className="flex shrink-0 items-center gap-0.5">
-
-              {/* Toggle API plataforma */}
-              <Tooltip title={`Plataforma: ${curso.published_api ? "publicado" : "oculto"}`}>
-                <span className="flex items-center gap-0.5">
-                  <PublicIcon sx={{ fontSize: 13, color: "#8daecb" }} />
-                  {togglingApi
-                    ? <CircularProgress size={16} sx={{ color: "#4A6D8C", mx: 0.75 }} />
-                    : (
-                      <Switch
-                        size="small"
-                        checked={curso.published_api}
-                        onChange={handleToggleApi}
-                        sx={{
-                          "& .MuiSwitch-thumb": { bgcolor: curso.published_api ? "#4A6D8C" : "#ccc" },
-                          "& .MuiSwitch-track": { bgcolor: curso.published_api ? "#6793ba !important" : "#d9e4ee !important" },
-                        }}
+                  <MenuItem
+                    onClick={handleEditar}
+                    sx={{
+                      gap: 1.5,
+                      py: 1.2,
+                      "&:hover": { bgcolor: "#F8FAFC" },
+                    }}
+                  >
+                    <ListItemIcon>
+                      <EditOutlinedIcon
+                        sx={{ fontSize: 16, color: "#2563EB" }}
                       />
-                    )
-                  }
-                </span>
-              </Tooltip>
+                    </ListItemIcon>
+                    <Typography variant="body2" sx={{ color: "#334155" }}>
+                      Editar
+                    </Typography>
+                  </MenuItem>
 
-              <Tooltip title="Editar curso">
-                <IconButton
-                  size="small"
-                  onClick={() => onEditar(curso)}
-                  sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}
-                >
-                  <EditOutlinedIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Eliminar curso">
-                <IconButton
-                  size="small"
-                  onClick={() => onEliminar(curso)}
-                  sx={{ color: "#8daecb", "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" } }}
-                >
-                  <DeleteOutlineOutlined fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Ver capítulos">
-                <IconButton
-                  size="small"
-                  onClick={() => navigate(`/cursos/${curso._id}/capitulos`)}
-                  sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}
-                >
-                  <ArrowForwardIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+                  <Divider sx={{ borderColor: "#F1F5F9", my: 0.5 }} />
+
+                  <MenuItem
+                    onClick={handleEliminar}
+                    sx={{
+                      gap: 1.5,
+                      py: 1.2,
+                      "&:hover": { bgcolor: "#FFF5F5" },
+                    }}
+                  >
+                    <ListItemIcon>
+                      <DeleteOutlineOutlinedIcon
+                        sx={{ fontSize: 16, color: "#EF4444" }}
+                      />
+                    </ListItemIcon>
+                    <Typography variant="body2" sx={{ color: "#EF4444" }}>
+                      Eliminar
+                    </Typography>
+                  </MenuItem>
+                </Menu>
+              </div>
             </div>
+
+            {/* Título */}
+            <Typography
+              variant="subtitle1"
+              sx={{
+                color: "#1E293B",
+                fontWeight: 500,
+                fontSize: "15px",
+                lineHeight: 1.35,
+                mb: curso.descripcion ? 0.75 : 0,
+              }}
+            >
+              {curso.nombre}
+            </Typography>
+
+            {/* Descripción — máx. 2 líneas */}
+            {/* {curso.descripcion && (
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "#94A3B8",
+                  fontSize: "12px",
+                  lineHeight: 1.55,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {curso.descripcion}
+              </Typography>
+            )} */}
           </div>
 
-          <Divider sx={{ borderColor: "#d9e4ee" }} />
+          <Divider sx={{ borderColor: "#F1F5F9" }} />
 
-          {/* ── Zona inferior: cursos Canvas ── */}
-          <div className="flex flex-col gap-2 px-5 pt-4 pb-5">
-            <div className="flex items-center justify-between mb-1">
+          {/* ── Sección Canvas ── */}
+          <div className="px-4 pt-3 pb-3 flex flex-col gap-2.5 flex-1">
+            {/* Subheader */}
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <SchoolIcon sx={{ fontSize: 14, color: "#8daecb" }} />
+                <SchoolIcon sx={{ fontSize: 14, color: "#2563EB" }} />
                 <Typography
                   variant="caption"
                   sx={{
-                    color: "#6793ba",
+                    color: "#64748B",
                     textTransform: "uppercase",
-                    letterSpacing: "0.06em",
-                    fontWeight: 600,
+                    letterSpacing: "0.07em",
+                    fontWeight: 700,
+                    fontSize: "10px",
                   }}
                 >
                   Cursos Canvas ({canvasActivos.length})
                 </Typography>
               </div>
+
+              {/* Asociar con borde azul */}
               <Button
                 size="small"
-                startIcon={<AddCircleOutlineOutlined />}
+                startIcon={
+                  <AddCircleOutlineOutlined
+                    sx={{ fontSize: "13px !important" }}
+                  />
+                }
                 onClick={() => setModalAsociar(true)}
                 sx={{
-                  color: "#4A6D8C", fontSize: "0.7rem", fontWeight: 600,
-                  borderRadius: 2, px: 1.5,
-                  "&:hover": { bgcolor: "#f0f4f8" },
+                  color: "#2563EB",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  borderRadius: "6px",
+                  px: 1.5,
+                  py: 0.5,
+                  minWidth: 0,
+                  textTransform: "none",
+                  border: "0.5px solid #BFDBFE",
+                  bgcolor: "transparent",
+                  "&:hover": { bgcolor: "#EFF6FF", borderColor: "#93C5FD" },
                 }}
               >
                 Asociar
               </Button>
             </div>
 
-            {/* Sin asociaciones */}
-            {canvasActivos.length === 0 && canvasInactivos.length === 0 && (
-              <div className="flex flex-col items-center gap-1 py-4 rounded-xl border border-dashed border-[#b3c9dd]">
-                <SchoolIcon sx={{ fontSize: 28, color: "#b3c9dd" }} />
-                <Typography variant="caption" sx={{ color: "#8daecb" }}>
+            {/* Empty state */}
+            {totalCanvas === 0 && (
+              <div className="flex flex-col items-center gap-2 py-5 rounded-lg border border-dashed border-[#E2E8F0]">
+                <SchoolIcon sx={{ fontSize: 24, color: "#CBD5E1" }} />
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#CBD5E1", fontSize: "11px" }}
+                >
                   Sin cursos Canvas asociados
                 </Typography>
               </div>
             )}
 
-            {/* Activos */}
-            <div className="flex flex-col gap-2">
-              {canvasActivos.map((cc) => (
-                <div key={cc.canvas_id} className="flex items-center gap-2">
-                  <div className="flex-1 min-w-0">
-                    <CanvasCursoChip curso_id={curso._id} canvasCurso={cc} />
+            {/* Lista con scroll cuando hay muchos items */}
+            {totalCanvas > 0 && (
+              <div
+                className="flex flex-col gap-2 overflow-y-auto"
+                style={{
+                  maxHeight: "130px",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#E2E8F0 transparent",
+                }}
+              >
+                {/* Activos */}
+                {canvasActivos.map((cc) => (
+                  <div
+                    key={cc.canvas_id}
+                    className="flex items-center gap-2 border border-[#E2E8F0] rounded-lg px-3 py-2 shrink-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <CanvasCursoChip curso_id={curso._id} canvasCurso={cc} />
+                    </div>
+                    <Tooltip title="Sincronizar contenido">
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          handleSync(
+                            cc.canvas_id,
+                            cc.nombre ?? `Canvas ${cc.canvas_id}`,
+                          )
+                        }
+                        sx={syncBtnSx}
+                      >
+                        <SyncIcon sx={{ fontSize: 15 }} />
+                      </IconButton>
+                    </Tooltip>
                   </div>
-                  <Tooltip title="Sincronizar contenido">
-                    <IconButton
-                      size="small"
-                      onClick={() => setModalSync({
-                        abierto:         true,
-                        canvas_curso_id: cc.canvas_id,
-                        canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
-                      })}
-                      sx={{ color: "#8daecb", flexShrink: 0, "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}
-                    >
-                      <SyncIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </div>
-              ))}
-            </div>
+                ))}
 
-            {/* Inactivos colapsados */}
-            {canvasInactivos.length > 0 && (
-              <div className="mt-1">
-                <button
-                  onClick={() => setVerInactivos((v) => !v)}
-                  className="text-xs text-[#8daecb] hover:text-[#4A6D8C] transition-colors"
-                >
-                  {verInactivos ? "▲" : "▼"} {canvasInactivos.length} inactivo
-                  {canvasInactivos.length > 1 ? "s" : ""}
-                </button>
-                {verInactivos && (
-                  <div className="flex flex-col gap-2 mt-2 animate-slideDown">
-                    {canvasInactivos.map((cc) => (
-                      <div key={cc.canvas_id} className="flex items-center gap-2">
-                        <div className="flex-1 min-w-0">
-                          <CanvasCursoChip curso_id={curso._id} canvasCurso={cc} />
-                        </div>
-                        <Tooltip title="Sincronizar contenido">
-                          <IconButton
-                            size="small"
-                            onClick={() => setModalSync({
-                              abierto:         true,
-                              canvas_curso_id: cc.canvas_id,
-                              canvas_nombre:   cc.nombre ?? `Canvas ${cc.canvas_id}`,
-                            })}
-                            sx={{ color: "#8daecb", flexShrink: 0, "&:hover": { color: "#4A6D8C", bgcolor: "#f0f4f8" } }}
-                          >
-                            <SyncIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </div>
-                    ))}
+                {/* Inactivos — opacidad reducida */}
+                {canvasInactivos.map((cc) => (
+                  <div
+                    key={cc.canvas_id}
+                    className="flex items-center gap-2 border border-[#E2E8F0] rounded-lg px-3 py-2 opacity-45 shrink-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <CanvasCursoChip curso_id={curso._id} canvasCurso={cc} />
+                    </div>
+                    <Tooltip title="Sincronizar contenido">
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          handleSync(
+                            cc.canvas_id,
+                            cc.nombre ?? `Canvas ${cc.canvas_id}`,
+                          )
+                        }
+                        sx={syncBtnSx}
+                      >
+                        <SyncIcon sx={{ fontSize: 15 }} />
+                      </IconButton>
+                    </Tooltip>
                   </div>
-                )}
+                ))}
               </div>
             )}
+          </div>
+
+          {/* ── Footer: status + Ver curso — siempre anclado abajo ── */}
+          <div className="px-4 pt-2.5 border-t border-[#F1F5F9] flex items-center justify-end mt-auto">
+            <Button
+              size="small"
+              endIcon={
+                <ArrowForwardIcon sx={{ fontSize: "13px !important" }} />
+              }
+              onClick={() => navigate(`/cursos/${curso._id}/capitulos`)}
+              sx={{
+                color: "#2563EB",
+                fontSize: "12px",
+                fontWeight: 500,
+                borderRadius: "6px",
+                px: 1.5,
+                py: 0.5,
+                minWidth: 0,
+                textTransform: "none",
+                border: "0.5px solid #BFDBFE",
+                bgcolor: "transparent",
+                "&:hover": { bgcolor: "#EFF6FF", borderColor: "#93C5FD" },
+              }}
+            >
+              Ver curso
+            </Button>
           </div>
         </CardContent>
       </Card>
 
       {modalAsociar && (
-        <ModalAsociarCanvas curso_id={curso._id} onClose={() => setModalAsociar(false)} />
+        <ModalAsociarCanvas
+          curso_id={curso._id}
+          onClose={() => setModalAsociar(false)}
+        />
       )}
 
       {modalSync.abierto && (
@@ -272,7 +437,13 @@ const MongoCursoCard = ({ curso, onEditar, onEliminar }: Props) => {
           curso_id={curso._id}
           canvas_curso_id={modalSync.canvas_curso_id}
           canvas_nombre={modalSync.canvas_nombre}
-          onClose={() => setModalSync({ abierto: false, canvas_curso_id: 0, canvas_nombre: "" })}
+          onClose={() =>
+            setModalSync({
+              abierto: false,
+              canvas_curso_id: 0,
+              canvas_nombre: "",
+            })
+          }
         />
       )}
     </>

@@ -11,22 +11,6 @@ import {
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
 
-// ── Tipos compartidos ─────────────────────────────────────────────────────────
-
-interface IItemFIBInput {
-  id:        string;
-  enunciado: string;
-  respuesta: string;
-  tipo_pimu: string;
-}
-
-interface IOpcionInput {
-  texto:       string;
-  es_correcta: boolean;
-  blank_id?:   string | null;
-  tipo_pimu?:  string | null;
-}
-
 // ─── Obtener ──────────────────────────────────────────────────────────────────
 
 export const obtenerQuizzesPorCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
@@ -35,7 +19,10 @@ export const obtenerQuizzesPorCapitulo = ({ capitulo_id }: { capitulo_id: string
     try {
       const resp = await fetchConToken(`api/admin/quizzes/capitulo/${capitulo_id}`);
       const body = await resp.json();
-      if (body.ok) { dispatch(setQuizzes(body.data)); dispatch(endLoadingQuiz()); return { ok: true }; }
+      if (body.ok) {
+        console.log("[QUIZ DEBUG] recibidos:", body.data?.map((q: { _id: string; contexto: string; tema_id: string }) => ({ _id: q._id, contexto: q.contexto, tema_id: q.tema_id })));
+        dispatch(setQuizzes(body.data)); dispatch(endLoadingQuiz()); return { ok: true };
+      }
       dispatch(setErrorQuiz(body.msg)); return { ok: false, msg: body.msg };
     } catch (error) { console.log(error); dispatch(setErrorQuiz(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
   };
@@ -157,23 +144,16 @@ export const eliminarQuiz = ({ quiz_id }: { quiz_id: string }) => {
 // ─── Preguntas ────────────────────────────────────────────────────────────────
 
 export const crearPregunta = ({
-  quiz_id, enunciado, tipo, puntos,
-  enunciado_contexto, items, columnas,
-  tipo_pimu, respuesta_lti, opciones, pares,
-  respuesta_numerica, formula, variables, decimales_resultado,
+  quiz_id, enunciado, tipo, puntos, tipo_pimu, respuesta_lti,
+  opciones, pares, respuesta_numerica, formula, variables, decimales_resultado,
 }: {
   quiz_id:             string;
   enunciado:           string;
   tipo:                TipoPregunta;
   puntos:              number;
-  // ── FIB ──────────────────────────────────────────────────────────────────
-  enunciado_contexto?: string;
-  items?:              IItemFIBInput[];
-  columnas?:           number;
-  // ─────────────────────────────────────────────────────────────────────────
   tipo_pimu?:          string | null;
   respuesta_lti?:      string | null;
-  opciones?:           IOpcionInput[];
+  opciones?:           { texto: string; es_correcta: boolean; blank_id?: string | null }[];
   pares?:              { izquierda: string; derecha: string }[];
   respuesta_numerica?: { tipo: "exact" | "range" | "precision"; exacto?: number; margen?: number; minimo?: number; maximo?: number; precision?: number };
   formula?:            string;
@@ -185,12 +165,7 @@ export const crearPregunta = ({
     try {
       const resp = await fetchConToken(
         `api/admin/quizzes/${quiz_id}/preguntas`,
-        {
-          quiz_id, enunciado, tipo, puntos,
-          enunciado_contexto, items, columnas,
-          tipo_pimu, respuesta_lti, opciones, pares,
-          respuesta_numerica, formula, variables, decimales_resultado,
-        },
+        { quiz_id, enunciado, tipo, puntos, tipo_pimu, respuesta_lti, opciones, pares, respuesta_numerica, formula, variables, decimales_resultado },
         "POST",
       );
       const body = await resp.json();
@@ -201,62 +176,30 @@ export const crearPregunta = ({
 };
 
 export const editarPregunta = ({
-  pregunta_id, enunciado, puntos,
-  enunciado_contexto, items, columnas,
-  tipo_pimu, respuesta_lti, opciones, pares, respuesta_numerica,
+  pregunta_id, enunciado, enunciado_contexto, columnas, puntos, tipo_pimu, respuesta_lti,
+  opciones, pares, respuesta_numerica,
 }: {
-  pregunta_id:         string;
-  enunciado?:          string;
-  puntos?:             number;
-  // ── FIB ──────────────────────────────────────────────────────────────────
-  enunciado_contexto?: string;
-  items?:              IItemFIBInput[];
-  columnas?:           number;
-  // ─────────────────────────────────────────────────────────────────────────
-  tipo_pimu?:          string | null;
-  respuesta_lti?:      string | null;
-  opciones?:           IOpcionInput[];
-  pares?:              { izquierda: string; derecha: string }[];
-  respuesta_numerica?: { tipo: "exact" | "range" | "precision"; exacto?: number; margen?: number; minimo?: number; maximo?: number; precision?: number };
+  pregunta_id:          string;
+  enunciado?:           string;
+  enunciado_contexto?:  string;
+  columnas?:            number;
+  puntos?:              number;
+  tipo_pimu?:           string | null;
+  respuesta_lti?:       string | null;
+  opciones?:            { texto: string; es_correcta: boolean; blank_id?: string | null }[];
+  pares?:               { izquierda: string; derecha: string }[];
+  respuesta_numerica?:  { tipo: "exact" | "range" | "precision"; exacto?: number; margen?: number; minimo?: number; maximo?: number; precision?: number };
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
       const resp = await fetchConToken(
         `api/admin/quizzes/preguntas/${pregunta_id}`,
-        { enunciado, puntos, enunciado_contexto, items, columnas, tipo_pimu, respuesta_lti, opciones, pares, respuesta_numerica },
+        { enunciado, enunciado_contexto, columnas, puntos, tipo_pimu, respuesta_lti, opciones, pares, respuesta_numerica },
         "PUT",
       );
       const body = await resp.json();
       if (body.ok) { dispatch(actualizarPreguntaState(body.data)); dispatch(endLoadingQuiz()); return { ok: true }; }
-      dispatch(setErrorQuiz(body.msg)); return { ok: false, msg: body.msg };
-    } catch (error) { console.log(error); dispatch(setErrorQuiz(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
-  };
-};
-
-// ── Editar un ítem individual de FIB ─────────────────────────────────────────
-// PATCH /api/admin/quizzes/preguntas/:pregunta_id/items/:item_id
-
-export const editarItemFIB = ({
-  pregunta_id, item_id, enunciado, respuesta, tipo_pimu,
-}: {
-  pregunta_id: string;
-  item_id:     string;
-  enunciado?:  string;
-  respuesta?:  string;
-  tipo_pimu?:  string;
-}) => {
-  return async (dispatch: AppDispatch) => {
-    dispatch(startLoadingQuiz());
-    try {
-      const resp = await fetchConToken(
-        `api/admin/quizzes/preguntas/${pregunta_id}/items/${item_id}`,
-        { enunciado, respuesta, tipo_pimu },
-        "PATCH",
-      );
-      const body = await resp.json();
-      // El servidor devuelve la pregunta completa actualizada
-      if (body.ok) { dispatch(actualizarPreguntaState(body.data)); dispatch(endLoadingQuiz()); return { ok: true, data: body.data }; }
       dispatch(setErrorQuiz(body.msg)); return { ok: false, msg: body.msg };
     } catch (error) { console.log(error); dispatch(setErrorQuiz(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
   };
@@ -283,5 +226,44 @@ export const cambiarPositionPregunta = ({ pregunta_id, direction }: { pregunta_i
       if (body.ok) { dispatch(intercambiarPreguntas(body.data)); dispatch(endLoadingQuiz()); return { ok: true }; }
       dispatch(setErrorQuiz(body.msg)); return { ok: false, msg: body.msg };
     } catch (error) { console.log(error); dispatch(setErrorQuiz(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
+  };
+};
+
+// ─── Editar ítem individual de pregunta FIB ───────────────────────────────────
+
+export const editarItemFIB = ({
+  pregunta_id,
+  item_id,
+  enunciado,
+  respuesta,
+  tipo_pimu,
+}: {
+  pregunta_id: string;
+  item_id:     string;
+  enunciado:   string;
+  respuesta:   string;
+  tipo_pimu:   string;
+}) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingQuiz());
+    try {
+      const resp = await fetchConToken(
+        `api/admin/quizzes/preguntas/${pregunta_id}/items/${item_id}`,
+        { enunciado, respuesta, tipo_pimu },
+        "PUT",
+      );
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(actualizarPreguntaState(body.data));
+        dispatch(endLoadingQuiz());
+        return { ok: true };
+      }
+      dispatch(setErrorQuiz(body.msg));
+      return { ok: false, msg: body.msg };
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorQuiz(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
   };
 };

@@ -11,9 +11,15 @@ import {
   Divider,
   ListItemIcon,
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
-import KeyIcon from "@mui/icons-material/Key";
+import LogoutIcon        from "@mui/icons-material/Logout";
+import KeyIcon           from "@mui/icons-material/Key";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+
+const ROLE_LABEL: Record<string, string> = {
+  admin:     "Administrador",
+  profesor:  "Profesor",
+  estudiante: "Estudiante",
+};
 
 const Navbar = () => {
   const dispatch = useAppDispatch();
@@ -28,56 +34,44 @@ const Navbar = () => {
     navigate("/login", { replace: true });
   };
 
-  // Iniciales para el avatar
   const iniciales = nombre
-    ? nombre
-        .split(" ")
-        .slice(0, 2)
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
+    ? nombre.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase()
     : (email?.[0]?.toUpperCase() ?? "U");
 
+  const roleLabel = ROLE_LABEL[role ?? ""] ?? "Usuario";
+
   return (
-    <div
-      className="flex items-center justify-between px-6 py-3"
-      style={{ backgroundColor: "#1f2c38", borderBottom: "1px solid #2d3f50" }}
-    >
-      {/* Logo */}
-      <div className="flex items-center gap-2">
-        <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ backgroundColor: "#4A6D8C" }}
-        >
-          <span className="text-white text-sm font-bold">M</span>
+    <nav className="flex items-center justify-between px-6 h-[52px] bg-[#1E293B] sticky top-0 z-10">
+
+      {/* ── Logo ── */}
+      <div className="flex items-center gap-2.5">
+        <div className="w-[30px] h-[30px] bg-[#2563EB] rounded-[7px] flex items-center justify-center shrink-0">
+          <span
+            className="text-white text-[15px] font-bold leading-none"
+            style={{ fontFamily: "Georgia, serif" }}
+          >
+            M
+          </span>
         </div>
-        <Typography variant="body1" sx={{ color: "white", fontWeight: 600 }}>
-          Canvas Matemáticas
-        </Typography>
+        <span className="text-white text-sm font-medium">Canvas Matemáticas</span>
       </div>
 
-      {/* Usuario */}
-      <div className="flex items-center gap-3">
+      {/* ── Usuario ── */}
+      <div className="flex items-center gap-2.5">
         <div className="text-right hidden sm:block">
-          <Typography variant="body2" sx={{ color: "white", lineHeight: 1.2 }}>
+          <p className="text-white/90 text-xs font-medium leading-none mb-0.5">
             {nombre ?? email}
-          </Typography>
-          <Typography variant="caption" sx={{ color: "#6793ba" }}>
-            {role === "admin"
-              ? "Administrador"
-              : role === "profesor"
-                ? "Profesor"
-                : "Estudiante"}
-          </Typography>
+          </p>
+          <p className="text-white/40 text-[11px] leading-none">{roleLabel}</p>
         </div>
 
-        <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} size="small">
+        <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} size="small" sx={{ p: 0 }}>
           <Avatar
             sx={{
-              width: 36,
-              height: 36,
-              bgcolor: "#4A6D8C",
-              fontSize: 14,
+              width: 30,
+              height: 30,
+              bgcolor: "#2563EB",
+              fontSize: 11,
               fontWeight: 600,
             }}
           >
@@ -93,66 +87,78 @@ const Navbar = () => {
           anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
           slotProps={{
             paper: {
-              sx: { mt: 1, minWidth: 200, borderRadius: 2 },
+              sx: {
+                mt: 1,
+                minWidth: 210,
+                borderRadius: "10px",
+                border: "0.5px solid #E2E8F0",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+              },
             },
           }}
         >
-          <div className="px-4 py-2">
-            <Typography
-              variant="body2"
-              sx={{ fontWeight: 600, color: "#1f2c38" }}
+          {/* Perfil en el menú */}
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-2.5 mb-1">
+              <Avatar sx={{ width: 32, height: 32, bgcolor: "#2563EB", fontSize: 12, fontWeight: 600 }}>
+                {iniciales}
+              </Avatar>
+              <div className="min-w-0">
+                <Typography variant="body2" sx={{ fontWeight: 500, color: "#1E293B", lineHeight: 1.3 }}>
+                  {nombre ?? "Usuario"}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#94A3B8", display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                >
+                  {email}
+                </Typography>
+              </div>
+            </div>
+            <span
+              className="inline-block text-[10px] font-semibold px-2 py-0.5 rounded-md mt-1"
+              style={{ background: "#EFF6FF", color: "#2563EB" }}
             >
-              {nombre ?? "Usuario"}
-            </Typography>
-            <Typography variant="caption" sx={{ color: "#6793ba" }}>
-              {email}
-            </Typography>
+              {roleLabel}
+            </span>
           </div>
 
-          <Divider />
+          <Divider sx={{ borderColor: "#F1F5F9" }} />
 
           <MenuItem
-            onClick={() => {
-              setAnchorEl(null);
-              navigate("/token-canvas");
-            }}
-            sx={{ gap: 1.5, py: 1.5 }}
+            onClick={() => { setAnchorEl(null); navigate("/token-canvas"); }}
+            sx={{ gap: 1.5, py: 1.5, "&:hover": { bgcolor: "#F8FAFC" } }}
           >
             <ListItemIcon>
-              <KeyIcon fontSize="small" sx={{ color: "#4A6D8C" }} />
+              <KeyIcon fontSize="small" sx={{ color: "#2563EB" }} />
             </ListItemIcon>
-            <Typography variant="body2">Token Canvas</Typography>
+            <Typography variant="body2" sx={{ color: "#334155" }}>Token Canvas</Typography>
           </MenuItem>
 
           <MenuItem
-            onClick={() => {
-              setAnchorEl(null);
-              navigate("/perfil");
-            }}
-            sx={{ gap: 1.5, py: 1.5 }}
+            onClick={() => { setAnchorEl(null); navigate("/perfil"); }}
+            sx={{ gap: 1.5, py: 1.5, "&:hover": { bgcolor: "#F8FAFC" } }}
           >
             <ListItemIcon>
-              <AccountCircleIcon fontSize="small" sx={{ color: "#4A6D8C" }} />
+              <AccountCircleIcon fontSize="small" sx={{ color: "#2563EB" }} />
             </ListItemIcon>
-            <Typography variant="body2">Mi perfil</Typography>
+            <Typography variant="body2" sx={{ color: "#334155" }}>Mi perfil</Typography>
           </MenuItem>
 
-          <Divider />
+          <Divider sx={{ borderColor: "#F1F5F9" }} />
 
           <MenuItem
             onClick={handleLogout}
-            sx={{ gap: 1.5, py: 1.5, color: "#ef4444" }}
+            sx={{ gap: 1.5, py: 1.5, "&:hover": { bgcolor: "#FFF5F5" } }}
           >
             <ListItemIcon>
-              <LogoutIcon fontSize="small" sx={{ color: "#ef4444" }} />
+              <LogoutIcon fontSize="small" sx={{ color: "#EF4444" }} />
             </ListItemIcon>
-            <Typography variant="body2" sx={{ color: "#ef4444" }}>
-              Cerrar sesión
-            </Typography>
+            <Typography variant="body2" sx={{ color: "#EF4444" }}>Cerrar sesión</Typography>
           </MenuItem>
         </Menu>
       </div>
-    </div>
+    </nav>
   );
 };
 

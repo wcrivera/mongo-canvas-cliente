@@ -1,5 +1,4 @@
 import {
-  Chip,
   IconButton,
   Tooltip,
   Typography,
@@ -8,11 +7,10 @@ import {
 // import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { useAppDispatch } from "../../../store/hooks";
 import {
-  desactivarCanvasCurso,
   eliminarCanvasCurso,
 } from "../../../store/slices/mongoCurso";
 import type { ICanvasCursoAsociado } from "../../../store/slices/mongoCurso";
-import { DeleteOutlineOutlined, PauseCircleFilledOutlined } from "@mui/icons-material";
+import { DeleteOutlineOutlined } from "@mui/icons-material";
 
 interface Props {
   curso_id: string;
@@ -30,12 +28,6 @@ const formatearAnio = (start_at: string | null): string => {
 
 const CanvasCursoChip = ({ curso_id, canvasCurso }: Props) => {
   const dispatch = useAppDispatch();
-
-  const handleDesactivar = async () => {
-    await dispatch(
-      desactivarCanvasCurso({ curso_id, canvas_id: canvasCurso.canvas_id })
-    );
-  };
 
   const handleEliminar = async () => {
     if (!confirm(`¿Eliminar ${canvasCurso.nombre}?`)) return;
@@ -68,29 +60,6 @@ const CanvasCursoChip = ({ curso_id, canvasCurso }: Props) => {
 
       {/* Badge estado + acciones */}
       <div className="flex items-center gap-1 shrink-0 ml-2">
-        <Chip
-          label={canvasCurso.activo ? "Activo" : "Inactivo"}
-          size="small"
-          sx={{
-            fontSize: "0.65rem",
-            height: 20,
-            bgcolor: canvasCurso.activo ? "#d9e4ee" : "#f0f0f0",
-            color: canvasCurso.activo ? "#3c5770" : "#999",
-            fontWeight: 600,
-          }}
-        />
-        <Tooltip title="Desactivar">
-          <span>
-            <IconButton
-              size="small"
-              onClick={handleDesactivar}
-              disabled={!canvasCurso.activo}
-              sx={{ color: "#8daecb", "&:hover": { color: "#f59e0b" } }}
-            >
-              <PauseCircleFilledOutlined fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
         <Tooltip title="Eliminar asociación">
           <IconButton
             size="small"

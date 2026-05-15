@@ -103,16 +103,16 @@ const BASE_PLUGINS = [
 const TOOLBAR_ITEMS = [
   "undo", "redo", "|",
   "heading", "|",
-  "bold", "italic", "underline", "strikethrough", "code", "|",
-  "fontSize", "fontColor", "|",
-  "alignment", "|",
-  "link", "bulletedList", "numberedList", "blockQuote", "|",
-  "insertTable",
-  "insertImageMenu",
-  "insertMath",            // botón f(x)
-  "insertMathEnvironment", // dropdown teoremas/definiciones/etc.
-  "|",
-  "sourceEditing",
+  // "bold", "italic", "underline", "strikethrough", "code", "|",
+  // "fontSize", "fontColor", "|",
+  // "alignment", "|",
+  // "link", "bulletedList", "numberedList", "blockQuote", "|",
+  // "insertTable",
+  // "insertImageMenu",
+  // "insertMath",            // botón f(x)
+  // "insertMathEnvironment", // dropdown teoremas/definiciones/etc.
+  // "|",
+  // "sourceEditing",
 ];
 
 // ── Componente ────────────────────────────────────────────────────────────────

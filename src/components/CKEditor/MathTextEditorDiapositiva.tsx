@@ -63,6 +63,7 @@ import {
 } from "./plugins/MathBlockPlugin";
 import { TwoColumnsPlugin } from "./plugins/TwoColumnsPlugin";
 import { MultiColumnListPlugin } from "./plugins/MultiColumnListPlugin";
+import { FragmentPlugin } from "./plugins/FragmentPlugin";
 import { InsertImageUrlModal } from "./components/InsertImageUrlModal";
 import MathEditModal from "./components/MathEditModal";
 import MathBlockModal from "./components/MathBlockModal";
@@ -208,6 +209,7 @@ const BASE_PLUGINS = [
   MathBlockPlugin,
   TwoColumnsPlugin,
   MultiColumnListPlugin,
+  FragmentPlugin,
   InlineStylesPlugin,
   InlineHeadingPlugin,
 ];
@@ -238,6 +240,7 @@ const TOOLBAR_ITEMS = [
   "insertImageMenu",
   "insertMath",
   "insertMathEnvironment",
+  "insertFragment",
   "insertTwoColumns",
   "insertMultiColList",
   "addMultiColListItem",
