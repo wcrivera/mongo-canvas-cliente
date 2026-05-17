@@ -1,4 +1,4 @@
-// src/pages/inicio/components/ModalEditarCurso.tsx
+// src/pages/inicio/components/ModalNuevoCurso.tsx
 import { useState } from "react";
 import {
   Dialog,
@@ -12,40 +12,29 @@ import {
 } from "@mui/material";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import { useAppDispatch } from "../../../store/hooks";
-import type { IMongoCurso } from "../../../types/mongo.types";
-import { editarMongoCurso } from "../../../store/slices/mongoCurso";
+import { crearMongoCurso } from "../../../store/slices/mongoCurso";
 
 interface Props {
-  curso: IMongoCurso;
   onClose: () => void;
 }
 
-export const ModalEditarCurso = ({ curso, onClose }: Props) => {
+export const ModalNuevoCurso = ({ onClose }: Props) => {
   const dispatch = useAppDispatch();
 
-  const [form, setForm] = useState({
-    nombre: curso.nombre,
-    descripcion: curso.descripcion ?? "",
-  });
+  const [form, setForm] = useState({ codigo: "", nombre: "", descripcion: "" });
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleGuardar = async () => {
-    if (!form.nombre.trim()) {
-      setError("El nombre es obligatorio");
+    if (!form.codigo.trim() || !form.nombre.trim()) {
+      setError("El código y el nombre son obligatorios");
       return;
     }
     setGuardando(true);
     setError(null);
-    const resultado = (await dispatch(
-      editarMongoCurso({ curso_id: curso._id, ...form }),
-    )) as unknown as { ok: boolean; msg?: string };
+    await dispatch(crearMongoCurso(form));
     setGuardando(false);
-    if (resultado.ok) {
-      onClose();
-    } else {
-      setError(resultado.msg ?? "Error al guardar");
-    }
+    onClose();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -92,7 +81,7 @@ export const ModalEditarCurso = ({ curso, onClose }: Props) => {
         >
           <MenuBookIcon sx={{ fontSize: 16, color: "white" }} />
         </div>
-        Editar curso
+        Nuevo curso
       </DialogTitle>
 
       {/* Contenido */}
@@ -105,34 +94,34 @@ export const ModalEditarCurso = ({ curso, onClose }: Props) => {
           gap: 2.5,
         }}
       >
-        {/* Código — solo lectura */}
-        <TextField
-          label="Código"
-          value={curso.codigo}
-          disabled
-          size="small"
-          fullWidth
-          helperText="El código no se puede modificar"
-          sx={{
-            mt: 3,
-            "& .MuiOutlinedInput-root": {
-              borderRadius: "8px",
-              bgcolor: "#F8FAFC",
-            },
-            "& input": { fontFamily: "monospace", letterSpacing: "0.05em" },
-          }}
-        />
-
-        <TextField
-          label="Nombre *"
-          value={form.nombre}
-          onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
-          size="small"
-          fullWidth
-          autoFocus
-          error={!form.nombre.trim()}
-          sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
-        />
+        <div
+          style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12, marginTop: 25 }}
+        >
+          <TextField
+            label="Código *"
+            value={form.codigo}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, codigo: e.target.value.toUpperCase() }))
+            }
+            size="small"
+            fullWidth
+            autoFocus
+            placeholder="MAT1220"
+            sx={{
+              "& .MuiOutlinedInput-root": { borderRadius: "8px" },
+              "& input": { fontFamily: "monospace", letterSpacing: "0.05em" },
+            }}
+          />
+          <TextField
+            label="Nombre *"
+            value={form.nombre}
+            onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
+            size="small"
+            fullWidth
+            placeholder="Cálculo Diferencial"
+            sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
+          />
+        </div>
 
         <TextField
           label="Descripción"
@@ -144,7 +133,7 @@ export const ModalEditarCurso = ({ curso, onClose }: Props) => {
           fullWidth
           multiline
           rows={2}
-          placeholder="Descripción opcional"
+          placeholder="Descripción opcional del curso"
           sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px" } }}
         />
 
@@ -171,7 +160,7 @@ export const ModalEditarCurso = ({ curso, onClose }: Props) => {
         <Button
           onClick={handleGuardar}
           variant="contained"
-          disabled={guardando || !form.nombre.trim()}
+          disabled={guardando || !form.codigo.trim() || !form.nombre.trim()}
           startIcon={
             guardando ? (
               <CircularProgress size={14} color="inherit" />
@@ -188,7 +177,7 @@ export const ModalEditarCurso = ({ curso, onClose }: Props) => {
             "&:hover": { bgcolor: "#1D4ED8", boxShadow: "none" },
           }}
         >
-          {guardando ? "Guardando..." : "Guardar cambios"}
+          {guardando ? "Creando..." : "Crear curso"}
         </Button>
       </DialogActions>
     </Dialog>

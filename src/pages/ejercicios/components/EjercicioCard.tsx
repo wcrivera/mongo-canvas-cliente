@@ -15,21 +15,21 @@ import CloseIcon             from "@mui/icons-material/Close";
 import QuizIcon              from "@mui/icons-material/Quiz";
 import RefreshIcon           from "@mui/icons-material/Refresh";
 import WarningAmberIcon      from "@mui/icons-material/WarningAmber";
-import { useAppDispatch }    from "../../store/hooks";
+import { useAppDispatch }    from "../../../store/hooks";
 import {
   editarEjercicio,
   eliminarEjercicio,
   cambiarPositionEjercicio,
   reintentarEjercicio,
-} from "../../store/slices/ejercicio";
-import type { IEjercicio } from "../../store/slices/ejercicio";
-import { PreguntaViewer, PreguntaEditor } from "../../components/quiz";
+} from "../../../store/slices/ejercicio";
+import type { IEjercicio } from "../../../store/slices/ejercicio";
+import { PreguntaViewer, PreguntaEditor } from "../../../components/quiz";
 import type {
   IOpcionEditor,
   IParEditor,
   IRespuestaNumEditor,
   TipoPreguntaEditor,
-} from "../../components/quiz";
+} from "../../../components/quiz";
 
 interface Props {
   ejercicio:  IEjercicio;

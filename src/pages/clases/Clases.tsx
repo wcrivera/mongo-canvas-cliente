@@ -1,53 +1,77 @@
 // src/pages/clases/Clases.tsx
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
-  Button, TextField, Typography,
-  CircularProgress, Alert,
+  Button,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
-import AddIcon       from "@mui/icons-material/Add";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import SchoolIcon    from "@mui/icons-material/School";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import AddIcon from "@mui/icons-material/Add";
+import ClassIcon from "@mui/icons-material/Class";
+
 import {
-  obtenerClases,
-  crearClase,
-  limpiarClases,
-} from "../../store/slices/clase";
-import { obtenerTemasPorCapitulo, limpiarTemas }               from "../../store/slices/tema";
-import { obtenerDiapositivasPorCapitulo, limpiarDiapositivas } from "../../store/slices/diapositiva";
-import { obtenerVideosPorCapitulo, limpiarVideos }             from "../../store/slices/video";
-import { obtenerQuizzesPorCapitulo, limpiarQuizzes }           from "../../store/slices/quiz";
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
-import { obtenerCapitulos }  from "../../store/slices/capitulo";
-import { fetchConToken }     from "../../helpers/fetch";
-import ClaseCard             from "./ClaseCard";
+import { obtenerCapituloActivo } from "../../store/slices/capitulo";
+import {
+  obtenerClasesPorCapitulo,
+  limpiarClases,
+  cambiarPositionClase,
+} from "../../store/slices/clase";
+import { obtenerTemasPorCapitulo, limpiarTemas } from "../../store/slices/tema";
+import {
+  obtenerDiapositivasPorCapitulo,
+  limpiarDiapositivas,
+} from "../../store/slices/diapositiva";
+import {
+  obtenerVideosPorCapitulo,
+  limpiarVideos,
+} from "../../store/slices/video";
+import {
+  obtenerQuizzesPorCapitulo,
+  limpiarQuizzes,
+} from "../../store/slices/quiz";
+import SortableClaseCard from "./components/SortableClaseCard";
+import Header from "./components/Header";
+import ModalCrearClase from "./components/ModalCrearClase";
 
+// ── Componente ────────────────────────────────────────────────────────────────
 const Clases = () => {
-  const { curso_id, capitulo_id } = useParams<{ curso_id: string; capitulo_id: string }>();
-  const navigate  = useNavigate();
-  const dispatch  = useAppDispatch();
+  const { curso_id, capitulo_id } = useParams<{
+    curso_id: string;
+    capitulo_id: string;
+  }>();
 
+  const dispatch = useAppDispatch();
+
+  const { capituloActivo } = useAppSelector((s) => s.capituloMongo);
   const { clases, isLoading, error } = useAppSelector((s) => s.claseMongo);
-  const { cursoActivo }              = useAppSelector((s) => s.mongoCurso);
-  const { capitulos }                = useAppSelector((s) => s.capituloMongo);
-
-  const capituloActivo = capitulos.find((c) => c._id === capitulo_id);
 
   const [mostrarForm, setMostrarForm] = useState(false);
-  const [nombre, setNombre]           = useState("");
-  const [guardando, setGuardando]     = useState(false);
-  const [desplegando, setDesplegando] = useState(false);
-  const [msgDeploy, setMsgDeploy]     = useState<string | null>(null);
+  const [msgDeploy, setMsgDeploy] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
 
   useEffect(() => {
     if (!curso_id || !capitulo_id) return;
-    dispatch(limpiarQuizzes());
-    dispatch(limpiarDiapositivas());
-    dispatch(limpiarVideos());
     dispatch(obtenerMongoCurso({ curso_id }));
-    dispatch(obtenerCapitulos({ curso_id }));
-    dispatch(obtenerClases({ capitulo_id }));
+    dispatch(obtenerCapituloActivo({ capitulo_id }));
+    dispatch(obtenerClasesPorCapitulo({ capitulo_id }));
     dispatch(obtenerTemasPorCapitulo({ capitulo_id }));
     dispatch(obtenerDiapositivasPorCapitulo({ capitulo_id }));
     dispatch(obtenerVideosPorCapitulo({ capitulo_id }));
@@ -61,144 +85,118 @@ const Clases = () => {
     };
   }, [curso_id, capitulo_id, dispatch]);
 
-  const handleCrear = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const nombreTrim = nombre.trim();
-    if (!nombreTrim || !capitulo_id) return;
-    setGuardando(true);
-    await dispatch(crearClase({ capitulo_id, nombre: nombreTrim }));
-    setGuardando(false);
-    setNombre("");
-    setMostrarForm(false);
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = clases.findIndex((c) => c._id === active.id);
+    const newIndex = clases.findIndex((c) => c._id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const direction = newIndex < oldIndex ? "up" : "down";
+    const steps = Math.abs(newIndex - oldIndex);
+    for (let i = 0; i < steps; i++) {
+      await dispatch(
+        cambiarPositionClase({ clase_id: String(active.id), direction }),
+      );
+    }
   };
 
-  const handleDesplegarPagina = async () => {
-    if (!capitulo_id) return;
-    setDesplegando(true);
-    setMsgDeploy(null);
-    try {
-      const resp = await fetchConToken(`api/admin/publicar-pagina/clases/${capitulo_id}`, {}, "POST");
-      const body = await resp.json();
-      const errores = (body.data ?? []).filter((r: { ok: boolean }) => !r.ok);
-      if (errores.length > 0) setMsgDeploy(`⚠ Error al publicar en ${errores.length} curso(s) Canvas`);
-      else setMsgDeploy("✓ Página publicada correctamente en Canvas");
-    } catch {
-      setMsgDeploy("⚠ Error de conexión");
-    }
-    setDesplegando(false);
-  };
+  const claseIds = clases.map((c) => c._id);
 
   return (
-    <div className="min-h-screen bg-[#f0f4f8] p-6">
-
-      {/* ── Header azul ── */}
-      <div className="rounded-2xl px-6 pt-5 pb-4 mb-6 animate-fadeIn" style={{ backgroundColor: "#4A6D8C" }}>
-        <div className="flex items-center gap-2 mb-1">
-          <Button startIcon={<ArrowBackIcon />}
-            onClick={() => navigate(`/cursos/${curso_id}/capitulos`)}
-            size="small"
-            sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.75rem", p: 0, minWidth: 0,
-              "&:hover": { color: "white", bgcolor: "transparent" } }}>
-            {cursoActivo?.codigo ?? "Volver"}
-          </Button>
-        </div>
-        <Typography variant="h6" sx={{ color: "white", fontWeight: 500, mb: 2, lineHeight: 1.3 }}>
-          {capituloActivo ? `${capituloActivo.position}. ${capituloActivo.nombre}` : "Cargando..."}
-        </Typography>
-        <div className="flex gap-2">
-          {[
-            { label: "Clases",     ruta: null,                                                       activo: true  },
-            { label: "Ayudantías", ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/ayudantias`, activo: false },
-            { label: "Ejercicios", ruta: `/cursos/${curso_id}/capitulos/${capitulo_id}/ejercicios`, activo: false },
-          ].map((tab) => (
-            <button key={tab.label} onClick={() => tab.ruta && navigate(tab.ruta)}
-              style={{
-                padding: "6px 16px", borderRadius: 20,
-                background:  tab.activo ? "rgba(255,255,255,0.2)" : "transparent",
-                border:      "1px solid rgba(255,255,255,0.3)",
-                fontSize:    13, color: "white",
-                fontWeight:  tab.activo ? 500 : 400,
-                opacity:     tab.activo ? 1 : 0.7,
-                cursor:      tab.ruta ? "pointer" : "default",
-              }}>
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Acciones ── */}
-      <div className="flex justify-between items-center mb-5">
-        <div className="flex items-center gap-2">
-          <SchoolIcon sx={{ color: "#8daecb", fontSize: 18 }} />
-          <Typography variant="body2" sx={{ color: "#6793ba", fontWeight: 500 }}>
-            {clases.length} clase{clases.length !== 1 ? "s" : ""}
-          </Typography>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outlined" onClick={handleDesplegarPagina}
-            disabled={desplegando || clases.length === 0}
-            startIcon={desplegando ? <CircularProgress size={14} color="inherit" /> : undefined}
-            sx={{ borderColor: "#4A6D8C", color: "#4A6D8C", borderRadius: 2.5, px: 3,
-              fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#f0f4f8", borderColor: "#3c5770" } }}>
-            {desplegando ? "Publicando..." : "Publicar en Canvas"}
-          </Button>
-          <Button variant="contained" startIcon={mostrarForm ? undefined : <AddIcon />}
-            onClick={() => { setMostrarForm((v) => !v); setNombre(""); }}
-            sx={{ bgcolor: mostrarForm ? "#6793ba" : "#4A6D8C", borderRadius: 2.5, px: 3,
-              fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#3c5770", boxShadow: "none" } }}>
-            {mostrarForm ? "Cancelar" : "Nueva clase"}
-          </Button>
-        </div>
-      </div>
-
-      {msgDeploy && (
-        <Alert severity={msgDeploy.startsWith("✓") ? "success" : "warning"}
-          onClose={() => setMsgDeploy(null)} sx={{ mb: 4, borderRadius: 2 }}>
-          {msgDeploy}
-        </Alert>
-      )}
+    <div className="px-8 py-6 min-h-screen bg-[#F4F5F7]">
+      <Header
+        curso_id={curso_id!}
+        capitulo={capituloActivo!}
+        setMsgDeploy={setMsgDeploy}
+      />
 
       {mostrarForm && (
-        <form onSubmit={handleCrear} className="mb-6 rounded-2xl p-5 animate-slideDown"
-          style={{ background: "white", border: "1px solid #d9e4ee" }}>
-          <Typography variant="subtitle2" sx={{ color: "#2e4154", mb: 2, fontWeight: 600 }}>Nueva clase</Typography>
-          <div className="flex gap-3 items-start">
-            <TextField label="Nombre de la clase" placeholder="ej: Introducción a los límites"
-              value={nombre} onChange={(e) => setNombre(e.target.value)}
-              required size="small" fullWidth autoFocus
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }} />
-            <Button type="submit" variant="contained" disabled={guardando || !nombre.trim()}
-              startIcon={guardando ? <CircularProgress size={14} color="inherit" /> : undefined}
-              sx={{ bgcolor: "#4A6D8C", borderRadius: 2, px: 3, fontWeight: 600,
-                boxShadow: "none", whiteSpace: "nowrap", "&:hover": { bgcolor: "#3c5770", boxShadow: "none" } }}>
-              {guardando ? "Creando..." : "Crear"}
-            </Button>
+        <ModalCrearClase
+          capitulo_id={capitulo_id!}
+          onClose={() => setMostrarForm(false)}
+        />
+      )}
+
+      <div className="flex justify-end my-4">
+        <Button
+          sx={{ borderRadius: "10px", textTransform: "none" }}
+          onClick={() => setMostrarForm(true)}
+          size="medium"
+          variant="outlined"
+          startIcon={<AddIcon />}
+        >
+          Agregar clase
+        </Button>
+      </div>
+
+      {/* ── Contenido ── */}
+      <div className="py-4">
+        {msgDeploy && (
+          <Alert
+            severity={msgDeploy.startsWith("✓") ? "success" : "warning"}
+            onClose={() => setMsgDeploy(null)}
+            sx={{ mb: 4, borderRadius: "10px" }}
+          >
+            {msgDeploy}
+          </Alert>
+        )}
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 4, borderRadius: "10px" }}>
+            {error}
+          </Alert>
+        )}
+
+        {isLoading && (
+          <div className="flex justify-center py-16">
+            <CircularProgress sx={{ color: "#2563EB" }} />
           </div>
-          <Typography variant="caption" sx={{ color: "#8daecb", mt: 1.5, display: "block" }}>
-            La clase se creará como borrador. Puedes publicarla desde la card.
-          </Typography>
-        </form>
-      )}
+        )}
 
-      {isLoading && <div className="flex justify-center py-16"><CircularProgress sx={{ color: "#4A6D8C" }} /></div>}
-      {error && <Alert severity="error" sx={{ mb: 4, borderRadius: 2 }}>{error}</Alert>}
+        {/* Empty state */}
+        {!isLoading && clases.length === 0 && !error && (
+          <div className="flex flex-col items-center gap-3 py-16">
+            <div className="w-14 h-14 bg-[#EFF6FF] rounded-2xl flex items-center justify-center">
+              <ClassIcon sx={{ fontSize: 28, color: "#93C5FD" }} />
+            </div>
+            <p className="text-[15px] font-medium text-[#64748B]">
+              No hay clases en este capítulo
+            </p>
+            <p className="text-[13px] text-[#94A3B8]">
+              Crea la primera con el botón
+            </p>
+          </div>
+        )}
 
-      {!isLoading && clases.length === 0 && !error && (
-        <div className="flex flex-col items-center gap-3 py-20 animate-fadeIn">
-          <SchoolIcon sx={{ fontSize: 56, color: "#b3c9dd" }} />
-          <Typography variant="body1" sx={{ color: "#6793ba", fontWeight: 500 }}>No hay clases</Typography>
-          <Typography variant="body2" sx={{ color: "#8daecb" }}>Crea la primera con el botón "Nueva clase"</Typography>
-        </div>
-      )}
-
-      {!isLoading && clases.length > 0 && (
-        <div className="flex flex-col gap-4 animate-fadeIn">
-          {clases.map((clase, idx) => (
-            <ClaseCard key={clase._id} clase={clase} esPrimero={idx === 0} esUltimo={idx === clases.length - 1} />
-          ))}
-        </div>
-      )}
+        {/* Lista con DnD */}
+        {!isLoading && (
+          <>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              modifiers={[restrictToVerticalAxis]}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={claseIds}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="flex flex-col gap-3">
+                  {clases.map((clase, index) => (
+                    <SortableClaseCard
+                      key={clase._id}
+                      index={index}
+                      clase={clase}
+                      capitulo_id={capitulo_id!}
+                      curso_id={curso_id!}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </>
+        )}
+      </div>
     </div>
   );
 };

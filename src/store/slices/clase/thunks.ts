@@ -36,6 +36,30 @@ export const obtenerClasesPorCurso = ({ curso_id }: { curso_id: string }) => {
   };
 };
 
+// ─── Obtener clases por capitulo ─────────────────────────────────────
+
+export const obtenerClasesPorCapitulo = ({ capitulo_id }: { capitulo_id: string }) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingClase());
+    try {
+      const resp = await fetchConToken(`api/admin/clases/capitulo/${capitulo_id}`);
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(setClases(body.data));
+        dispatch(endLoadingClase());
+        return { ok: true };
+      } else {
+        dispatch(setErrorClase(body.msg));
+        return { ok: false, msg: body.msg };
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorClase(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
 // ─── Obtener clases ───────────────────────────────────────────────
 
 export const obtenerClases = ({ capitulo_id }: { capitulo_id: string }) => {

@@ -1,18 +1,21 @@
-// ─── Modal de confirmación de eliminación ─────────────────────────────────────
-
-import { useState } from "react";
+// src/pages/inicio/components/ModalEliminarCurso.tsx
+import { useState }       from "react";
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  Button, CircularProgress, Typography, Alert,
+} from "@mui/material";
+import WarningAmberIcon   from "@mui/icons-material/WarningAmber";
 import { useAppDispatch } from "../../../store/hooks";
 import { eliminarMongoCurso, type IMongoCurso } from "../../../store/slices/mongoCurso";
-import { Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
-interface ModalEliminarProps {
+interface Props {
   curso:   IMongoCurso;
   onClose: () => void;
 }
 
-export const ModalEliminarCurso = ({ curso, onClose }: ModalEliminarProps) => {
-  const dispatch    = useAppDispatch();
+export const ModalEliminarCurso = ({ curso, onClose }: Props) => {
+  const dispatch = useAppDispatch();
+
   const [eliminando, setEliminando] = useState(false);
   const [error, setError]           = useState<string | null>(null);
 
@@ -38,55 +41,76 @@ export const ModalEliminarCurso = ({ curso, onClose }: ModalEliminarProps) => {
       onClose={onClose}
       maxWidth="xs"
       fullWidth
-      sx={{ "& .MuiDialog-paper": { borderRadius: 3 } }}
+      slotProps={{ paper: { sx: { borderRadius: "14px" } } }}
     >
+      {/* Header */}
       <DialogTitle
         sx={{
-          bgcolor: "#fef2f2",
-          color: "#991b1b",
-          display: "flex",
+          bgcolor:    "#1E293B",
+          color:      "white",
+          display:    "flex",
           alignItems: "center",
-          gap: 1.5,
-          py: 2,
+          gap:        1.5,
+          py:         2,
+          px:         3,
+          fontFamily: "Georgia, serif",
+          fontSize:   "17px",
+          fontWeight: "normal",
         }}
       >
-        <WarningAmberIcon />
-        <span>Eliminar curso</span>
+        <div style={{
+          width: 30, height: 30, borderRadius: 8,
+          background: "#DC2626", border: "1px solid #EF4444",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0,
+        }}>
+          <WarningAmberIcon sx={{ fontSize: 16, color: "white" }} />
+        </div>
+        Eliminar curso
       </DialogTitle>
 
-      <DialogContent sx={{ mt: 3, pt: 3, pb: 1 }}>
-        <Typography variant="body2" sx={{ color: "#374151", mb: 1.5 }}>
+      {/* Contenido */}
+      <DialogContent sx={{ pt: 3, pb: 1, display: "flex", flexDirection: "column", gap: 1.5 }}>
+
+        <Typography variant="body2" sx={{ color: "#334155", mt: 2 }}>
           ¿Estás seguro de que quieres eliminar{" "}
-          <strong>{curso.nombre}</strong>?
+          <strong style={{ color: "#0F172A" }}>{curso.nombre}</strong>?
         </Typography>
 
-        <Typography variant="body2" sx={{ color: "#6b7280", mb: 2 }}>
-          Se eliminarán de forma permanente todos los capítulos, clases,
-          temas, recursos, quizzes, ayudantías y ejercicios asociados.
+        <Typography variant="body2" sx={{ color: "#64748B", lineHeight: 1.65 }}>
+          Se eliminarán permanentemente todos los capítulos, clases, temas,
+          recursos, quizzes, ayudantías y ejercicios asociados.
           Esta acción no se puede deshacer.
         </Typography>
 
         {tieneCanvas && (
-          <Alert severity="warning" sx={{ borderRadius: 2, mb: 1 }}>
-            Este curso tiene {curso.canvas_cursos.length} curso
+          <Alert
+            severity="warning"
+            sx={{ borderRadius: "8px", fontSize: 13 }}
+          >
+            Este curso tiene{" "}
+            <strong>{curso.canvas_cursos.length}</strong> curso
             {curso.canvas_cursos.length !== 1 ? "s" : ""} Canvas asociado
-            {curso.canvas_cursos.length !== 1 ? "s" : ""}. El contenido
-            en Canvas <strong>no se eliminará</strong> automáticamente.
+            {curso.canvas_cursos.length !== 1 ? "s" : ""}.
+            El contenido en Canvas <strong>no se eliminará</strong> automáticamente.
           </Alert>
         )}
 
         {error && (
-          <Alert severity="error" sx={{ borderRadius: 2 }}>
+          <Alert severity="error" sx={{ borderRadius: "8px", fontSize: 13 }}>
             {error}
           </Alert>
         )}
       </DialogContent>
 
+      {/* Acciones */}
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
         <Button
           onClick={onClose}
-          variant="outlined"
-          sx={{ borderColor: "#d1d5db", color: "#374151", borderRadius: 2 }}
+          sx={{
+            color: "#94A3B8", textTransform: "none", borderRadius: "8px",
+            "&:hover": { bgcolor: "#F8FAFC" },
+          }}
         >
           Cancelar
         </Button>
@@ -96,12 +120,14 @@ export const ModalEliminarCurso = ({ curso, onClose }: ModalEliminarProps) => {
           disabled={eliminando}
           startIcon={eliminando ? <CircularProgress size={14} color="inherit" /> : undefined}
           sx={{
-            bgcolor: "#dc2626",
-            borderRadius: 2,
-            px: 3,
-            fontWeight: 600,
-            boxShadow: "none",
-            "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" },
+            bgcolor:       "#DC2626",
+            borderRadius:  "8px",
+            px:            2.5,
+            fontWeight:    500,
+            fontSize:      "13px",
+            textTransform: "none",
+            boxShadow:     "none",
+            "&:hover":     { bgcolor: "#B91C1C", boxShadow: "none" },
           }}
         >
           {eliminando ? "Eliminando..." : "Sí, eliminar"}

@@ -8,6 +8,7 @@ import {
   agregarCapitulo,
   actualizarCapitulo,
   intercambiarCapitulos,
+  setCapituloActivo,
 } from "./capituloSlice";
 
 const MSG_ERROR = "Estamos teniendo problemas, vuelva a intentarlo más tarde";
@@ -36,6 +37,35 @@ export const obtenerCapitulos = ({ curso_id }: { curso_id: string }) => {
   };
 };
 
+// ─── Obtener capítulos ────────────────────────────────────────────
+
+export const obtenerCapituloActivo = ({
+  capitulo_id,
+}: {
+  capitulo_id: string;
+}) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingCapitulo());
+    try {
+      const resp = await fetchConToken(`api/admin/capitulos/${capitulo_id}`);
+      const body = await resp.json();
+
+      if (body.ok) {
+        dispatch(setCapituloActivo(body.data));
+        dispatch(endLoadingCapitulo());
+        return { ok: true };
+      } else {
+        dispatch(setErrorCapitulo(body.msg));
+        return { ok: false, msg: body.msg };
+      }
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorCapitulo(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
 // ─── Crear capítulo ───────────────────────────────────────────────
 
 export const crearCapitulo = ({
@@ -43,7 +73,7 @@ export const crearCapitulo = ({
   nombre,
 }: {
   curso_id: string;
-  nombre:   string;
+  nombre: string;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
@@ -78,10 +108,10 @@ export const editarCapitulo = ({
   published_canvas,
   published_api,
 }: {
-  capitulo_id:       string;
-  nombre?:           string;
+  capitulo_id: string;
+  nombre?: string;
   published_canvas?: boolean;
-  published_api?:    boolean;
+  published_api?: boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());
@@ -142,7 +172,7 @@ export const reintentarCapitulo = ({
   capitulo_id,
   canvas_curso_id,
 }: {
-  capitulo_id:     string;
+  capitulo_id: string;
   canvas_curso_id: number;
 }) => {
   return async (dispatch: AppDispatch) => {
@@ -176,7 +206,7 @@ export const desplegarPendienteCapitulo = ({
   capitulo_id,
   canvas_curso_id,
 }: {
-  capitulo_id:     string;
+  capitulo_id: string;
   canvas_curso_id: number;
 }) => {
   return async (dispatch: AppDispatch) => {
@@ -211,7 +241,7 @@ export const cambiarPositionCapitulo = ({
   direction,
 }: {
   capitulo_id: string;
-  direction:   "up" | "down";
+  direction: "up" | "down";
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingCapitulo());

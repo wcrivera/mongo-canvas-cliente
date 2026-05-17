@@ -1,13 +1,14 @@
+// src/pages/auth/AuthCallback.tsx
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setCredenciales } from "../../store/slices/auth/authSlice";
-import { cargarPerfil } from "../../store/slices/auth/thunks";
+import { cargarPerfil }    from "../../store/slices/auth/thunks";
 import type { AppDispatch } from "../../store";
 
 const decodeJWT = (token: string) => {
   const base64Url = token.split(".")[1];
-  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  const base64    = base64Url.replace(/-/g, "+").replace(/_/g, "/");
   const jsonPayload = decodeURIComponent(
     atob(base64)
       .split("")
@@ -19,8 +20,8 @@ const decodeJWT = (token: string) => {
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
+  const navigate       = useNavigate();
+  const dispatch       = useDispatch<AppDispatch>();
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -38,17 +39,15 @@ const AuthCallback = () => {
           setCredenciales({
             token,
             email: payload.email,
-            role: payload.role,
-            id: payload.id,
+            role:  payload.role,
+            id:    payload.id,
           }),
         );
 
         sessionStorage.setItem("auth_token", token);
 
-        // Cargar perfil completo para saber si tiene token Canvas
         await dispatch(cargarPerfil());
 
-        // Redirigir según rol
         const destino = payload.role === "admin" ? "/inicio" : "/plataforma";
         navigate(destino, { replace: true });
       } catch (e) {
@@ -61,11 +60,69 @@ const AuthCallback = () => {
   }, [dispatch, navigate, searchParams]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-gray-500">Iniciando sesión...</p>
+    <div
+      style={{
+        display:        "flex",
+        alignItems:     "center",
+        justifyContent: "center",
+        minHeight:      "100vh",
+        background:     "#0A1020",
+      }}
+    >
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 20 }}>
+
+        {/* Logo M */}
+        <div
+          style={{
+            width:        40,
+            height:       40,
+            borderRadius: 11,
+            background:   "#2563EB",
+            border:       "1px solid #3B82F6",
+            display:      "flex",
+            alignItems:   "center",
+            justifyContent: "center",
+            fontSize:     19,
+            color:        "white",
+            fontFamily:   "Georgia, serif",
+            fontWeight:   "bold",
+          }}
+        >
+          M
+        </div>
+
+        {/* Spinner */}
+        <div
+          style={{
+            width:        28,
+            height:       28,
+            borderRadius: "50%",
+            border:       "2.5px solid rgba(255,255,255,0.08)",
+            borderTop:    "2.5px solid #2563EB",
+            animation:    "spin 0.75s linear infinite",
+          }}
+        />
+
+        {/* Texto */}
+        <p
+          style={{
+            fontSize:   13,
+            color:      "rgba(255,255,255,0.35)",
+            fontFamily: "-apple-system, sans-serif",
+            margin:     0,
+          }}
+        >
+          Iniciando sesión...
+        </p>
+
       </div>
+
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg);   }
+          to   { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
