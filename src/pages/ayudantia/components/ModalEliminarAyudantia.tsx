@@ -1,22 +1,12 @@
 import { useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import {
-  editarAyudantia,
-  type IAyudantia,
-} from "../../../store/slices/ayudantia";
-import {
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-} from "@mui/material";
-import MathTextEditor from "../../../components/CKEditor/MathTextEditor";
+import { useAppDispatch } from "../../../store/hooks";
+import { eliminarAyudantia, type IAyudantia } from "../../../store/slices/ayudantia";
+import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber"
 
-import EditNoteIcon from "@mui/icons-material/EditNote";
 
-export const ModalEnunciado = ({
+// ── Modal eliminar ayudantía ──────────────────────────────────────────────────
+const ModalEliminarAyudantia = ({
   ayudantia,
   onClose,
 }: {
@@ -24,18 +14,12 @@ export const ModalEnunciado = ({
   onClose: () => void;
 }) => {
   const dispatch = useAppDispatch();
-  const siglaCurso = useAppSelector(
-    (s) => s.mongoCurso.cursoActivo?.codigo ?? "",
-  );
-  const [contenido, setContenido] = useState(ayudantia.enunciado ?? "");
-  const [guardando, setGuardando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
 
-  const handleGuardar = async () => {
-    setGuardando(true);
-    await dispatch(
-      editarAyudantia({ ayudantia_id: ayudantia._id, enunciado: contenido }),
-    );
-    setGuardando(false);
+  const handleEliminar = async () => {
+    setEliminando(true);
+    await dispatch(eliminarAyudantia({ ayudantia_id: ayudantia._id }));
+    setEliminando(false);
     onClose();
   };
 
@@ -43,7 +27,7 @@ export const ModalEnunciado = ({
     <Dialog
       open
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="xs"
       fullWidth
       slotProps={{ paper: { sx: { borderRadius: "14px" } } }}
     >
@@ -66,25 +50,27 @@ export const ModalEnunciado = ({
             width: 30,
             height: 30,
             borderRadius: 8,
-            background: "#2563EB",
-            border: "1px solid #3B82F6",
+            background: "#DC2626",
+            border: "1px solid #EF4444",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
           }}
         >
-          <EditNoteIcon sx={{ fontSize: 16, color: "white" }} />
+          <WarningAmberIcon sx={{ fontSize: 16, color: "white" }} />
         </div>
-        {ayudantia.enunciado ? "Editar enunciado" : "Agregar enunciado"}
+        Eliminar ayudantía
       </DialogTitle>
       <DialogContent sx={{ pt: 3, pb: 1 }}>
-        <MathTextEditor
-          initialData={contenido}
-          onChange={setContenido}
-          siglaCurso={siglaCurso}
-          // placeholder="Escribe el enunciado de la ayudantía..."
-        />
+        <Typography variant="body2" sx={{ color: "#334155", mb: 1.5 }}>
+          ¿Eliminar{" "}
+          <strong style={{ color: "#0F172A" }}>{ayudantia.nombre}</strong>?
+        </Typography>
+        <Typography variant="body2" sx={{ color: "#64748B" }}>
+          Se eliminarán todos los recursos asociados (solución, video, quiz).
+          Esta acción no se puede deshacer.
+        </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
         <Button
@@ -99,28 +85,30 @@ export const ModalEnunciado = ({
           Cancelar
         </Button>
         <Button
-          onClick={handleGuardar}
+          onClick={handleEliminar}
           variant="contained"
-          disabled={guardando}
+          disabled={eliminando}
           startIcon={
-            guardando ? (
+            eliminando ? (
               <CircularProgress size={14} color="inherit" />
             ) : undefined
           }
           sx={{
-            bgcolor: "#2563EB",
+            bgcolor: "#DC2626",
             borderRadius: "8px",
             px: 2.5,
             fontWeight: 500,
             fontSize: "13px",
             textTransform: "none",
             boxShadow: "none",
-            "&:hover": { bgcolor: "#1D4ED8", boxShadow: "none" },
+            "&:hover": { bgcolor: "#B91C1C", boxShadow: "none" },
           }}
         >
-          {guardando ? "Guardando..." : "Guardar"}
+          {eliminando ? "Eliminando..." : "Sí, eliminar"}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
+
+export default ModalEliminarAyudantia;

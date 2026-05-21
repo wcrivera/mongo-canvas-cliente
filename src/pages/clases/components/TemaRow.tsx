@@ -36,8 +36,9 @@ import ModalElegirDiapositiva from "./ModalElegirDiapositiva";
 import ModalUrlDiapositiva from "./ModalUrlDiapositiva";
 import ModalUrlVideo from "./ModalUrlVideo";
 import ModalCrearQuiz from "./ModalCrearQuiz";
-import RecursoSlot from "../../capitulo/components/RecursoSlot";
+import RecursoSlot from "./RecursoSlot";
 import ModalEliminarTema from "./ModalEliminarTema";
+import ModalVerDiapositiva from "./ModalVerDiapositiva";
 
 // ── Estilos ───────────────────────────────────────────────────────────────────
 const iconBtnSmSx = {
@@ -110,6 +111,8 @@ const TemaRow = ({
   const [modalUrl, setModalUrl] = useState(false);
   const [modalVideo, setModalVideo] = useState(false);
   const [modalQuiz, setModalQuiz] = useState(false);
+
+  const [modalVer, setModalVer] = useState(false);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
   const handleGuardarNombre = async () => {
@@ -421,16 +424,16 @@ const TemaRow = ({
             display: "flex",
             alignItems: "center",
             gap: 8,
-            padding: "4px 14px 8px 48px",
+            padding: "0px 14px 8px 40px",
             flexWrap: "wrap",
           }}
         >
           <RecursoSlot
             exists={!!diapoTema}
             label="Diapositiva"
-            icon={<SlideshowIcon sx={{ fontSize: 13 }} />}
+            icon={<SlideshowIcon sx={{ fontSize: 18 }} />}
             iconColor="#F59E0B"
-            onVer={irADiapositiva}
+            onVer={() => setModalVer(true)}
             onEditar={irADiapositiva}
             onEliminar={() =>
               diapoTema &&
@@ -441,7 +444,7 @@ const TemaRow = ({
           <RecursoSlot
             exists={!!videoTema}
             label="Video"
-            icon={<PlayCircleIcon sx={{ fontSize: 13 }} />}
+            icon={<PlayCircleIcon sx={{ fontSize: 18 }} />}
             iconColor="#EF4444"
             onVer={() => setModalVideo(true)}
             onEditar={() => setModalVideo(true)}
@@ -453,7 +456,7 @@ const TemaRow = ({
           <RecursoSlot
             exists={!!quizTema}
             label="Quiz"
-            icon={<QuizIcon sx={{ fontSize: 13 }} />}
+            icon={<QuizIcon sx={{ fontSize: 18 }} />}
             iconColor="#2563EB"
             onVer={irAQuiz}
             onEditar={() => setModalQuiz(true)}
@@ -514,6 +517,15 @@ const TemaRow = ({
           quiz={quizTema}
           onClose={() => setModalQuiz(false)}
           onCreado={handleQuizCreado}
+        />
+      )}
+
+      {modalVer && diapoTema && (
+        <ModalVerDiapositiva
+          // Pasar props necesarios para mostrar el contenido del tema
+          label="Diapositiva"
+          diapoTema={diapoTema}
+          onClose={() => setModalVer(false)}
         />
       )}
     </>

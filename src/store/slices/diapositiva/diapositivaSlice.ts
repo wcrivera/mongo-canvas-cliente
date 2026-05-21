@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import type { ISlide } from "../../../pages/diapositiva/EditorDiapositiva";
 
 export type ContextoDiapositiva = "clase" | "ayudantia";
 
@@ -26,7 +27,7 @@ export interface IDiapositiva {
   published_canvas: boolean;
   published_api:    boolean;
   url:              string;
-  slides:           object[];
+  slides:           ISlide[] | null;
   html_compilado:   string;
   config:           { tema: string; transicion: string; menu: boolean };
   canvas_deployments: ICanvasDeploymentDiapositiva[];

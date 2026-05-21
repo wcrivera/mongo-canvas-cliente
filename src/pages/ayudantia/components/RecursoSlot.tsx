@@ -1,16 +1,18 @@
-import { useState } from "react";
 import {
+  Divider,
+  IconButton,
+  ListItemIcon,
   Menu,
   MenuItem,
-  ListItemIcon,
   Typography,
-  Divider,
 } from "@mui/material";
+import React, { useState } from "react";
+
 import AddIcon from "@mui/icons-material/Add";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+// import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 interface RecursoSlotProps {
   exists: boolean;
@@ -63,8 +65,7 @@ const RecursoSlot = ({
           (e.currentTarget as HTMLButtonElement).style.color = "#94A3B8";
         }}
       >
-        <AddIcon sx={{ fontSize: 12 }} />
-        {label}
+        <AddIcon sx={{ fontSize: 12 }} /> {label}
       </button>
     );
   }
@@ -75,74 +76,22 @@ const RecursoSlot = ({
         style={{
           display: "flex",
           alignItems: "center",
-          borderRadius: 20,
-          border: "0.5px solid #E2E8F0",
-          overflow: "hidden",
-          height: 26,
+          gap: 5,
+          marginRight: 20,
         }}
       >
-        <button
-          onClick={onVer}
-          style={{
-            background: "transparent",
-            border: "none",
-            borderRight: "0.5px solid #E2E8F0",
-            padding: "0 10px",
-            height: "100%",
-            fontSize: 11,
-            color: "#334155",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            whiteSpace: "nowrap",
-            fontFamily: "inherit",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "#F8FAFC";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "transparent";
-          }}
-        >
-          <span
-            style={{
-              color: iconColor,
-              fontSize: 13,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            {icon}
-          </span>
-          {label}
-        </button>
-        <button
+        <IconButton
+          aria-label={`menu-${label}`}
+          // sx={iconBtnSmSx}
+          sx={{ color: iconColor }}
           onClick={(e) => setMenuAnchor(e.currentTarget)}
-          style={{
-            background: "transparent",
-            border: "none",
-            padding: "0 7px",
-            height: "100%",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            color: "#94A3B8",
-            fontFamily: "inherit",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background = "#F8FAFC";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.background =
-              "transparent";
-          }}
         >
-          <ExpandMoreIcon sx={{ fontSize: 14 }} />
-        </button>
+          {icon}
+        </IconButton>
+        <span style={{ fontSize: 14, color: "gray", fontWeight: 400 }}>
+          {label}
+        </span>
       </div>
-
       <Menu
         anchorEl={menuAnchor}
         open={Boolean(menuAnchor)}
@@ -174,7 +123,7 @@ const RecursoSlot = ({
           }}
         >
           <ListItemIcon>
-            <VisibilityIcon sx={{ fontSize: 14, color: "#2563EB" }} />
+            <VisibilityIcon sx={{ fontSize: 14, color: "#1a8d18" }} />
           </ListItemIcon>
           <Typography variant="body2" sx={{ color: "#334155" }}>
             Ver
