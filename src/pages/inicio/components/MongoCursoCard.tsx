@@ -25,6 +25,7 @@ import type { IMongoCurso } from "../../../store/slices/mongoCurso";
 import CanvasCursoChip from "./CanvasCursoChip";
 import ModalAsociarCanvas from "./ModalAsociarCanvas";
 import ModalSincronizar from "./ModalSincronizar";
+import { iconBtnActiveSx, iconBtnSx } from "../../../styles/iconButtons";
 
 // ── Paleta de 6 colores cíclica ───────────────────────────────────────────────
 const COLOR_PALETTE = [
@@ -71,25 +72,6 @@ const COLOR_PALETTE = [
     accent: "#475569",
   },
 ] as const;
-
-// ── Estilos icon-buttons ──────────────────────────────────────────────────────
-const iconBtnSx = {
-  width: 28,
-  height: 28,
-  borderRadius: "7px",
-  border: "0.5px solid #E2E8F0",
-  bgcolor: "#F8FAFC",
-  color: "#94A3B8",
-  "&:hover": { bgcolor: "#F1F5F9", color: "#475569", borderColor: "#CBD5E1" },
-};
-
-const iconBtnActiveSx = {
-  ...iconBtnSx,
-  color: "#16A34A",
-  bgcolor: "#F0FDF4",
-  borderColor: "#BBF7D0",
-  "&:hover": { bgcolor: "#DCFCE7", color: "#15803D", borderColor: "#86EFAC" },
-};
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {

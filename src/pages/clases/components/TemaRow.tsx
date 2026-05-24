@@ -39,24 +39,7 @@ import ModalCrearQuiz from "./ModalCrearQuiz";
 import RecursoSlot from "./RecursoSlot";
 import ModalEliminarTema from "./ModalEliminarTema";
 import ModalVerDiapositiva from "./ModalVerDiapositiva";
-
-// ── Estilos ───────────────────────────────────────────────────────────────────
-const iconBtnSmSx = {
-  width: 24,
-  height: 24,
-  borderRadius: "6px",
-  border: "0.5px solid #E2E8F0",
-  bgcolor: "#F8FAFC",
-  color: "#94A3B8",
-  "&:hover": { bgcolor: "#F1F5F9", color: "#475569", borderColor: "#CBD5E1" },
-};
-const iconBtnSmActiveSx = {
-  ...iconBtnSmSx,
-  color: "#2563EB",
-  bgcolor: "#EFF6FF",
-  borderColor: "#BFDBFE",
-  "&:hover": { bgcolor: "#DBEAFE", color: "#1D4ED8", borderColor: "#93C5FD" },
-};
+import { iconBtnXsActiveSx, iconBtnXsSx } from "../../../styles/iconButtons";
 
 interface Props {
   tema: ITema;
@@ -322,7 +305,7 @@ const TemaRow = ({
                       size="small"
                       onClick={handleToggleCanvas}
                       sx={
-                        tema.published_canvas ? iconBtnSmActiveSx : iconBtnSmSx
+                        tema.published_canvas ? iconBtnXsActiveSx : iconBtnXsSx
                       }
                     >
                       <SchoolIcon sx={{ fontSize: 12 }} />
@@ -340,7 +323,7 @@ const TemaRow = ({
                     <IconButton
                       size="small"
                       onClick={handleToggleApi}
-                      sx={tema.published_api ? iconBtnSmActiveSx : iconBtnSmSx}
+                      sx={tema.published_api ? iconBtnXsActiveSx : iconBtnXsSx}
                     >
                       {tema.published_api ? (
                         <PublicIcon sx={{ fontSize: 12 }} />
@@ -354,7 +337,7 @@ const TemaRow = ({
               <IconButton
                 size="small"
                 onClick={(e) => setMenuAnchor(e.currentTarget)}
-                sx={iconBtnSmSx}
+                sx={iconBtnXsSx}
               >
                 <MoreHorizIcon sx={{ fontSize: 13 }} />
               </IconButton>

@@ -1,16 +1,16 @@
 // src/pages/ejercicios/components/SortableEjercicioCard.tsx
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS }         from "@dnd-kit/utilities";
-import type { IEjercicio } from "../../../store/slices/ejercicio";
-import EjercicioCard   from "./EjercicioCard";
+import type { IQuiz, IPregunta } from "../../../store/slices/quiz";
+import EjercicioCard from "./EjercicioCard";
 
 interface Props {
-  ejercicio:   IEjercicio;
-  curso_id:    string;
-  capitulo_id: string;
+  ejercicio: IQuiz;
+  preguntas: IPregunta[];
+  index:     number;
 }
 
-const SortableEjercicioCard = ({ ejercicio, curso_id, capitulo_id }: Props) => {
+const SortableEjercicioCard = ({ ejercicio, preguntas, index }: Props) => {
   const {
     attributes, listeners, setNodeRef,
     transform, transition, isDragging,
@@ -26,8 +26,8 @@ const SortableEjercicioCard = ({ ejercicio, curso_id, capitulo_id }: Props) => {
     <div ref={setNodeRef} style={style}>
       <EjercicioCard
         ejercicio={ejercicio}
-        curso_id={curso_id}
-        capitulo_id={capitulo_id}
+        preguntas={preguntas}
+        index={index}
         isDragging={isDragging}
         dragHandleProps={{ ...attributes, ...listeners }}
       />

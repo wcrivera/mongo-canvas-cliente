@@ -29,6 +29,7 @@ import { useAppDispatch, useAppSelector } from "../../../store/hooks";
 import { editarCapitulo } from "../../../store/slices/capitulo";
 import type { ICapitulo } from "../../../store/slices/capitulo";
 import { ModalEliminarCapitulo } from "./ModalEliminarCapitulo";
+import { iconBtnActiveSx, iconBtnSx } from "../../../styles/iconButtons";
 
 interface Props {
   capitulo: ICapitulo;
@@ -37,25 +38,6 @@ interface Props {
   isDragging?: boolean;
   dragHandleProps?: React.HTMLAttributes<HTMLElement>;
 }
-
-// ── Estilos icon-buttons ──────────────────────────────────────────────────────
-const iconBtnSx = {
-  width: 28,
-  height: 28,
-  borderRadius: "7px",
-  border: "0.5px solid #E2E8F0",
-  bgcolor: "#F8FAFC",
-  color: "#94A3B8",
-  "&:hover": { bgcolor: "#F1F5F9", color: "#475569", borderColor: "#CBD5E1" },
-};
-
-const iconBtnActiveSx = {
-  ...iconBtnSx,
-  color: "#2563EB",
-  bgcolor: "#EFF6FF",
-  borderColor: "#BFDBFE",
-  "&:hover": { bgcolor: "#DBEAFE", color: "#1D4ED8", borderColor: "#93C5FD" },
-};
 
 // ── Componente ────────────────────────────────────────────────────────────────
 const CapituloCard = ({

@@ -101,18 +101,36 @@ const BASE_PLUGINS = [
 ];
 
 const TOOLBAR_ITEMS = [
-  "undo", "redo", "|",
-  "heading", "|",
-  // "bold", "italic", "underline", "strikethrough", "code", "|",
-  // "fontSize", "fontColor", "|",
-  // "alignment", "|",
-  // "link", "bulletedList", "numberedList", "blockQuote", "|",
-  // "insertTable",
-  // "insertImageMenu",
-  // "insertMath",            // botón f(x)
-  // "insertMathEnvironment", // dropdown teoremas/definiciones/etc.
-  // "|",
-  // "sourceEditing",
+  "undo",
+  "redo",
+  "|",
+  "heading",
+  "|",
+  "bold",
+  "italic",
+  "underline",
+  "strikethrough",
+  "code",
+  "|",
+  "fontSize",
+  "fontColor",
+  "|",
+  "alignment",
+  "|",
+  "link",
+  "bulletedList",
+  "numberedList",
+  "blockQuote",
+  "|",
+  "insertTable",
+  "insertImageMenu",
+  "insertMath",
+  "insertFragment",
+  "insertTwoColumns",
+  "insertMultiColList",
+  "addMultiColListItem",
+  "|",
+  "sourceEditing",
 ];
 
 // ── Componente ────────────────────────────────────────────────────────────────
@@ -249,7 +267,7 @@ const MathTextEditor: React.FC<EditorProps> = ({
             const root = editor.editing.view.document.getRoot();
             if (root) {
               editor.editing.view.change((writer: ViewDowncastWriter) => {
-                writer.setStyle("min-height", "50vh", root);
+                writer.setStyle("min-height", "150px", root);
                 writer.setStyle("font-size", "16px", root);
               });
             }

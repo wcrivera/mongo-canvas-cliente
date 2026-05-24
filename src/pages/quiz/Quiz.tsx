@@ -20,8 +20,8 @@ import {
   limpiarQuizActivo,
   setQuizActivo,
 } from "../../store/slices/quiz";
-import PreguntaCard from "./PreguntaCard";
-import FormPregunta from "./FormPregunta";
+import PreguntaCard from "./components/PreguntaCard";
+import FormPregunta from "./components/FormPregunta";
 import ModalBanco   from "../../components/banco/ModalBanco";
 
 // El parámetro en la ruta sigue llamándose :recurso_id por compatibilidad

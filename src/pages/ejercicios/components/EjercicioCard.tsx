@@ -1,346 +1,392 @@
-// src/pages/ejercicios/EjercicioCard.tsx
+// src/pages/ejercicios/components/EjercicioCard.tsx
 import { useState } from "react";
 import {
-  Card, CardContent, Typography,
-  IconButton, Tooltip, CircularProgress,
-  Switch, Chip,
-  Button, Dialog, DialogTitle, DialogContent, DialogActions,
+  Card,
+  CardContent,
+  IconButton,
+  Typography,
+  Tooltip,
+  
+  CircularProgress,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  Divider,
+  Chip,
+  
 } from "@mui/material";
-import KeyboardArrowUpIcon   from "@mui/icons-material/KeyboardArrowUp";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import EditOutlinedIcon      from "@mui/icons-material/EditOutlined";
-import DeleteOutlineIcon     from "@mui/icons-material/DeleteOutlineOutlined";
-import CheckIcon             from "@mui/icons-material/Check";
-import CloseIcon             from "@mui/icons-material/Close";
-import QuizIcon              from "@mui/icons-material/Quiz";
-import RefreshIcon           from "@mui/icons-material/Refresh";
-import WarningAmberIcon      from "@mui/icons-material/WarningAmber";
-import { useAppDispatch }    from "../../../store/hooks";
+import DragIndicatorIcon  from "@mui/icons-material/DragIndicator";
+import SchoolIcon         from "@mui/icons-material/School";
+import PublicIcon         from "@mui/icons-material/Public";
+import PublicOffIcon      from "@mui/icons-material/PublicOff";
+import MoreHorizIcon      from "@mui/icons-material/MoreHoriz";
+import EditOutlinedIcon   from "@mui/icons-material/EditOutlined";
+import DeleteOutlineIcon  from "@mui/icons-material/DeleteOutlineOutlined";
+import CheckIcon          from "@mui/icons-material/Check";
+import CloseIcon          from "@mui/icons-material/Close";
+import EditNoteIcon       from "@mui/icons-material/EditNote";
+import RefreshIcon        from "@mui/icons-material/Refresh";
+
+import { useAppDispatch }  from "../../../store/hooks";
 import {
-  editarEjercicio,
-  eliminarEjercicio,
-  cambiarPositionEjercicio,
-  reintentarEjercicio,
-} from "../../../store/slices/ejercicio";
-import type { IEjercicio } from "../../../store/slices/ejercicio";
+  editarQuiz, editarPregunta,
+  type IQuiz, type IPregunta,
+} from "../../../store/slices/quiz";
+import { reintentarEjercicio } from "../../../store/slices/ejercicio";
+import { iconBtnSx, iconBtnActiveSx } from "../../../styles/iconButtons";
 import { PreguntaViewer, PreguntaEditor } from "../../../components/quiz";
 import type {
-  IOpcionEditor,
-  IParEditor,
-  IRespuestaNumEditor,
-  TipoPreguntaEditor,
+  IOpcionEditor, IParEditor,
+  IRespuestaNumEditor, TipoPreguntaEditor,
 } from "../../../components/quiz";
+import ModalEliminar from "./ModalEliminar";
 
-interface Props {
-  ejercicio:  IEjercicio;
-  esPrimero:  boolean;
-  esUltimo:   boolean;
-}
+// ── Colores por tipo ──────────────────────────────────────────────────────────
 
 const TIPO_LABEL: Record<string, string> = {
-  multiple_choice:  "Opción múltiple",
-  multiple_answers: "Respuestas múltiples",
-  true_false:       "Verdadero/Falso",
-  short_answer:     "Respuesta corta",
-  essay:            "Ensayo",
-  matching:         "Coincidencia",
-  numerical:        "Respuesta numérica",
+  multiple_choice:         "Opción múltiple",
+  multiple_answers:        "Respuestas múltiples",
+  true_false:              "Verdadero / Falso",
+  short_answer:            "Respuesta corta",
+  essay:                   "Ensayo",
+  matching:                "Pareo",
+  numerical:               "Numérico",
+  fill_in_multiple_blanks: "Completar",
 };
 
 const TIPO_COLOR: Record<string, string> = {
-  multiple_choice:  "#4A6D8C",
-  multiple_answers: "#2d5be3",
-  true_false:       "#1a9e5c",
-  short_answer:     "#f47c3c",
-  essay:            "#9c27b0",
-  matching:         "#e67e22",
-  numerical:        "#e74c3c",
+  multiple_choice:         "#2563EB",
+  multiple_answers:        "#7C3AED",
+  true_false:              "#0D9488",
+  short_answer:            "#475569",
+  essay:                   "#475569",
+  matching:                "#D97706",
+  numerical:               "#DB2777",
+  fill_in_multiple_blanks: "#EA580C",
 };
 
-// ─── Modal eliminar ───────────────────────────────────────────────────────────
+// ── Props ─────────────────────────────────────────────────────────────────────
 
-const ModalEliminar = ({
+interface Props {
+  ejercicio:        IQuiz;
+  preguntas:        IPregunta[];
+  index:            number;
+  isDragging?:      boolean;
+  dragHandleProps?: React.HTMLAttributes<HTMLElement>;
+}
+
+// ── EjercicioCard ─────────────────────────────────────────────────────────────
+
+const EjercicioCard = ({
   ejercicio,
-  onClose,
-}: {
-  ejercicio: IEjercicio;
-  onClose:   () => void;
-}) => {
-  const dispatch = useAppDispatch();
-  const [eliminando, setEliminando] = useState(false);
-
-  const handleEliminar = async () => {
-    setEliminando(true);
-    await dispatch(eliminarEjercicio({ ejercicio_id: ejercicio._id }));
-    setEliminando(false);
-    onClose();
-  };
-
-  return (
-    <Dialog open onClose={onClose} maxWidth="xs" fullWidth
-      sx={{ "& .MuiDialog-paper": { borderRadius: 3 } }}>
-      <DialogTitle sx={{ bgcolor: "#fef2f2", color: "#991b1b", display: "flex", alignItems: "center", gap: 1.5, py: 2 }}>
-        <WarningAmberIcon />
-        <span>Eliminar ejercicio</span>
-      </DialogTitle>
-      <DialogContent sx={{ pt: 3, pb: 1 }}>
-        <Typography variant="body2" sx={{ color: "#374151", mb: 1 }}>
-          ¿Eliminar <strong>{ejercicio.nombre}</strong>?
-        </Typography>
-        <Typography variant="body2" sx={{ color: "#6b7280" }}>
-          Esta acción no se puede deshacer. El ejercicio también se eliminará de Canvas.
-        </Typography>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-        <Button onClick={onClose} variant="outlined"
-          sx={{ borderColor: "#d1d5db", color: "#374151", borderRadius: 2 }}>
-          Cancelar
-        </Button>
-        <Button onClick={handleEliminar} variant="contained" disabled={eliminando}
-          startIcon={eliminando ? <CircularProgress size={14} color="inherit" /> : undefined}
-          sx={{ bgcolor: "#dc2626", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none", "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" } }}>
-          {eliminando ? "Eliminando..." : "Sí, eliminar"}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};
-
-// ─── Card principal ───────────────────────────────────────────────────────────
-
-const EjercicioCard = ({ ejercicio, esPrimero, esUltimo }: Props) => {
+  preguntas,
+  index,
+  isDragging    = false,
+  dragHandleProps = {},
+}: Props) => {
   const dispatch = useAppDispatch();
 
-  const [editando,      setEditando]      = useState(false);
-  const [guardando,     setGuardando]     = useState(false);
-  const [moviendo,      setMoviendo]      = useState(false);
-  const [modalEliminar, setModalEliminar] = useState(false);
-  const [verDeploys,    setVerDeploys]    = useState(false);
+  // La primera (y única) pregunta del ejercicio
+  const pregunta = preguntas[0];
 
-  // Estado del editor
-  const [enunciado, setEnunciado] = useState(ejercicio.enunciado);
-  const [puntos,    setPuntos]    = useState(ejercicio.puntos ?? 1);
+  // ── Estado ────────────────────────────────────────────────────────────────
+  const [editando,       setEditando]       = useState(false);
+  const [guardando,      setGuardando]      = useState(false);
+  const [modalEliminar,  setModalEliminar]  = useState(false);
+  const [menuAnchor,     setMenuAnchor]     = useState<null | HTMLElement>(null);
+  const [togglingCanvas, setTogglingCanvas] = useState(false);
+  const [togglingApi,    setTogglingApi]    = useState(false);
+
+  // Estado del editor — inicializado desde la pregunta
+  const [enunciado, setEnunciado] = useState(pregunta?.enunciado ?? "");
+  const [puntos,    setPuntos]    = useState(pregunta?.puntos ?? 1);
   const [opciones,  setOpciones]  = useState<IOpcionEditor[]>(
-    ejercicio.opciones.map((op) => ({ texto: op.texto, es_correcta: op.es_correcta })),
+    (pregunta?.opciones ?? []).map((op) => ({ texto: op.texto, es_correcta: op.es_correcta })),
   );
   const [pares, setPares] = useState<IParEditor[]>(
-    (ejercicio.pares ?? []).map((p) => ({ izquierda: p.izquierda, derecha: p.derecha })),
+    (pregunta?.pares ?? []).map((p) => ({ izquierda: p.izquierda, derecha: p.derecha })),
   );
   const [respNum, setRespNum] = useState<IRespuestaNumEditor>({
-    tipo:      ejercicio.respuesta_numerica?.tipo      ?? "exact",
-    exacto:    ejercicio.respuesta_numerica?.exacto    ?? 0,
-    margen:    ejercicio.respuesta_numerica?.margen    ?? 0,
-    minimo:    ejercicio.respuesta_numerica?.minimo    ?? 0,
-    maximo:    ejercicio.respuesta_numerica?.maximo    ?? 10,
-    precision: ejercicio.respuesta_numerica?.precision ?? 2,
+    tipo:      pregunta?.respuesta_numerica?.tipo      ?? "exact",
+    exacto:    pregunta?.respuesta_numerica?.exacto    ?? 0,
+    margen:    pregunta?.respuesta_numerica?.margen    ?? 0,
+    minimo:    pregunta?.respuesta_numerica?.minimo    ?? 0,
+    maximo:    pregunta?.respuesta_numerica?.maximo    ?? 10,
+    precision: pregunta?.respuesta_numerica?.precision ?? 2,
   });
 
-  const tieneErrores = ejercicio.canvas_deployments.some((d) => d.status === "error" || d.status === "missing");
-  const tienePending = ejercicio.canvas_deployments.some((d) => d.status === "pending");
-  const syncCount    = ejercicio.canvas_deployments.filter((d) => d.status === "synced").length;
-  const totalCount   = ejercicio.canvas_deployments.length;
+  // Canvas status
+  const tieneErrores = ejercicio.canvas_deployments?.some(
+    (d) => d.status === "error" || d.status === "missing",
+  ) ?? false;
+  const tienePending = ejercicio.canvas_deployments?.some(
+    (d) => d.status === "pending",
+  ) ?? false;
+  const syncCount = ejercicio.canvas_deployments?.filter(
+    (d) => d.status === "synced",
+  ).length ?? 0;
+
+  const tipoPregunta = pregunta?.tipo ?? "";
+  const tipoColor    = TIPO_COLOR[tipoPregunta] ?? "#2563EB";
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleAbrirEdicion = () => {
-    setEnunciado(ejercicio.enunciado);
-    setPuntos(ejercicio.puntos ?? 1);
-    setOpciones(ejercicio.opciones.map((op) => ({ texto: op.texto, es_correcta: op.es_correcta })));
-    setPares((ejercicio.pares ?? []).map((p) => ({ izquierda: p.izquierda, derecha: p.derecha })));
+    setMenuAnchor(null);
+    if (!pregunta) return;
+    setEnunciado(pregunta.enunciado ?? "");
+    setPuntos(pregunta.puntos ?? 1);
+    setOpciones((pregunta.opciones ?? []).map((op) => ({ texto: op.texto, es_correcta: op.es_correcta })));
+    setPares((pregunta.pares ?? []).map((p) => ({ izquierda: p.izquierda, derecha: p.derecha })));
     setRespNum({
-      tipo:      ejercicio.respuesta_numerica?.tipo      ?? "exact",
-      exacto:    ejercicio.respuesta_numerica?.exacto    ?? 0,
-      margen:    ejercicio.respuesta_numerica?.margen    ?? 0,
-      minimo:    ejercicio.respuesta_numerica?.minimo    ?? 0,
-      maximo:    ejercicio.respuesta_numerica?.maximo    ?? 10,
-      precision: ejercicio.respuesta_numerica?.precision ?? 2,
+      tipo:      pregunta.respuesta_numerica?.tipo      ?? "exact",
+      exacto:    pregunta.respuesta_numerica?.exacto    ?? 0,
+      margen:    pregunta.respuesta_numerica?.margen    ?? 0,
+      minimo:    pregunta.respuesta_numerica?.minimo    ?? 0,
+      maximo:    pregunta.respuesta_numerica?.maximo    ?? 10,
+      precision: pregunta.respuesta_numerica?.precision ?? 2,
     });
     setEditando(true);
   };
 
   const handleGuardar = async () => {
+    if (!pregunta) return;
     setGuardando(true);
-    await dispatch(editarEjercicio({
-      ejercicio_id: ejercicio._id,
+    await dispatch(editarPregunta({
+      pregunta_id:        pregunta._id,
       enunciado,
-      published: ejercicio.published,
+      puntos,
       opciones,
-      pares:              ejercicio.tipo_pregunta === "matching"  ? pares   : [],
-      respuesta_numerica: ejercicio.tipo_pregunta === "numerical" ? respNum : undefined,
+      pares:              tipoPregunta === "matching"  ? pares   : [],
+      respuesta_numerica: tipoPregunta === "numerical" ? respNum : undefined,
     }));
     setGuardando(false);
     setEditando(false);
   };
 
-  const handleMover = async (direction: "up" | "down") => {
-    if (moviendo) return;
-    setMoviendo(true);
-    await dispatch(cambiarPositionEjercicio({ ejercicio_id: ejercicio._id, direction }));
-    setMoviendo(false);
+  const handleToggleCanvas = async () => {
+    setTogglingCanvas(true);
+    await dispatch(editarQuiz({ quiz_id: ejercicio._id, published_canvas: !ejercicio.published_canvas }));
+    setTogglingCanvas(false);
+  };
+
+  const handleToggleApi = async () => {
+    setTogglingApi(true);
+    await dispatch(editarQuiz({ quiz_id: ejercicio._id, published_api: !ejercicio.published_api }));
+    setTogglingApi(false);
   };
 
   const handleReintentar = (canvas_curso_id: number) =>
     dispatch(reintentarEjercicio({ ejercicio_id: ejercicio._id, canvas_curso_id }));
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
     <>
-      <Card elevation={0} className="animate-fadeIn"
+      <Card
+        elevation={1}
         sx={{
-          borderRadius: 3,
-          border: tieneErrores ? "1px solid #fca5a5" : tienePending ? "1px solid #fde68a" : "1px solid #d9e4ee",
-          transition: "box-shadow 0.2s",
-          "&:hover": { boxShadow: "0 4px 16px rgba(74,109,140,0.08)" },
-        }}>
+          borderRadius: "12px",
+          border: "0.5px solid #E2E8F0",
+          bgcolor: "white",
+          overflow: "hidden",
+          transition: "box-shadow 0.15s",
+          "&:hover": {
+            boxShadow: isDragging
+              ? "0 8px 24px rgba(0,0,0,0.12)"
+              : "0 4px 16px rgba(0,0,0,0.07)",
+          },
+        }}
+      >
         <CardContent sx={{ p: 0 }}>
 
-          {/* ── Header ── */}
-          <div className="flex items-center gap-3 px-5 py-3"
-            style={{ background: "linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%)" }}>
-            <div style={{ fontSize: 22, lineHeight: 1 }}>✏️</div>
+          {/* ── Header — mismo patrón que AyudantiaCard ── */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 14px" }}>
 
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Typography variant="caption" sx={{ color: "#a0a0a0", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  Ejercicio {ejercicio.position}
+            {/* Drag handle */}
+            <div
+              {...dragHandleProps}
+              style={{
+                color: "#CBD5E1", cursor: "grab", flexShrink: 0,
+                display: "flex", alignItems: "center", touchAction: "none",
+              }}
+              aria-label="Arrastrar para reordenar"
+            >
+              <DragIndicatorIcon sx={{ fontSize: 24 }} />
+            </div>
+
+            {/* Ícono circular con color semántico del tipo */}
+            <div style={{
+              width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+              background: `${tipoColor}18`,
+              border:     `0.5px solid ${tipoColor}40`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <EditNoteIcon sx={{ fontSize: 20, color: tipoColor }} />
+            </div>
+
+            {/* Info */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: "gray", fontSize: "14px", lineHeight: 1.3, mb: 0.6 }}>
+                Ejercicio
+              </Typography>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <Typography variant="body2" sx={{ fontWeight: 200, color: "#0F172A", fontSize: "13px", lineHeight: 1.3 }}>
+                  Pregunta {index + 1}
                 </Typography>
-                <Chip
-                  label={TIPO_LABEL[ejercicio.tipo_pregunta] ?? ejercicio.tipo_pregunta}
-                  size="small"
-                  sx={{
-                    fontSize: "0.62rem", height: 18,
-                    bgcolor: `${TIPO_COLOR[ejercicio.tipo_pregunta] ?? "#4A6D8C"}18`,
-                    color: TIPO_COLOR[ejercicio.tipo_pregunta] ?? "#4A6D8C", fontWeight: 600,
-                  }}
-                />
-                {totalCount > 0 && (
+                {tipoPregunta && (
                   <Chip
-                    label={tieneErrores ? "Error Canvas" : tienePending ? "Pendiente" : `${syncCount}/${totalCount} sync`}
+                    label={TIPO_LABEL[tipoPregunta] ?? tipoPregunta}
                     size="small"
-                    onClick={() => setVerDeploys((v) => !v)}
                     sx={{
-                      fontSize: "0.62rem", height: 18, cursor: "pointer", fontWeight: 600,
-                      bgcolor: tieneErrores ? "#fee2e2" : tienePending ? "#fef9c3" : "#d1fae5",
-                      color:   tieneErrores ? "#991b1b" : tienePending ? "#854d0e" : "#065f46",
+                      fontSize: "0.6rem", height: 18,
+                      bgcolor:  `${tipoColor}18`,
+                      color:    tipoColor,
+                      fontWeight: 600,
                     }}
                   />
                 )}
+                {syncCount > 0 && !tieneErrores && (
+                  <span style={{ fontSize: 10, fontWeight: 600, background: "#DCFCE7", color: "#166534", borderRadius: 4, padding: "1px 6px" }}>
+                    Canvas ✓
+                  </span>
+                )}
+                {tieneErrores && (
+                  <span style={{ fontSize: 10, fontWeight: 600, background: "#FEE2E2", color: "#991B1B", borderRadius: 4, padding: "1px 6px" }}>
+                    Error Canvas
+                  </span>
+                )}
+                {tienePending && !tieneErrores && (
+                  <span style={{ fontSize: 10, fontWeight: 600, background: "#FEF9C3", color: "#854D0E", borderRadius: 4, padding: "1px 6px" }}>
+                    Pendiente
+                  </span>
+                )}
               </div>
-              <Typography variant="body2" sx={{ color: "#3d3d3d", fontWeight: 500, mt: 0.3 }} noWrap>
-                {ejercicio.nombre}
-              </Typography>
             </div>
 
-            {/* Controles */}
-            <div className="flex items-center gap-0.5 shrink-0">
-              {editando ? (
-                <>
-                  <Tooltip title="Guardar"><span>
-                    <IconButton size="small" onClick={handleGuardar} disabled={guardando} sx={{ color: "#4A6D8C" }}>
-                      {guardando ? <CircularProgress size={14} /> : <CheckIcon fontSize="small" />}
-                    </IconButton>
-                  </span></Tooltip>
-                  <Tooltip title="Cancelar">
-                    <IconButton size="small" onClick={() => setEditando(false)} sx={{ color: "#8daecb" }}>
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              ) : (
-                <>
-                  <Tooltip title={ejercicio.published ? "Publicado" : "Oculto"}>
-                    <Switch
-                      size="small"
-                      checked={ejercicio.published}
-                      disabled={moviendo}
-                      onChange={() => dispatch(editarEjercicio({ ejercicio_id: ejercicio._id, published: !ejercicio.published }))}
-                      sx={{ "& .MuiSwitch-thumb": { bgcolor: ejercicio.published ? "#4A6D8C" : "#ccc" }, "& .MuiSwitch-track": { bgcolor: ejercicio.published ? "#6793ba !important" : "#d9e4ee !important" } }}
-                    />
-                  </Tooltip>
-                  <Tooltip title="Mover arriba"><span>
-                    <IconButton size="small" disabled={esPrimero || moviendo} onClick={() => handleMover("up")}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" }, "&:disabled": { color: "#d9e4ee" } }}>
-                      {moviendo ? <CircularProgress size={14} sx={{ color: "#8daecb" }} /> : <KeyboardArrowUpIcon fontSize="small" />}
-                    </IconButton>
-                  </span></Tooltip>
-                  <Tooltip title="Mover abajo"><span>
-                    <IconButton size="small" disabled={esUltimo || moviendo} onClick={() => handleMover("down")}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" }, "&:disabled": { color: "#d9e4ee" } }}>
-                      <KeyboardArrowDownIcon fontSize="small" />
-                    </IconButton>
-                  </span></Tooltip>
-                  <Tooltip title="Editar">
-                    <IconButton size="small" onClick={handleAbrirEdicion} disabled={moviendo}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#4A6D8C" } }}>
-                      <EditOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Eliminar">
-                    <IconButton size="small" onClick={() => setModalEliminar(true)} disabled={moviendo}
-                      sx={{ color: "#8daecb", "&:hover": { color: "#ef4444" } }}>
-                      <DeleteOutlineIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </>
-              )}
-            </div>
-          </div>
+            {/* Acciones — mismo patrón que AyudantiaCard */}
+            {!editando && (
+              <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
+                <Tooltip title={`Canvas: ${ejercicio.published_canvas ? "publicado" : "oculto"}`}>
+                  <span>
+                    {togglingCanvas
+                      ? <CircularProgress size={14} sx={{ color: "#2563EB", mx: 0.5 }} />
+                      : <IconButton size="small" onClick={handleToggleCanvas}
+                          sx={ejercicio.published_canvas ? iconBtnActiveSx : iconBtnSx}>
+                          <SchoolIcon sx={{ fontSize: 14 }} />
+                        </IconButton>}
+                  </span>
+                </Tooltip>
+                <Tooltip title={`Plataforma: ${ejercicio.published_api ? "publicado" : "oculto"}`}>
+                  <span>
+                    {togglingApi
+                      ? <CircularProgress size={14} sx={{ color: "#2563EB", mx: 0.5 }} />
+                      : <IconButton size="small" onClick={handleToggleApi}
+                          sx={ejercicio.published_api ? iconBtnActiveSx : iconBtnSx}>
+                          {ejercicio.published_api
+                            ? <PublicIcon    sx={{ fontSize: 14 }} />
+                            : <PublicOffIcon sx={{ fontSize: 14 }} />}
+                        </IconButton>}
+                  </span>
+                </Tooltip>
+                <IconButton size="small" onClick={(e) => setMenuAnchor(e.currentTarget)} sx={iconBtnSx}>
+                  <MoreHorizIcon sx={{ fontSize: 15 }} />
+                </IconButton>
+                <Menu
+                  anchorEl={menuAnchor}
+                  open={Boolean(menuAnchor)}
+                  onClose={() => setMenuAnchor(null)}
+                  transformOrigin={{ horizontal: "right", vertical: "top" }}
+                  anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+                  slotProps={{ paper: { sx: { mt: 0.5, minWidth: 150, borderRadius: "8px", border: "0.5px solid #E2E8F0", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" } } }}
+                >
+                  <MenuItem onClick={handleAbrirEdicion} sx={{ gap: 1.5, py: 1, "&:hover": { bgcolor: "#F8FAFC" } }}>
+                    <ListItemIcon><EditOutlinedIcon sx={{ fontSize: 15, color: "#2563EB" }} /></ListItemIcon>
+                    <Typography variant="body2" sx={{ color: "#334155" }}>Editar</Typography>
+                  </MenuItem>
+                  <Divider sx={{ borderColor: "#F1F5F9", my: 0.5 }} />
+                  <MenuItem onClick={() => { setMenuAnchor(null); setModalEliminar(true); }} sx={{ gap: 1.5, py: 1, "&:hover": { bgcolor: "#FFF5F5" } }}>
+                    <ListItemIcon><DeleteOutlineIcon sx={{ fontSize: 15, color: "#EF4444" }} /></ListItemIcon>
+                    <Typography variant="body2" sx={{ color: "#EF4444" }}>Eliminar</Typography>
+                  </MenuItem>
+                </Menu>
+              </div>
+            )}
 
-          {/* ── Contenido ── */}
-          <div className="px-5 py-4">
-            {editando ? (
-              <PreguntaEditor
-                tipo={ejercicio.tipo_pregunta as TipoPreguntaEditor}
-                enunciado={enunciado}
-                onEnunciadoChange={setEnunciado}
-                puntos={puntos}
-                onPuntosChange={setPuntos}
-                opciones={opciones}
-                onOpcionesChange={setOpciones}
-                pares={pares}
-                onParesChange={setPares}
-                respNum={respNum}
-                onRespNumChange={setRespNum}
-              />
-            ) : (
-              <PreguntaViewer
-                tipo={ejercicio.tipo_pregunta as TipoPreguntaEditor}
-                enunciado={ejercicio.enunciado}
-                opciones={ejercicio.opciones}
-                pares={ejercicio.pares}
-                respuesta_numerica={ejercicio.respuesta_numerica}
-              />
+            {/* Botones Guardar/Cancelar al editar */}
+            {editando && (
+              <div style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
+                <Tooltip title="Guardar">
+                  <span>
+                    <IconButton size="small" onClick={handleGuardar} disabled={guardando} sx={{ color: "#2563EB" }}>
+                      {guardando
+                        ? <CircularProgress size={14} sx={{ color: "#2563EB" }} />
+                        : <CheckIcon sx={{ fontSize: 16 }} />}
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Cancelar">
+                  <IconButton size="small" onClick={() => setEditando(false)} sx={{ color: "#94A3B8" }}>
+                    <CloseIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Tooltip>
+              </div>
             )}
           </div>
 
-          {/* ── Canvas deployments ── */}
-          {verDeploys && totalCount > 0 && (
-            <div className="animate-slideDown px-5 py-3" style={{ borderTop: "0.5px solid #d9e4ee" }}>
-              <div className="flex items-center gap-1.5 mb-2">
-                <QuizIcon sx={{ fontSize: 13, color: "#8daecb" }} />
-                <Typography variant="caption" sx={{ color: "#6793ba", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
-                  Estado en Canvas
-                </Typography>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                {ejercicio.canvas_deployments.map((d) => (
-                  <div key={d.canvas_curso_id} className="flex items-center gap-2">
-                    <Chip
-                      label={`${d.canvas_curso_id} · ${d.status}`}
-                      size="small"
-                      sx={{
-                        fontSize: "0.65rem", height: 22,
-                        bgcolor: d.status === "synced" ? "#d1fae5" : d.status === "error" ? "#fee2e2" : "#fef9c3",
-                        color:   d.status === "synced" ? "#065f46" : d.status === "error" ? "#991b1b" : "#854d0e",
-                      }}
-                    />
-                    {(d.status === "error" || d.status === "missing") && (
-                      <Tooltip title="Reintentar">
-                        <IconButton size="small" onClick={() => handleReintentar(d.canvas_curso_id)} sx={{ color: "#8daecb" }}>
-                          <RefreshIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
+          {/* ── Contenido: viewer o editor — mismo fondo que AyudantiaCard ── */}
+          {pregunta ? (
+            <div style={{ borderTop: "0.5px solid #F1F5F9", padding: "14px 16px", background: "#FAFAFA" }}>
+              {editando ? (
+                <PreguntaEditor
+                  tipo={pregunta.tipo as TipoPreguntaEditor}
+                  enunciado={enunciado}
+                  onEnunciadoChange={setEnunciado}
+                  puntos={puntos}
+                  onPuntosChange={setPuntos}
+                  opciones={opciones}
+                  onOpcionesChange={setOpciones}
+                  pares={pares}
+                  onParesChange={setPares}
+                  respNum={respNum}
+                  onRespNumChange={setRespNum}
+                />
+              ) : (
+                <PreguntaViewer
+                  tipo={pregunta.tipo as TipoPreguntaEditor}
+                  enunciado={pregunta.enunciado}
+                  opciones={pregunta.opciones}
+                  pares={pregunta.pares}
+                  respuesta_numerica={pregunta.respuesta_numerica}
+                />
+              )}
+            </div>
+          ) : (
+            <div style={{ borderTop: "0.5px solid #F1F5F9", padding: "14px 16px", background: "#FAFAFA" }}>
+              <Typography variant="body2" sx={{ color: "#CBD5E1", fontStyle: "italic" }}>
+                Cargando pregunta...
+              </Typography>
+            </div>
+          )}
+
+          {/* ── Footer de errores Canvas ── */}
+          {tieneErrores && !editando && (
+            <div style={{ borderTop: "1px solid #E2E8F0", padding: "8px 14px", display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {ejercicio.canvas_deployments
+                ?.filter((d) => d.status === "error" || d.status === "missing")
+                .map((d) => (
+                  <div key={d.canvas_curso_id} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ fontSize: 10, fontWeight: 600, background: "#FEE2E2", color: "#991B1B", borderRadius: 4, padding: "1px 6px" }}>
+                      Canvas {d.canvas_curso_id}
+                    </span>
+                    <Tooltip title="Reintentar">
+                      <IconButton size="small" onClick={() => handleReintentar(d.canvas_curso_id)}
+                        sx={{ color: "#94A3B8", "&:hover": { color: "#2563EB" } }}>
+                        <RefreshIcon sx={{ fontSize: 14 }} />
+                      </IconButton>
+                    </Tooltip>
                   </div>
                 ))}
-              </div>
             </div>
           )}
 
@@ -348,7 +394,10 @@ const EjercicioCard = ({ ejercicio, esPrimero, esUltimo }: Props) => {
       </Card>
 
       {modalEliminar && (
-        <ModalEliminar ejercicio={ejercicio} onClose={() => setModalEliminar(false)} />
+        <ModalEliminar
+          ejercicio={ejercicio}
+          onClose={() => setModalEliminar(false)}
+        />
       )}
     </>
   );
