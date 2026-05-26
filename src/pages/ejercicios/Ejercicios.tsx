@@ -68,9 +68,11 @@ const Ejercicios = () => {
     });
   }, [ejIds, dispatch]);
 
-  const handleCreado = () => {
+  const handleCreado = (quiz: IQuiz) => {
     setModalQuiz(false);
     setQuizEditar(undefined);
+    // Cargar preguntas del nuevo ejercicio inmediatamente
+    dispatch(obtenerPreguntas({ quiz_id: quiz._id }));
   };
 
   const preguntasEjercicio = (quiz_id: string) =>

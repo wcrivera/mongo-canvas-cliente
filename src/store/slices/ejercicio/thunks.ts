@@ -75,7 +75,9 @@ export const crearEjercicio = ({
   pares,
   respuesta_numerica,
   puntos,
-  published,
+  published_canvas,
+  published_api,
+
 }: {
   capitulo_id:         string;
   nombre:              string;
@@ -85,7 +87,8 @@ export const crearEjercicio = ({
   pares?:              IParEjercicio[];
   respuesta_numerica?: IRespuestaNumericaEjercicio;
   puntos:              number;
-  published:           boolean;
+  published_canvas:    boolean;
+  published_api:       boolean;
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingEjercicio());
@@ -98,7 +101,8 @@ export const crearEjercicio = ({
           pares:              pares ?? [],
           respuesta_numerica: respuesta_numerica ?? null,
           puntos,
-          published,
+          published_canvas,
+          published_api,
         },
         "POST",
       );
@@ -125,7 +129,8 @@ export const editarEjercicio = ({
   ejercicio_id,
   nombre,
   enunciado,
-  published,
+  published_canvas,
+  published_api,
   opciones,
   pares,
   respuesta_numerica,
@@ -133,7 +138,8 @@ export const editarEjercicio = ({
   ejercicio_id:        string;
   nombre?:             string;
   enunciado?:          string;
-  published?:          boolean;
+  published_canvas?:    boolean;
+  published_api?:       boolean;
   opciones?:           IOpcionEjercicio[];
   pares?:              IParEjercicio[];
   respuesta_numerica?: IRespuestaNumericaEjercicio;
@@ -143,7 +149,7 @@ export const editarEjercicio = ({
     try {
       const resp = await fetchConToken(
         `api/ejercicios/${ejercicio_id}`,
-        { nombre, enunciado, published, opciones, pares, respuesta_numerica },
+        { nombre, enunciado, published_canvas, published_api, opciones, pares, respuesta_numerica },
         "PUT",
       );
       const body = await resp.json();

@@ -177,7 +177,7 @@ export const crearPregunta = ({
 
 export const editarPregunta = ({
   pregunta_id, enunciado, enunciado_contexto, columnas, puntos, tipo_pimu, respuesta_lti,
-  opciones, pares, respuesta_numerica,
+  opciones, pares, respuesta_numerica, items,
 }: {
   pregunta_id:          string;
   enunciado?:           string;
@@ -186,16 +186,17 @@ export const editarPregunta = ({
   puntos?:              number;
   tipo_pimu?:           string | null;
   respuesta_lti?:       string | null;
-  opciones?:            { texto: string; es_correcta: boolean; blank_id?: string | null }[];
+  opciones?:            { texto: string; es_correcta: boolean; blank_id?: string | null; tipo_pimu?: string | null }[];
   pares?:               { izquierda: string; derecha: string }[];
   respuesta_numerica?:  { tipo: "exact" | "range" | "precision"; exacto?: number; margen?: number; minimo?: number; maximo?: number; precision?: number };
+  items?:               { id: string; enunciado: string; respuesta: string; tipo_pimu: string }[];
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
       const resp = await fetchConToken(
         `api/admin/quizzes/preguntas/${pregunta_id}`,
-        { enunciado, enunciado_contexto, columnas, puntos, tipo_pimu, respuesta_lti, opciones, pares, respuesta_numerica },
+        { enunciado, enunciado_contexto, columnas, puntos, tipo_pimu, respuesta_lti, opciones, pares, respuesta_numerica, items },
         "PUT",
       );
       const body = await resp.json();
@@ -204,6 +205,7 @@ export const editarPregunta = ({
     } catch (error) { console.log(error); dispatch(setErrorQuiz(MSG_ERROR)); return { ok: false, msg: MSG_ERROR }; }
   };
 };
+ 
 
 export const eliminarPregunta = ({ pregunta_id }: { pregunta_id: string }) => {
   return async (dispatch: AppDispatch) => {

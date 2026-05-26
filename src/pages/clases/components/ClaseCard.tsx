@@ -217,8 +217,20 @@ const ClaseCard = ({
             >
               {clase.position}
             </div> */}
-            <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center">
-              <ClassIcon sx={{ fontSize: 20, color: "white" }} />
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                flexShrink: 0,
+                background: "#2563EB18",
+                border: "0.5px solid #2563EB40",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ClassIcon sx={{ fontSize: 20, color: "#2563EB" }} />
             </div>
 
             {/* Nombre / editor */}

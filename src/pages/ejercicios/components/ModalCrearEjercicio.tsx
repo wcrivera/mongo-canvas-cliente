@@ -50,7 +50,8 @@ const ModalCrearEjercicio = ({ capitulo_id, onClose, onCreado }: Props) => {
             : [],
         pares:    tipo === "matching" ? [{ izquierda: "", derecha: "" }] : [],
         puntos:   1,
-        published: false,
+        published_canvas: false,
+        published_api:    false,
       })
     ) as unknown as { ok: boolean };
     setCreando(false);

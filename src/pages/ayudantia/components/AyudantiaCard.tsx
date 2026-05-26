@@ -198,8 +198,20 @@ const AyudantiaCard = ({
               <DragIndicatorIcon sx={{ fontSize: 24 }} />
             </div>
 
-            <div className="w-10 h-10 bg-gray-400 rounded-full flex items-center justify-center">
-              <GroupsIcon sx={{ fontSize: 20, color: "white" }} />
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                flexShrink: 0,
+                background: "#0D948818",
+                border: "0.5px solid #0D948840",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <GroupsIcon sx={{ fontSize: 20, color: "#0D9488" }} />
             </div>
 
             {/* Nombre / editor */}

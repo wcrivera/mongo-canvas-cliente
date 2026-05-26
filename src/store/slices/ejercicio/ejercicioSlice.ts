@@ -53,7 +53,8 @@ export interface IEjercicio {
   respuesta_numerica?: IRespuestaNumericaEjercicio;
   puntos:              number;
   position:            number;
-  published:           boolean;
+  published_canvas:           boolean;
+  published_api:              boolean;
   canvas_deployments:  ICanvasDeploymentEjercicio[];
   createdAt:           string;
   updatedAt:           string;
