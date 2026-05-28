@@ -456,7 +456,7 @@ const AyudantiaCard = ({
                   color: "#475569",
                   lineHeight: 1.6,
                   marginBottom: 6,
-                  maxHeight: 60,
+                  minHeight: 60,
                   overflow: "hidden",
                 }}
               >

@@ -34,7 +34,7 @@ class ManthanoUploadAdapter {
     formData.append("sigla_curso", this.config.siglaCurso);
 
     const response = await fetch(
-      `${this.config.backendUrl}/api/upload/imagen`,
+      `${this.config.backendUrl}/api/admin/upload/imagen`,
       {
         method: "POST",
         headers: {

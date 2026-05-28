@@ -33,6 +33,7 @@ import { actualizarDiapositiva, eliminarDiapositiva } from "../../store/slices/d
 import { fetchConToken } from "../../helpers/fetch";
 import MathTextEditor from "../../components/CKEditor/MathTextEditorDiapositiva";
 import SlidePreview from "./SlidePreview"; // mismo directorio: src/pages/diapositiva/
+import { normalizeForEditor } from "../../components/CKEditor/mathUtils";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -552,7 +553,7 @@ const EditorDiapositiva = () => {
               <div style={{ marginTop: 4 }}>
                 <MathTextEditor
                   key={`contenido-${slide.id}`}
-                  initialData={slide.contenido}
+                  initialData={normalizeForEditor(slide.contenido ?? "")}
                   onChange={(html) => actualizarSlide("contenido", html)}
                   siglaCurso={siglaCurso}
                   tema={config.tema}

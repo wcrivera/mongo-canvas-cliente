@@ -50,6 +50,7 @@ import type { IItemFIBViewer } from "../../../components/quiz/PreguntaViewer";
 import ModalEliminar from "./ModalEliminar";
 import FormPregunta from "../../quiz/components/FormPregunta";
 import { obtenerPreguntas } from "../../../store/slices/quiz";
+import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
 
 // ── Colores por tipo ──────────────────────────────────────────────────────────
 
@@ -174,6 +175,11 @@ const EjercicioCard = ({
       ? pregunta?.enunciado_contexto || pregunta?.enunciado || ""
       : (pregunta?.enunciado ?? ""),
   );
+
+  const enunciadoPregunta = esFIB
+    ? pregunta?.enunciado_contexto || pregunta?.enunciado || ""
+    : (pregunta?.enunciado ?? "");
+
   const [puntos, setPuntos] = useState(pregunta?.puntos ?? 1);
   const [opciones, setOpciones] = useState<IOpcionEditor[]>(
     (pregunta?.opciones ?? []).map((op) => ({
@@ -182,6 +188,13 @@ const EjercicioCard = ({
       blank_id: op.blank_id ?? null,
     })),
   );
+
+  const opcionesPregunta = (pregunta?.opciones ?? []).map((op) => ({
+    texto: op.texto,
+    es_correcta: op.es_correcta,
+    blank_id: op.blank_id ?? null,
+  }));
+  
   const [pares, setPares] = useState<IParEditor[]>(
     (pregunta?.pares ?? []).map((p) => ({
       izquierda: p.izquierda,
@@ -408,7 +421,7 @@ const EjercicioCard = ({
           },
         }}
       >
-        <CardContent sx={{ p: 0,"&:last-child": { pb: 0 } }}>
+        <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
           {/* ── Header ── */}
           <div
             style={{
@@ -712,11 +725,11 @@ const EjercicioCard = ({
               {editando ? (
                 <PreguntaEditor
                   tipo={pregunta.tipo as TipoPreguntaEditor}
-                  enunciado={enunciado}
+                  enunciado={normalizeForEditor(enunciadoPregunta)}
                   onEnunciadoChange={setEnunciado}
                   puntos={puntos}
                   onPuntosChange={setPuntos}
-                  opciones={opciones}
+                  opciones={opcionesPregunta}
                   onOpcionesChange={setOpciones}
                   pares={pares}
                   onParesChange={setPares}

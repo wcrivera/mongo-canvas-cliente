@@ -1,28 +1,33 @@
 // src/pages/quiz/components/tipos/FormOpciones.tsx
-import { Button, Checkbox, IconButton, TextField, Typography } from "@mui/material";
-import AddIcon                  from "@mui/icons-material/Add";
-import DeleteIcon               from "@mui/icons-material/Delete";
+import { Button, Checkbox, IconButton, Typography } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
-import RadioButtonCheckedIcon   from "@mui/icons-material/RadioButtonChecked";
+import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
+import MathTextEditorInline from "../../../../components/CKEditor/MathTextEditorInline";
 
 export interface IOpcionForm {
-  texto:       string;
+  texto: string;
   es_correcta: boolean;
 }
 
 interface Props {
-  tipo:     "multiple_choice" | "multiple_answers" | "true_false";
+  tipo: "multiple_choice" | "multiple_answers" | "true_false";
   opciones: IOpcionForm[];
   onChange: (opciones: IOpcionForm[]) => void;
 }
 
 const FormOpciones = ({ tipo, opciones, onChange }: Props) => {
-  const esMultiple  = tipo === "multiple_answers";
+  const esMultiple = tipo === "multiple_answers";
   const esTrueFalse = tipo === "true_false";
 
   const handleCorrecta = (idx: number) => {
     if (esMultiple) {
-      onChange(opciones.map((op, i) => i === idx ? { ...op, es_correcta: !op.es_correcta } : op));
+      onChange(
+        opciones.map((op, i) =>
+          i === idx ? { ...op, es_correcta: !op.es_correcta } : op,
+        ),
+      );
     } else {
       onChange(opciones.map((op, i) => ({ ...op, es_correcta: i === idx })));
     }
@@ -40,11 +45,14 @@ const FormOpciones = ({ tipo, opciones, onChange }: Props) => {
   return (
     <div className="flex flex-col gap-2">
       <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
-        {esMultiple ? "Opciones — marca todas las correctas" : "Opciones — marca la correcta"}
+        {esMultiple
+          ? "Opciones — marca todas las correctas"
+          : "Opciones — marca la correcta"}
       </Typography>
 
       {opciones.map((op, idx) => (
         <div key={idx} className="flex items-center gap-2">
+          {/* ── Selector correcto/incorrecto ── */}
           {esMultiple ? (
             <Checkbox
               checked={op.es_correcta}
@@ -63,26 +71,32 @@ const FormOpciones = ({ tipo, opciones, onChange }: Props) => {
             />
           )}
 
+          {/* ── Texto de la opción ── */}
           {esTrueFalse ? (
-            <Typography variant="body2" sx={{ color: "#374151" }}>
+            // true_false: etiquetas fijas, sin editor
+            <Typography variant="body2" sx={{ color: "#3c5770", flex: 1 }}>
               {op.texto}
             </Typography>
           ) : (
-            <TextField
-              value={op.texto}
-              onChange={(e) => handleTexto(idx, e.target.value)}
+            // multiple_choice / multiple_answers: editor con soporte LaTeX
+            <MathTextEditorInline
+              initialData={op.texto}
+              onChange={(html) => handleTexto(idx, html)}
               placeholder={`Opción ${idx + 1}`}
-              size="small"
-              fullWidth
-              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 2 } }}
             />
           )}
 
-          {!esTrueFalse && opciones.length > 2 && (
+          {/* ── Botón eliminar (solo en opciones variables) ── */}
+          {!esTrueFalse && (
             <IconButton
               size="small"
               onClick={() => eliminar(idx)}
-              sx={{ color: "#ef4444" }}
+              disabled={opciones.length <= 2}
+              sx={{
+                color: "#c9dae8",
+                "&:hover": { color: "#ef4444" },
+                flexShrink: 0,
+              }}
             >
               <DeleteIcon fontSize="small" />
             </IconButton>
@@ -95,7 +109,7 @@ const FormOpciones = ({ tipo, opciones, onChange }: Props) => {
           size="small"
           startIcon={<AddIcon />}
           onClick={agregar}
-          sx={{ color: "#4A6D8C", alignSelf: "flex-start", textTransform: "none" }}
+          sx={{ color: "#4A6D8C", alignSelf: "flex-start", mt: 1 }}
         >
           Agregar opción
         </Button>

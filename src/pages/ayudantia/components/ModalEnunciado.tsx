@@ -15,6 +15,7 @@ import {
 import MathTextEditor from "../../../components/CKEditor/MathTextEditor";
 
 import EditNoteIcon from "@mui/icons-material/EditNote";
+import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
 
 export const ModalEnunciado = ({
   ayudantia,
@@ -27,7 +28,7 @@ export const ModalEnunciado = ({
   const siglaCurso = useAppSelector(
     (s) => s.mongoCurso.cursoActivo?.codigo ?? "",
   );
-  const [contenido, setContenido] = useState(ayudantia.enunciado ?? "");
+  const [contenido, setContenido] = useState("");
   const [guardando, setGuardando] = useState(false);
 
   const handleGuardar = async () => {
@@ -80,7 +81,7 @@ export const ModalEnunciado = ({
       </DialogTitle>
       <DialogContent sx={{ pt: 3, pb: 1 }}>
         <MathTextEditor
-          initialData={contenido}
+          initialData={normalizeForEditor(ayudantia.enunciado ?? "")}
           onChange={setContenido}
           siglaCurso={siglaCurso}
           // placeholder="Escribe el enunciado de la ayudantía..."

@@ -219,7 +219,7 @@ const HTML_SUPPORT_CONFIG = {
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
-const MathTextEditor: React.FC<EditorProps> = ({
+const MathTextEditorInline: React.FC<EditorProps> = ({
   initialData = "",
   onChange,
   siglaCurso = "",
@@ -420,7 +420,7 @@ const MathTextEditor: React.FC<EditorProps> = ({
             const root = editor.editing.view.document.getRoot();
             if (root) {
               editor.editing.view.change((writer: ViewDowncastWriter) => {
-                writer.setStyle("min-height", "150px", root);
+                writer.setStyle("min-height", "50px", root);
                 writer.setStyle("font-size", "16px", root);
               });
             }
@@ -467,4 +467,4 @@ const MathTextEditor: React.FC<EditorProps> = ({
   );
 };
 
-export default MathTextEditor;
+export default MathTextEditorInline;

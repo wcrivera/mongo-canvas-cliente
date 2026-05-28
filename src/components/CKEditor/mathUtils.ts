@@ -6,11 +6,21 @@
  * FLUJO COMPLETO:
  *
  *   DB (guardado limpio)          Editor CKEditor           DB (guardar)
- *   \(...\)  o  \[...\]    →   prepareForEditor()   →   CKEditor.getData()
+ *   \(...\)  o  \[...\]    →   normalizeForEditor()  →   CKEditor.getData()
  *   <span data-type="inline-math">  (Tiptap legado)         → \(...\) limpio automático
+ *   <table> sin wrapper            (carga directa DB)        → sanitizado automático
  *
  *   DB  →  TiptapRenderer / Preview
  *   Cualquier formato  →  renderLatexInHtml()  →  KaTeX HTML
+ *
+ * PIPELINE DE ENTRADA AL EDITOR (normalizeForEditor):
+ *   paso A → sanitizeHtml          (limpia HTML malformado: <div >, <h4>, etc.)
+ *   paso 0 → sanitizeTables        (envuelve <table> desnudos en <figure class="table">)
+ *   paso 1 → prepareForEditor      (convierte \(...\) y \[...\] a spans intermedios)
+ *   paso 2 → prepareBlocksForEditor (convierte spans intermedios a divs para mathBlock)
+ *
+ * Para agregar soporte de un nuevo formato externo, añadir un paso más aquí.
+ * Todos los editores heredan el cambio automáticamente.
  */
 
 import katex from "katex";
@@ -19,6 +29,91 @@ import katex from "katex";
 
 function escapeAttr(s: string): string {
   return s.replace(/"/g, "&quot;");
+}
+
+// ── -1. Limpiar HTML malformado antes de cualquier otra transformación ────────
+//
+// Corrige problemas de HTML legacy que confunden el parser de CKEditor:
+//   - <div > con espacio vacío → <div>
+//   - <h4>, <h5>, <h6> → convertidos a <h3> porque CKEditor solo registra h1-h3
+//     (a menos que heading4 esté en las opciones del editor)
+//   - Atributos vacíos sobrantes de la migración
+
+function sanitizeHtml(html: string): string {
+  if (!html) return "";
+
+  return html
+    // <div > con espacio pero sin atributos → <div>
+    .replace(/<div\s+>/g, "<div>")
+    // <span > → <span>
+    .replace(/<span\s+>/g, "<span>")
+    // <h4> → <h3> (CKEditor solo registra h1-h3 por defecto)
+    // Si heading4 está habilitado en editorConfig, eliminar esta línea
+    .replace(/<h4([^>]*)>/gi, "<h3$1>")
+    .replace(/<\/h4>/gi, "</h3>")
+    // <h5>, <h6> → <h3>
+    .replace(/<h[56]([^>]*)>/gi, "<h3$1>")
+    .replace(/<\/h[56]>/gi, "</h3>");
+}
+
+// ── 0. Sanitizar tablas para el upcast de CKEditor ───────────────────────────
+//
+// Problema: HTML cargado directamente en MongoDB puede contener <table> sin el
+// wrapper <figure class="table"> que el upcast nativo de CKEditor espera.
+// Cuando CKEditor recibe un <table> desnudo, su modelo interno queda
+// inconsistente y el editor se duplica o no permite edición.
+//
+// Solución: envolver cada <table> que NO esté ya dentro de un <figure class="table">
+// en ese wrapper antes de pasarlo como initialData.
+//
+// También limpia atributos style/class/width/border del propio <table> porque
+// CKEditor los ignora en el modelo y generan ruido en el upcast.
+
+function sanitizeTables(html: string): string {
+  if (!html || !html.includes("<table")) return html;
+
+  // Marcador temporal para proteger tablas ya envueltas
+  const MARKER = "\x00CK_WRAPPED\x00";
+
+  // Paso 1: marcar los <figure class="table">...</figure> ya existentes
+  let result = html.replace(
+    /(<figure[^>]*class="[^"]*\btable\b[^"]*"[^>]*>)([\s\S]*?)(<\/figure>)/gi,
+    (_match, open, inner, close) => `${MARKER}${open}${inner}${close}${MARKER}`,
+  );
+
+  // Paso 2: envolver <table> que quedaron sin wrapper
+  // Capturamos <table ... > ... </table> completo con un regex no-greedy
+  result = result.replace(
+    /<table([\s\S]*?)<\/table>/gi,
+    (match) => {
+      // Si está dentro de un bloque marcado, no tocar
+      if (match.startsWith(MARKER) || match.includes(MARKER)) return match;
+
+      // Limpiar atributos de presentación del tag <table> de apertura
+      const cleaned = match.replace(
+        /^<table([^>]*)>/i,
+        (_full, attrs: string) => {
+          const cleanAttrs = attrs
+            .replace(/\s*style="[^"]*"/gi, "")
+            .replace(/\s*class="[^"]*"/gi, "")
+            .replace(/\s*width="[^"]*"/gi, "")
+            .replace(/\s*height="[^"]*"/gi, "")
+            .replace(/\s*border="[^"]*"/gi, "")
+            .replace(/\s*cellspacing="[^"]*"/gi, "")
+            .replace(/\s*cellpadding="[^"]*"/gi, "")
+            .replace(/\s*align="[^"]*"/gi, "");
+          return `<table${cleanAttrs}>`;
+        },
+      );
+
+      return `<figure class="table">${cleaned}</figure>`;
+    },
+  );
+
+  // Paso 3: quitar marcadores temporales
+  result = result.replace(new RegExp(MARKER, "g"), "");
+
+  return result;
 }
 
 // ── 1. Preparar contenido para CKEditor ──────────────────────────────────────
@@ -31,10 +126,6 @@ function escapeAttr(s: string): string {
 
 export function prepareForEditor(html: string): string {
   if (!html) return "";
-
-  // Si ya tiene tags data-type (Tiptap legado), el upcast de MathPlugin
-  // los maneja directamente — no necesita transformación.
-  // Solo convertimos \(...\) y \[...\] a spans para que el upcast los lea.
 
   return html
     // \[...\] → span para mathBlock upcast
@@ -51,10 +142,10 @@ export function prepareForEditor(html: string): string {
     );
 }
 
-// ── 2. Preparar contenido guardado en \(...\) para el upcast de mathBlock ────
+// ── 2. Preparar contenido guardado en \[...\] para el upcast de mathBlock ────
 //
-// El problema: \[...\] necesita su propio upcast. Agregamos un segundo
-// paso que convierte el span temporal de mathInline-block al div correcto.
+// Convierte el span temporal generado por prepareForEditor al div que
+// el upcast de MathPlugin espera para bloques.
 
 export function prepareBlocksForEditor(html: string): string {
   return html.replace(
@@ -64,16 +155,21 @@ export function prepareBlocksForEditor(html: string): string {
 }
 
 /**
- * Función principal — combina ambos pasos.
- * Usar esta en lugar de prepareForEditor directamente.
+ * normalizeForEditor — pipeline de entrada unificado para CKEditor.
+ *
+ * Aplica TODAS las transformaciones necesarias antes de pasar HTML como
+ * initialData a cualquier instancia del editor. Agregar pasos aquí cuando
+ * aparezcan nuevos formatos externos que rompan el upcast.
  *
  * @example
- *   <CKEditor data={normalizeForEditor(pregunta.enunciado)} ... />
+ *   <CKEditor data={normalizeForEditor(slide.contenido)} ... />
  */
 export function normalizeForEditor(html: string): string {
   if (!html) return "";
-  const step1 = prepareForEditor(html);
-  const step2 = prepareBlocksForEditor(step1);
+  const stepA = sanitizeHtml(html);            // HTML malformado → limpio
+  const step0 = sanitizeTables(stepA);         // tablas desnudas → <figure class="table">
+  const step1 = prepareForEditor(step0);       // \(...\) → spans intermedios
+  const step2 = prepareBlocksForEditor(step1); // spans → divs para mathBlock
   return step2;
 }
 
@@ -197,7 +293,13 @@ export function renderLatexInHtml(html: string): string {
     // Nuevo formato CKEditor: <span data-math="block">\[...\]</span>
     .replace(/<span[^>]*data-math="block"[^>]*>([\s\S]*?)<\/span>/g, (_, inner) => inner)
     // Wrapper math-tex (formato anterior del MathPlugin)
-    .replace(/<span class="math-tex">([\s\S]*?)<\/span>/g, (_, inner) => inner);
+    .replace(/<span class="math-tex">([\s\S]*?)<\/span>/g, (_, inner) => inner)
+
+    .replace(/&amp;/g, "&")
+     .replace(/&lt;/g, "<")
+     .replace(/&gt;/g, ">")
+     .replace(/&quot;/g, '"')
+     .replace(/&#39;/g, "'");
 
   // Paso 2: renderizar \[...\] con KaTeX en display mode
   result = result.replace(/\\\[([\s\S]*?)\\\]/g, (_, latex) => {

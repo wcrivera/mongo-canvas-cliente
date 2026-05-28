@@ -12,6 +12,7 @@ import {
 } from "../../../store/slices/solucionTexto";
 import type { ISolucionTexto } from "../../../store/slices/solucionTexto";
 import MathTextEditor from "../../../components/CKEditor/MathTextEditor";
+import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
 
 interface Props {
   ayudantia_id: string;
@@ -26,7 +27,7 @@ const ModalSolucionTexto = ({ ayudantia_id, solucion, onClose }: Props) => {
   const dispatch   = useAppDispatch();
   const siglaCurso = useAppSelector((s) => s.mongoCurso.cursoActivo?.codigo ?? "");
 
-  const [texto,     setTexto]     = useState(solucion?.texto ?? "");
+  const [texto,     setTexto]     = useState("");
   const [guardando,  setGuardando]  = useState(false);
   const [eliminando, setEliminando] = useState(false);
   const [error,     setError]     = useState<string | null>(null);
@@ -67,7 +68,7 @@ const ModalSolucionTexto = ({ ayudantia_id, solucion, onClose }: Props) => {
       </DialogTitle>
 
       <DialogContent sx={{ pt: 3, pb: 1 }}>
-        <MathTextEditor initialData={texto} onChange={setTexto} siglaCurso={siglaCurso} />
+        <MathTextEditor initialData={normalizeForEditor(solucion?.texto ?? "")} onChange={setTexto} siglaCurso={siglaCurso} />
         {error && (
           <Typography variant="caption" sx={{ color: "#ef4444", mt: 1, display: "block" }}>
             {error}

@@ -209,7 +209,9 @@ const PreguntaViewer = ({
                   variant="body2"
                   sx={{ color: op.es_correcta ? "#065f46" : "#3d3d3d", fontWeight: op.es_correcta ? 600 : 400, fontSize: 13 }}
                 >
-                  {op.texto || <em style={{ color: "#8daecb" }}>vacío</em>}
+                  {op.texto ? <Latex>{op.texto}</Latex> : <em style={{ color: "#8daecb" }}>vacío</em>}
+
+                  
                 </Typography>
               </div>
             ))}
