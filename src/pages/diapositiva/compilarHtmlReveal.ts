@@ -163,7 +163,11 @@ const compilarSeccion = (slide: ISlide): string => {
     </section>`;
 };
 
-// ── Función principal ─────────────────────────────────────────────────────────
+// ── Función principal (exportación a Canvas) ──────────────────────────────────
+//
+// CAMBIO: se agrega Tailwind CDN (con preflight desactivado para no romper
+// los estilos base de Reveal.js). Es necesario porque TwoColumnsPlugin y
+// MultiColumnListPlugin generan clases grid/col-span-* de Tailwind.
 
 export const compilarHtmlReveal = (
   slides: ISlide[],
@@ -190,6 +194,8 @@ export const compilarHtmlReveal = (
   <link rel="stylesheet" href="https://manthano.cl/css/diapositivas.css">
   ${menuCss}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script>window.tailwind = { config: { corePlugins: { preflight: false } } };</script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     ${REVEAL_STYLES}
     .reveal strong { font-weight: bold; }
@@ -226,6 +232,11 @@ export const compilarHtmlReveal = (
 };
 
 // ── Miniatura para el editor ──────────────────────────────────────────────────
+//
+// Usada por SlidePreview vía iframe (cuando se usa ese modo) y como referencia
+// de lo que se ve en el modal de preview.
+// CAMBIO: se agrega Tailwind CDN igual que en compilarHtmlReveal para
+// consistencia visual.
 
 export const compilarHtmlMiniatura = (
   slides: ISlide[],
@@ -241,6 +252,8 @@ export const compilarHtmlMiniatura = (
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/${config.tema}.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <link rel="stylesheet" href="https://manthano.cl/css/diapositivas.css">
+  <script>window.tailwind = { config: { corePlugins: { preflight: false } } };</script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     ${REVEAL_STYLES}
     body, html { margin: 0; padding: 0; overflow: hidden; }
@@ -254,6 +267,7 @@ export const compilarHtmlMiniatura = (
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
   <script>
     Reveal.initialize({
       hash: false, 
@@ -269,7 +283,7 @@ export const compilarHtmlMiniatura = (
       margin: 0.05, 
       minScale: 0.05, 
       maxScale: 1.0,
-      plugins: [],
+      plugins: [RevealMath.KaTeX],
     });
   </script>
 </body>

@@ -163,6 +163,13 @@ export class MathPlugin extends Plugin {
       allowAttributes: ["latex"],
     });
 
+    // editor.model.schema.register("mathBlock", {
+    //   allowWhere: "$text", // ← inline en el modelo, igual que mathInline
+    //   isInline: true, // ← inline → no genera párrafos vacíos automáticos
+    //   isObject: true,
+    //   allowAttributes: ["latex"],
+    // });
+
     // ── Comandos ─────────────────────────────────────────────────────────────
 
     editor.commands.add(
@@ -221,8 +228,8 @@ export class MathPlugin extends Plugin {
             "data-latex": latex,
             style:
               "display:inline-flex;align-items:center;cursor:pointer;" +
-              "background:#eef3f8;border:1px solid #c9dae8;" +
-              "border-radius:4px;padding:1px 5px;margin:0 2px;vertical-align:middle;",
+              "background: #eef3f8b8;border:1px solid #c9dae8b7;" +
+              "border-radius:4px;padding:0px 0px;margin:0 0px;vertical-align:middle;",
           },
           (el) => {
             el.innerHTML = renderKatexInline(latex);
@@ -244,9 +251,9 @@ export class MathPlugin extends Plugin {
           class: "ck-math-block",
           "data-latex": latex,
           style:
-            "text-align:center;padding:14px 18px;margin:8px 0;" +
-            "background:#eef3f8;border:1px solid #c9dae8;" +
-            "border-radius:6px;cursor:pointer;",
+            "text-align:center;padding:0px;margin:0px;" +
+            "background: #eef3f8b8;border:1px solid #c9dae8b7;" +
+            "border-radius:4px;padding:0px 0px;margin:0 0px;vertical-align:middle;",
         });
 
         // RawElement interno para el HTML de KaTeX (no editable)

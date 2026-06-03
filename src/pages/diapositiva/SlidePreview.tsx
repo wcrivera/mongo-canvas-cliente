@@ -1,8 +1,11 @@
 // src/pages/diapositiva/SlidePreview.tsx
 import { useEffect, useRef } from "react";
 import Reveal from "reveal.js";
+import RevealMath from "reveal.js";
+// import RevealMath from "reveal.js/plugin/math/math.js";
 import type { ISlide, IConfigReveal } from "./EditorDiapositiva";
 import { transformarHtmlParaReveal } from "./compilarHtmlReveal";
+import TiptapRenderer from "../../components/CKEditor/TiptapRenderer";
 
 interface Props {
   slide: ISlide;
@@ -14,30 +17,79 @@ interface Props {
 const CANVAS_W = 1280;
 const CANVAS_H = 800;
 
+// ── Inyectar recursos globales una sola vez ───────────────────────────────────
+//
+// RevealMath.KaTeX necesita window.katex disponible. Como usamos Reveal
+// embebido en el mismo DOM (no iframe), inyectamos KaTeX CDN en el <head>.
+// Tailwind también se inyecta aquí para que las clases grid/col-span
+// del TwoColumnsPlugin funcionen en el preview igual que en Canvas.
+
+let globalResourcesInjected = false;
+
+function injectGlobalResources() {
+  if (globalResourcesInjected) return;
+  globalResourcesInjected = true;
+
+  // KaTeX CSS
+  if (!document.getElementById("katex-css")) {
+    const link = document.createElement("link");
+    link.id = "katex-css";
+    link.rel = "stylesheet";
+    link.href = "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css";
+    document.head.appendChild(link);
+  }
+
+  // KaTeX JS — RevealMath lo busca en window.katex
+  if (!document.getElementById("katex-js")) {
+    const script = document.createElement("script");
+    script.id = "katex-js";
+    script.src = "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js";
+    document.head.appendChild(script);
+  }
+}
+
+// ── Componente ────────────────────────────────────────────────────────────────
+
 const SlidePreview = ({ slide, config, width = 140, height = 88 }: Props) => {
   const scale = width / CANVAS_W;
   const deckDivRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deckRef = useRef<any>(null);
 
-  // Inyectar CSS de Reveal una sola vez en el documento
+  // Inyectar KaTeX global una sola vez al montar cualquier SlidePreview
   useEffect(() => {
-    const cssIds = ["reveal-core-css", "reveal-theme-css"];
-    const cssUrls = [
-      "https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css",
-      `https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/${config.tema}.css`,
-    ];
-    cssIds.forEach((id, i) => {
-      if (!document.getElementById(id)) {
-        const link = document.createElement("link");
-        link.id = id;
-        link.rel = "stylesheet";
-        link.href = cssUrls[i];
-        document.head.appendChild(link);
-      }
-    });
+    injectGlobalResources();
+  }, []);
+
+  // Inyectar/actualizar CSS de Reveal
+  useEffect(() => {
+    // Core CSS — una sola vez
+    if (!document.getElementById("reveal-core-css")) {
+      const link = document.createElement("link");
+      link.id = "reveal-core-css";
+      link.rel = "stylesheet";
+      link.href =
+        "https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css";
+      document.head.appendChild(link);
+    }
+
+    // Theme CSS — actualizar href cuando cambia el tema
+    const existing = document.getElementById(
+      "reveal-theme-css",
+    ) as HTMLLinkElement | null;
+    const themeUrl = `https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/${config.tema}.css`;
+    if (existing) {
+      if (existing.href !== themeUrl) existing.href = themeUrl;
+    } else {
+      const link = document.createElement("link");
+      link.id = "reveal-theme-css";
+      link.rel = "stylesheet";
+      link.href = themeUrl;
+      document.head.appendChild(link);
+    }
   }, [config.tema]);
 
+  // Inicializar/reinicializar Reveal cuando cambia el contenido
   useEffect(() => {
     if (!deckDivRef.current) return;
 
@@ -56,8 +108,6 @@ const SlidePreview = ({ slide, config, width = 140, height = 88 }: Props) => {
       controls: false,
       progress: false,
       keyboard: false,
-    //   overview: false,
-    //   touch: false,
       embedded: true,
       center: false,
       transition: "none",
@@ -67,6 +117,11 @@ const SlidePreview = ({ slide, config, width = 140, height = 88 }: Props) => {
       height: CANVAS_H,
       minScale: 0.05,
       maxScale: 1.0,
+      // RevealMath.KaTeX procesa \(...\) y \[...\] — igual que en Canvas
+      plugins: [RevealMath],
+      math: {
+        renderer: "KaTeX",
+      },
     });
 
     deckRef.current.initialize().catch(() => {});
@@ -81,7 +136,13 @@ const SlidePreview = ({ slide, config, width = 140, height = 88 }: Props) => {
         /* ignorar */
       }
     };
-  }, [slide.id, slide.contenido, slide.fondo, config.tema]);
+  }, [
+    slide.id,
+    slide.contenido,
+    slide.contenido_derecho,
+    slide.fondo,
+    config.tema,
+  ]);
 
   const contenido = transformarHtmlParaReveal(slide.contenido ?? "");
   const fondoAttr = slide.fondo ? { "data-background-color": slide.fondo } : {};
@@ -114,10 +175,12 @@ const SlidePreview = ({ slide, config, width = 140, height = 88 }: Props) => {
         >
           <div className="slides">
             <section
-              {...fondoAttr}
-              dangerouslySetInnerHTML={{ __html: contenido }}
-              style={{ textAlign: "left", fontSize: "28px" }}
-            />
+            {...fondoAttr}
+            // dangerouslySetInnerHTML={{ __html: <TiptapRenderer>{contenido}</TiptapRenderer> }}
+            style={{ textAlign: "left", fontSize: "28px" }}
+            >
+              <TiptapRenderer style={{ textAlign: "left", fontSize: "28px" }}>{contenido}</TiptapRenderer>
+            </section>
           </div>
         </div>
       </div>

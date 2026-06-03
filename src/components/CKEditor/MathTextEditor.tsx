@@ -11,6 +11,7 @@ import {
   Heading,
   Link,
   List,
+  ListProperties,
   BlockQuote,
   Alignment,
   FontSize,
@@ -51,6 +52,7 @@ import {
   type MathBlockPluginConfig,
   type TipoEntorno,
 } from "./plugins/MathBlockPlugin";
+import { ListTypePlugin } from "./plugins/ListTypePlugin";
 import { InsertImageUrlModal } from "./components/InsertImageUrlModal";
 import MathEditModal from "./components/MathEditModal";
 import MathBlockModal from "./components/MathBlockModal";
@@ -110,6 +112,7 @@ const BASE_PLUGINS = [
   Heading,
   Link,
   List,
+  ListProperties,
   BlockQuote,
   Alignment,
   FontSize,
@@ -132,6 +135,7 @@ const BASE_PLUGINS = [
   MathBlockPlugin,
   InlineStylesPlugin,
   InlineHeadingPlugin,
+  ListTypePlugin, 
   GeneralHtmlSupport,
 ];
 
@@ -155,6 +159,7 @@ const TOOLBAR_ITEMS = [
   "link",
   "bulletedList",
   "numberedList",
+  "listType",
   "blockQuote",
   "|",
   "insertTable",
@@ -172,6 +177,12 @@ const TOOLBAR_ITEMS = [
 
 const HTML_SUPPORT_CONFIG = {
   allow: [
+    {
+      name: /.*/,          // cualquier elemento HTML
+      attributes: true,    // cualquier atributo
+      classes: true,       // cualquier clase
+      styles: true,        // cualquier estilo inline
+    },
     { name: "ol", attributes: { type: true }, classes: true, styles: true },
     { name: "div", attributes: true, classes: true, styles: true },
     { name: "section", attributes: true, classes: true, styles: true },
@@ -225,7 +236,6 @@ const MathTextEditor: React.FC<EditorProps> = ({
   siglaCurso = "",
 }) => {
 
-  console.log(initialData)
   const [latexModal, setLatexModal] =
     useState<LatexModalState>(LATEX_MODAL_CLOSED);
   const [urlModal, setUrlModal] = useState<UrlModalState>({ open: false });

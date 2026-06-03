@@ -22,7 +22,11 @@ interface Props {
   children: string;
 }
 
-const TiptapRenderer = ({ children }: Props) => {
+interface TiptapRendererProps extends Props {
+  style?: React.CSSProperties;
+}
+
+const TiptapRenderer = ({ children, style }: TiptapRendererProps) => {
   const { isHtml, processed } = useMemo(() => {
     if (!children) return { isHtml: false, processed: "" };
 
@@ -57,7 +61,7 @@ const TiptapRenderer = ({ children }: Props) => {
       <div
         className={styles.content}
         dangerouslySetInnerHTML={{ __html: processed }}
-        style={{ lineHeight: 1.75, fontSize: 14, color: "#1f2c38" }}
+        style={{ lineHeight: 1.75, fontSize: 14, color: "#1f2c38", ...style }}
       />
     );
   }

@@ -45,7 +45,8 @@ export const ENTORNO_COLORS: Record<TipoEntorno, { border: string; bg: string; l
   proposicion:  { border: "#7c3aed", bg: "rgba(109,40,217,0.07)",  label: "#6d28d9" },
   corolario:    { border: "#0284c7", bg: "rgba(2,132,199,0.07)",   label: "#0369a1" },
   lema:         { border: "#0d9488", bg: "rgba(13,148,136,0.07)",  label: "#0f766e" },
-  ejemplo:      { border: "#ea580c", bg: "rgba(234,88,12,0.07)",   label: "#c2410c" },
+  ejemplo:      { border: "none", bg: "none",   label: "none" },
+  // ejemplo:      { border: "#ea580c", bg: "rgba(234,88,12,0.07)",   label: "#c2410c" },
   demostracion: { border: "#94a3b8", bg: "rgba(100,116,139,0.06)", label: "#475569" },
   observacion:  { border: "#ca8a04", bg: "rgba(202,138,4,0.08)",   label: "#92400e" },
 };

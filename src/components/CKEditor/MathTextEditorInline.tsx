@@ -1,23 +1,11 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
-  ClassicEditor,
+  InlineEditor as ClassicEditor,
   Bold,
   Italic,
-  Underline,
-  Strikethrough,
   Essentials,
-  Paragraph,
   Heading,
-  Link,
-  List,
-  BlockQuote,
-  Alignment,
-  FontSize,
-  FontColor,
-  Code,
-  Table,
-  TableToolbar,
   SourceEditing,
   Image,
   ImageToolbar,
@@ -35,13 +23,10 @@ import {
 import "ckeditor5/ckeditor5.css";
 
 import { MathPlugin } from "./plugins/MathPlugin";
-import { InlineTablePlugin } from "./plugins/InlineTablePlugin";
 import {
   ImageUploadPlugin,
   type ImageUploadPluginConfig,
 } from "./plugins/ImageUploadPlugin";
-import { InlineStylesPlugin } from "./plugins/InlineStylesPlugin";
-import { InlineHeadingPlugin } from "./plugins/InlineHeadingPlugin";
 import {
   InsertImageUrlPlugin,
   type InsertImageUrlPluginConfig,
@@ -102,21 +87,9 @@ const ENV_MODAL_CLOSED: EnvModalState = {
 
 const BASE_PLUGINS = [
   Essentials,
-  Paragraph,
   Bold,
   Italic,
-  Underline,
-  Strikethrough,
   Heading,
-  Link,
-  List,
-  BlockQuote,
-  Alignment,
-  FontSize,
-  FontColor,
-  Code,
-  Table,
-  TableToolbar,
   SourceEditing,
   Image,
   ImageToolbar,
@@ -125,13 +98,10 @@ const BASE_PLUGINS = [
   ImageResizeEditing,
   ImageResizeHandles,
   ImageInsert,
-  InlineTablePlugin,
   ImageUploadPlugin,
   InsertImageUrlPlugin,
   MathPlugin,
   MathBlockPlugin,
-  InlineStylesPlugin,
-  InlineHeadingPlugin,
   GeneralHtmlSupport,
 ];
 
@@ -139,31 +109,11 @@ const TOOLBAR_ITEMS = [
   "undo",
   "redo",
   "|",
-  "heading",
-  "|",
   "bold",
   "italic",
-  "underline",
-  "strikethrough",
-  "code",
   "|",
-  "fontSize",
-  "fontColor",
-  "|",
-  "alignment",
-  "|",
-  "link",
-  "bulletedList",
-  "numberedList",
-  "blockQuote",
-  "|",
-  "insertTable",
   "insertImageMenu",
   "insertMath",
-  "insertFragment",
-  "insertTwoColumns",
-  "insertMultiColList",
-  "addMultiColListItem",
   "|",
   "sourceEditing",
 ];
@@ -172,6 +122,12 @@ const TOOLBAR_ITEMS = [
 
 const HTML_SUPPORT_CONFIG = {
   allow: [
+    {
+      name: /.*/,          // cualquier elemento HTML
+      attributes: true,    // cualquier atributo
+      classes: true,       // cualquier clase
+      styles: true,        // cualquier estilo inline
+    },
     { name: "ol", attributes: { type: true }, classes: true, styles: true },
     { name: "div", attributes: true, classes: true, styles: true },
     { name: "section", attributes: true, classes: true, styles: true },
@@ -422,6 +378,17 @@ const MathTextEditorInline: React.FC<EditorProps> = ({
               editor.editing.view.change((writer: ViewDowncastWriter) => {
                 writer.setStyle("min-height", "50px", root);
                 writer.setStyle("font-size", "16px", root);
+                writer.setStyle("line-height", "1.75", root);
+                writer.setStyle("color", "#1f2c38", root);
+                writer.setStyle("font-family", "Arial, sans-serif", root);
+                writer.setStyle("padding", "8px", root);
+                writer.setStyle("box-sizing", "border-box", root);
+                writer.setStyle("border", "1px solid #c9dae8", root);
+                writer.setStyle("border-radius", "8px", root);
+                writer.setStyle("background", "#f8fafd", root);
+                writer.setStyle("outline", "none", root);
+                writer.setStyle("transition", "border-color 0.2s ease", root);
+                writer.setStyle("min-width", "300px", root);
               });
             }
           }}

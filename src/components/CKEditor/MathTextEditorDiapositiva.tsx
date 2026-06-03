@@ -41,6 +41,7 @@ import {
   type EditorConfig,
   type ViewDowncastWriter,
   type Editor,
+  ListProperties,
 } from "ckeditor5";
 
 import "ckeditor5/ckeditor5.css";
@@ -178,6 +179,7 @@ const BASE_PLUGINS = [
   Heading,
   Link,
   List,
+  ListProperties,
   BlockQuote,
   Alignment,
   FontSize,
@@ -226,6 +228,7 @@ const TOOLBAR_ITEMS = [
   "link",
   "bulletedList",
   "numberedList",
+  "listType",
   "blockQuote",
   "|",
   "insertTable",
@@ -244,6 +247,12 @@ const TOOLBAR_ITEMS = [
 
 const HTML_SUPPORT_CONFIG = {
   allow: [
+    {
+      name: /.*/,          // cualquier elemento HTML
+      attributes: true,    // cualquier atributo
+      classes: true,       // cualquier clase
+      styles: true,        // cualquier estilo inline
+    },
     { name: "ol", attributes: { type: true }, classes: true, styles: true },
     { name: "div",     attributes: true,  classes: true,  styles: true  },
     { name: "section", attributes: true,  classes: true,  styles: true  },

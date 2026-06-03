@@ -20,7 +20,7 @@ export const obtenerQuizzesPorCapitulo = ({ capitulo_id }: { capitulo_id: string
       const resp = await fetchConToken(`api/admin/quizzes/capitulo/${capitulo_id}`);
       const body = await resp.json();
       if (body.ok) {
-        console.log("[QUIZ DEBUG] recibidos:", body.data?.map((q: { _id: string; contexto: string; tema_id: string }) => ({ _id: q._id, contexto: q.contexto, tema_id: q.tema_id })));
+        // console.log("[QUIZ DEBUG] recibidos:", body.data?.map((q: { _id: string; contexto: string; tema_id: string }) => ({ _id: q._id, contexto: q.contexto, tema_id: q.tema_id })));
         dispatch(setQuizzes(body.data)); dispatch(endLoadingQuiz()); return { ok: true };
       }
       dispatch(setErrorQuiz(body.msg)); return { ok: false, msg: body.msg };

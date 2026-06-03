@@ -409,8 +409,8 @@ const EditorDiapositiva = () => {
               onClick={() => setSlideActivo(idx)}
               style={{
                 borderRadius: 8,
-                overflow: "hidden",
-                cursor: "pointer",
+                // overflow: "hidden",
+                // cursor: "pointer",
                 border:
                   idx === slideActivo
                     ? "2px solid #f47c3c"

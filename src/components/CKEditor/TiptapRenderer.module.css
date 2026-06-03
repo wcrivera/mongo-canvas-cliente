@@ -12,7 +12,7 @@
 }
 
 .content ol {
-  list-style-type: decimal !important;
+  list-style-type: decimal; /* ← sin !important para que ol[type] pueda sobreescribir */
   padding-left: 1.75em !important;
   margin: 0.5em 0 !important;
   display: block !important;
@@ -23,11 +23,18 @@
   margin: 0.2em 0 !important;
 }
 
+/* Tipos de lista ordenada — deben tener !important para ganar sobre Tailwind */
 .content ol[type="1"] { list-style-type: decimal     !important; }
 .content ol[type="a"] { list-style-type: lower-alpha !important; }
 .content ol[type="A"] { list-style-type: upper-alpha !important; }
 .content ol[type="i"] { list-style-type: lower-roman !important; }
 .content ol[type="I"] { list-style-type: upper-roman !important; }
+
+/* Soporte para list-style-type inline (cuando CKEditor usa style en vez de type) */
+.content ol[style*="lower-alpha"] { list-style-type: lower-alpha !important; }
+.content ol[style*="upper-alpha"] { list-style-type: upper-alpha !important; }
+.content ol[style*="lower-roman"] { list-style-type: lower-roman !important; }
+.content ol[style*="upper-roman"] { list-style-type: upper-roman !important; }
 
 .content ul ul    { list-style-type: circle !important; }
 .content ul ul ul { list-style-type: square !important; }

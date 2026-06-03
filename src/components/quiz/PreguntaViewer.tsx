@@ -4,33 +4,32 @@
 
 import { Typography, Divider, Chip } from "@mui/material";
 import TiptapRenderer from "../CKEditor/TiptapRenderer";
-import Latex from "react-latex-next";
 
 // ── Tipos exportados ──────────────────────────────────────────────────────────
 
 export interface IOpcion {
-  texto:       string;
+  texto: string;
   es_correcta: boolean;
-  blank_id?:   string | null;
-  tipo_pimu?:  string | null;
+  blank_id?: string | null;
+  tipo_pimu?: string | null;
 }
 
 export interface IPar {
   izquierda: string;
-  derecha:   string;
+  derecha: string;
 }
 
 export interface IRespuestaNumerica {
-  tipo:       "exact" | "range" | "precision";
-  exacto?:    number;
-  margen?:    number;
-  minimo?:    number;
-  maximo?:    number;
+  tipo: "exact" | "range" | "precision";
+  exacto?: number;
+  margen?: number;
+  minimo?: number;
+  maximo?: number;
   precision?: number;
 }
 
 export interface IItemFIBViewer {
-  id:        string;
+  id: string;
   enunciado: string;
   respuesta: string;
   tipo_pimu: string;
@@ -52,17 +51,17 @@ export type TipoPreguntaViewer =
 // ── Labels PIMU ───────────────────────────────────────────────────────────────
 
 const PIMU_LABELS: Record<string, string> = {
-  numero:              "Número",
-  formula:             "Fórmula",
-  antiderivada:        "Antiderivada",
-  conjunto:            "Conjunto",
-  intervalo:           "Intervalo",
-  ecuacion:            "Ecuación",
-  punto:               "Punto",
-  factorizacion:       "Factorización",
-  formulaN:            "Fórmula (n)",
-  formulaT:            "Fórmula (t)",
-  vector:              "Vector",
+  numero: "Número",
+  formula: "Fórmula",
+  antiderivada: "Antiderivada",
+  conjunto: "Conjunto",
+  intervalo: "Intervalo",
+  ecuacion: "Ecuación",
+  punto: "Punto",
+  factorizacion: "Factorización",
+  formulaN: "Fórmula (n)",
+  formulaT: "Fórmula (t)",
+  vector: "Vector",
   "conjunto-vectores": "Conjunto vectores",
 };
 
@@ -75,18 +74,18 @@ const colClass: Record<number, string> = {
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
-  tipo:                TipoPreguntaViewer;
-  enunciado:           string;
+  tipo: TipoPreguntaViewer;
+  enunciado: string;
   // FIB nuevo schema
   enunciado_contexto?: string;
-  items?:              IItemFIBViewer[];
-  columnas?:           number;
+  items?: IItemFIBViewer[];
+  columnas?: number;
   // otros tipos
-  opciones?:           IOpcion[];
-  pares?:              IPar[];
+  opciones?: IOpcion[];
+  pares?: IPar[];
   respuesta_numerica?: IRespuestaNumerica;
-  tipo_pimu?:          string | null;
-  respuesta_lti?:      string | null;
+  tipo_pimu?: string | null;
+  respuesta_lti?: string | null;
 }
 
 // ── Componente ────────────────────────────────────────────────────────────────
@@ -103,25 +102,28 @@ const PreguntaViewer = ({
   tipo_pimu,
   respuesta_lti,
 }: Props) => {
-  const esMultiple  = tipo === "multiple_answers";
-  const esFib       = tipo === "fill_in_multiple_blanks";
-  const esDropdown  = tipo === "multiple_dropdowns";
-  const esFIBItems  = esFib && items.length > 0;
+  const esMultiple = tipo === "multiple_answers";
+  const esFib = tipo === "fill_in_multiple_blanks";
+  const esDropdown = tipo === "multiple_dropdowns";
+  const esFIBItems = esFib && items.length > 0;
 
   const mostrarOpciones =
-    tipo === "multiple_choice" || tipo === "multiple_answers" || tipo === "true_false";
+    tipo === "multiple_choice" ||
+    tipo === "multiple_answers" ||
+    tipo === "true_false";
 
   return (
     <div className="flex flex-col gap-2">
-
       {/* ── Enunciado / Enunciado de contexto ── */}
       <div style={{ fontSize: 14, lineHeight: 1.8, color: "#1f2c38" }}>
-        {(esFIBItems ? (enunciado_contexto || enunciado) : enunciado) ? (
+        {(esFIBItems ? enunciado_contexto || enunciado : enunciado) ? (
           <TiptapRenderer>
-            {esFIBItems ? (enunciado_contexto || enunciado) : enunciado}
+            {esFIBItems ? enunciado_contexto || enunciado : enunciado}
           </TiptapRenderer>
         ) : (
-          <span style={{ color: "#8daecb", fontStyle: "italic" }}>Sin enunciado</span>
+          <span style={{ color: "#8daecb", fontStyle: "italic" }}>
+            Sin enunciado
+          </span>
         )}
       </div>
 
@@ -129,7 +131,9 @@ const PreguntaViewer = ({
       {esFIBItems && (
         <>
           <Divider sx={{ borderColor: "#f0f0f0" }} />
-          <div className={`grid ${colClass[Math.max(1, Math.min(3, Number(columnas) || 1)) as 1 | 2 | 3] ?? "grid-cols-1"} gap-3`}>
+          <div
+            className={`grid ${colClass[Math.max(1, Math.min(3, Number(columnas) || 1)) as 1 | 2 | 3] ?? "grid-cols-1"} gap-3`}
+          >
             {items.map((item, idx) => (
               <div
                 key={item.id}
@@ -144,21 +148,35 @@ const PreguntaViewer = ({
                 }}
               >
                 <div className="flex items-center justify-between">
-                  <Typography variant="caption" sx={{ color: "#4A6D8C", fontWeight: 700 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "#4A6D8C", fontWeight: 700 }}
+                  >
                     Ítem {idx + 1}
                   </Typography>
                   <Chip
                     label={PIMU_LABELS[item.tipo_pimu] ?? item.tipo_pimu}
                     size="small"
-                    sx={{ fontSize: "0.6rem", height: 18, bgcolor: "#e0f0ff", color: "#1d4ed8" }}
+                    sx={{
+                      fontSize: "0.6rem",
+                      height: 18,
+                      bgcolor: "#e0f0ff",
+                      color: "#1d4ed8",
+                    }}
                   />
                 </div>
                 {item.enunciado && (
-                  <Typography variant="body2" sx={{ color: "#374151", fontSize: 13 }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: "#374151", fontSize: 13 }}
+                  >
                     <TiptapRenderer>{item.enunciado}</TiptapRenderer>
                   </Typography>
                 )}
-                <Typography variant="body2" sx={{ color: "#065f46", fontWeight: 600, fontSize: 13 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ color: "#065f46", fontWeight: 600, fontSize: 13 }}
+                >
                   ✓ {item.respuesta}
                 </Typography>
               </div>
@@ -176,7 +194,12 @@ const PreguntaViewer = ({
               <Chip
                 label={`LTI · ${PIMU_LABELS[tipo_pimu] ?? tipo_pimu}`}
                 size="small"
-                sx={{ bgcolor: "#e0f0ff", color: "#1d4ed8", fontWeight: 600, fontSize: "0.65rem" }}
+                sx={{
+                  bgcolor: "#e0f0ff",
+                  color: "#1d4ed8",
+                  fontWeight: 600,
+                  fontSize: "0.65rem",
+                }}
               />
             )}
             {respuesta_lti && (
@@ -197,21 +220,33 @@ const PreguntaViewer = ({
               <div
                 key={idx}
                 className="flex items-center gap-2 px-2 py-1 rounded-lg"
-                style={{ background: op.es_correcta ? "#f0fdf4" : "transparent" }}
+                style={{
+                  background: op.es_correcta ? "#f0fdf4" : "transparent",
+                }}
               >
-                <div style={{
-                  width: 12, height: 12, flexShrink: 0,
-                  borderRadius: esMultiple ? "3px" : "50%",
-                  border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`,
-                  background: op.es_correcta ? "#1a9e5c" : "transparent",
-                }} />
+                <div
+                  style={{
+                    width: 12,
+                    height: 12,
+                    flexShrink: 0,
+                    borderRadius: esMultiple ? "3px" : "50%",
+                    border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`,
+                    background: op.es_correcta ? "#1a9e5c" : "transparent",
+                  }}
+                />
                 <Typography
                   variant="body2"
-                  sx={{ color: op.es_correcta ? "#065f46" : "#3d3d3d", fontWeight: op.es_correcta ? 600 : 400, fontSize: 13 }}
+                  sx={{
+                    color: op.es_correcta ? "#065f46" : "#3d3d3d",
+                    fontWeight: op.es_correcta ? 600 : 400,
+                    fontSize: 13,
+                  }}
                 >
-                  {op.texto ? <Latex>{op.texto}</Latex> : <em style={{ color: "#8daecb" }}>vacío</em>}
-
-                  
+                  {op.texto ? (
+                    <TiptapRenderer>{op.texto}</TiptapRenderer>
+                  ) : (
+                    <em style={{ color: "#8daecb" }}>vacío</em>
+                  )}
                 </Typography>
               </div>
             ))}
@@ -226,25 +261,46 @@ const PreguntaViewer = ({
           <div className="flex flex-col gap-2">
             {[...new Set(opciones.map((o) => o.blank_id ?? ""))].map((bid) => (
               <div key={bid} className="flex flex-col gap-0.5">
-                <Typography variant="caption" sx={{ color: "#6793ba", fontWeight: 600 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#6793ba", fontWeight: 600 }}
+                >
                   [{bid}]
                 </Typography>
-                {opciones.filter((o) => o.blank_id === bid).map((op, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 px-2 py-0.5"
-                    style={{ background: op.es_correcta ? "#f0fdf4" : "transparent", borderRadius: 4 }}
-                  >
-                    <div style={{
-                      width: 10, height: 10, borderRadius: 2, flexShrink: 0,
-                      border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`,
-                      background: op.es_correcta ? "#1a9e5c" : "transparent",
-                    }} />
-                    <Typography variant="body2" sx={{ fontSize: 12, color: op.es_correcta ? "#065f46" : "#64748b" }}>
-                      <Latex>{op.texto}</Latex>
-                    </Typography>
-                  </div>
-                ))}
+                {opciones
+                  .filter((o) => o.blank_id === bid)
+                  .map((op, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 px-2 py-0.5"
+                      style={{
+                        background: op.es_correcta ? "#f0fdf4" : "transparent",
+                        borderRadius: 4,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: 2,
+                          flexShrink: 0,
+                          border: `2px solid ${op.es_correcta ? "#1a9e5c" : "#ccc"}`,
+                          background: op.es_correcta
+                            ? "#1a9e5c"
+                            : "transparent",
+                        }}
+                      />
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontSize: 12,
+                          color: op.es_correcta ? "#065f46" : "#64748b",
+                        }}
+                      >
+                        <TiptapRenderer>{op.texto}</TiptapRenderer>
+                      </Typography>
+                    </div>
+                  ))}
               </div>
             ))}
           </div>
@@ -258,7 +314,9 @@ const PreguntaViewer = ({
           <div className="flex flex-col gap-1.5">
             {pares.map((par, idx) => (
               <div key={idx} className="flex items-center gap-2 text-sm">
-                <span style={{ flex: 1, color: "#1e293b" }}>{par.izquierda}</span>
+                <span style={{ flex: 1, color: "#1e293b" }}>
+                  {par.izquierda}
+                </span>
                 <span style={{ color: "#8daecb" }}>→</span>
                 <span style={{ flex: 1, color: "#1e293b" }}>{par.derecha}</span>
               </div>
@@ -286,12 +344,16 @@ const PreguntaViewer = ({
       {(tipo === "essay" || tipo === "short_answer") && (
         <>
           <Divider sx={{ borderColor: "#f0f0f0" }} />
-          <Typography variant="caption" sx={{ color: "#8daecb", fontStyle: "italic" }}>
-            {tipo === "essay" ? "Respuesta de desarrollo — corrección manual" : "Respuesta corta"}
+          <Typography
+            variant="caption"
+            sx={{ color: "#8daecb", fontStyle: "italic" }}
+          >
+            {tipo === "essay"
+              ? "Respuesta de desarrollo — corrección manual"
+              : "Respuesta corta"}
           </Typography>
         </>
       )}
-
     </div>
   );
 };

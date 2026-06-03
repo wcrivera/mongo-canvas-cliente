@@ -140,6 +140,7 @@
 /* @ckeditor/ckeditor5-list/theme/todolist.css */
 .ck-content .todo-list .todo-list__label > input {
     -webkit-appearance: none;
+    appearance: none;
     display: inline-block;
     position: relative;
     width: var(--ck-todo-list-checkmark-size);
@@ -215,6 +216,7 @@ margin-left: -15px;
 /* @ckeditor/ckeditor5-list/theme/todolist.css */
 .ck-editor__editable.ck-content .todo-list .todo-list__label > span[contenteditable=false] > input {
     -webkit-appearance: none;
+    appearance: none;
     display: inline-block;
     position: relative;
     width: var(--ck-todo-list-checkmark-size);

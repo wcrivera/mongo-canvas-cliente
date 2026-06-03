@@ -55,7 +55,7 @@ export const InsertImageUrlModal = ({ siglaCurso, initialTab = 0, onInsert, onCl
       setCargando(true);
       setErrMsg(null);
       try {
-        const resp = await fetch(`${BACKEND_URL}/api/upload/carpetas`, {
+        const resp = await fetch(`${BACKEND_URL}/api/admin/upload/carpetas`, {
           headers: { Authorization: `Bearer ${getToken()}` },
         });
         const body = await resp.json() as { ok: boolean; carpetas: string[]; msg?: string };
@@ -82,7 +82,7 @@ export const InsertImageUrlModal = ({ siglaCurso, initialTab = 0, onInsert, onCl
     setVista("imagenes");
 
     try {
-      const resp = await fetch(`${BACKEND_URL}/api/upload/imagenes/${sigla}`, {
+      const resp = await fetch(`${BACKEND_URL}/api/admin/upload/imagenes/${sigla}`, {
         headers: { Authorization: `Bearer ${getToken()}` },
       });
       const body = await resp.json() as { ok: boolean; imagenes: string[]; msg?: string };
