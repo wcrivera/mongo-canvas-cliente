@@ -173,6 +173,15 @@ const HTML_SUPPORT_CONFIG = {
   ],
 };
 
+// Paleta de color de texto — calza 1:1 con TEXT_COLOR_CLASS del InlineStylesPlugin
+const FONT_COLORS = [
+  { color: "#0f172a", label: "Slate" },
+  { color: "#64748b", label: "Gris" },
+  { color: "#0d9488", label: "Teal" },
+  { color: "#16a34a", label: "Verde" },
+  { color: "#dc2626", label: "Rojo" },
+];
+
 // ── Componente ────────────────────────────────────────────────────────────────
 
 const MathTextEditorInline: React.FC<EditorProps> = ({
@@ -341,6 +350,16 @@ const MathTextEditorInline: React.FC<EditorProps> = ({
             type: "auto",
             integrations: ["insertImageViaUrl", "upload"],
           },
+        },
+        fontSize: {
+          options: ["tiny", "small", "default", "big", "huge"],
+          supportAllValues: false,
+        },
+        fontColor: {
+          colors: FONT_COLORS,
+          columns: 5,
+          documentColors: 0,
+          colorPicker: false,
         },
         imageUpload: {
           siglaCurso,

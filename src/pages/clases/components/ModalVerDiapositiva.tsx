@@ -5,8 +5,9 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import Diapositiva from "./Diapositiva";
+// import Diapositiva from "./Diapositiva";
 import type { IDiapositiva } from "../../../store/slices/diapositiva";
+import Diapositivas from "./Diapositivas";
 
 interface ModalVerProps {
   label: string;
@@ -24,7 +25,7 @@ const ModalVerDiapositiva: React.FC<ModalVerProps> = ({
     <Dialog
       open
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="lg"
       fullWidth
       sx={{ "& .MuiDialog-paper": { borderRadius: "14px" } }}
     >
@@ -43,8 +44,7 @@ const ModalVerDiapositiva: React.FC<ModalVerProps> = ({
 
       <DialogContent
         sx={{
-          pt: "20px !important",
-          pb: 1,
+          p: "0px !important",
           overflow: "visible",
           justifyContent: "center",
           display: "flex",
@@ -59,17 +59,14 @@ const ModalVerDiapositiva: React.FC<ModalVerProps> = ({
             style={{ border: "none", borderRadius: 8 }}
           />
         ) : (
-          diapoTema.slides &&
-          diapoTema.slides.length > 0 && 
-          diapoTema.slides.map((slide, index) => (
-            <Diapositiva
-              key={index}
-              slide={slide}
+          diapoTema.slides && (
+            <Diapositivas
+              slides={diapoTema.slides}
               config={diapoTema.config}
-              width={600}
-              height={400}
+              width={1280}
+              height={720}
             />
-          ))
+          )
         )}
       </DialogContent>
 

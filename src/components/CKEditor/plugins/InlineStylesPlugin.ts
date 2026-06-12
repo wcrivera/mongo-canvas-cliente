@@ -1,28 +1,18 @@
 import { Plugin } from "ckeditor5";
 
 /**
- * InlineStylesPlugin
+ * InlineStylesPlugin (Tailwind)
  *
- * Sobreescribe los conversores `dataDowncast` de los atributos de formato
- * para que el HTML emitido por editor.getData() use estilos inline en lugar
- * de clases CSS propias de CKEditor.
+ * dataDowncast de fontSize / fontColor / fontBackgroundColor / imágenes
+ * emitiendo CLASES Tailwind en vez de estilos inline.
  *
- * Esto es necesario para que el contenido funcione en Canvas (LMS), que
- * aplica su propio CSS y no conoce las clases de CKEditor.
+ * - bold/italic/underline/strikethrough: SE ELIMINARON los overrides.
+ *   CKEditor emite <strong>/<i>/<u>/<s> y `prose` los estiliza.
+ * - El ancho dinámico de imagen sí va inline (valor arbitrario, juice lo
+ *   pasa tal cual al desplegar a Canvas).
  *
- * Atributos cubiertos:
- *  - bold        → <strong style="font-weight:bold">
- *  - italic      → <em style="font-style:italic">
- *  - underline   → <u style="text-decoration:underline">
- *  - strikethrough → <s style="text-decoration:line-through">
- *  - fontSize    → <span style="font-size:{valor}">
- *  - fontColor   → <span style="color:{valor}">
- *  - fontBackgroundColor → <span style="background-color:{valor}">
- *  - imageBlock  → <figure style="...centrado..."><img style="...">
- *  - imageInline → <img style="vertical-align:middle;...">
- *
- * NO toca el editingDowncast, por lo que la experiencia visual en el editor
- * no cambia.
+ * NOTA: nombre conservado para no romper imports. Renombrar a
+ * TailwindStylesPlugin como follow-up.
  */
 export class InlineStylesPlugin extends Plugin {
   static get pluginName(): string {
@@ -32,96 +22,57 @@ export class InlineStylesPlugin extends Plugin {
   init(): void {
     const { conversion } = this.editor;
 
-    // ── bold ──────────────────────────────────────────────────────────────────
-    conversion.for("dataDowncast").attributeToElement({
-      model: "bold",
-      converterPriority: "high",
-      view: (_value, { writer }) =>
-        writer.createAttributeElement("strong", {
-          style: "font-weight:bold",
-        }),
-    });
-
-    // ── italic ────────────────────────────────────────────────────────────────
-    conversion.for("dataDowncast").attributeToElement({
-      model: "italic",
-      converterPriority: "high",
-      view: (_value, { writer }) =>
-        writer.createAttributeElement("em", {
-          style: "font-style:italic",
-        }),
-    });
-
-    // ── underline ─────────────────────────────────────────────────────────────
-    conversion.for("dataDowncast").attributeToElement({
-      model: "underline",
-      converterPriority: "high",
-      view: (_value, { writer }) =>
-        writer.createAttributeElement("u", {
-          style: "text-decoration:underline",
-        }),
-    });
-
-    // ── strikethrough ─────────────────────────────────────────────────────────
-    conversion.for("dataDowncast").attributeToElement({
-      model: "strikethrough",
-      converterPriority: "high",
-      view: (_value, { writer }) =>
-        writer.createAttributeElement("s", {
-          style: "text-decoration:line-through",
-        }),
-    });
-
-    // ── fontSize ──────────────────────────────────────────────────────────────
-    // CKEditor emite clases "text-tiny", "text-small", "text-big", "text-huge"
-    // cuando fontSize usa nombres predefinidos.
-    // Si se usan valores numéricos (ej: "12px", "1.2em"), los pasa directo.
+    // ── fontSize → clase Tailwind (fallback inline para valores numéricos) ──
     conversion.for("dataDowncast").attributeToElement({
       model: "fontSize",
       converterPriority: "high",
       view: (value, { writer }) => {
-        const sizeValue = FONT_SIZE_MAP[value as string] ?? value;
-        return writer.createAttributeElement("span", {
-          style: `font-size:${sizeValue}`,
-        });
+        const cls = FONT_SIZE_CLASS[value as string];
+        return cls
+          ? writer.createAttributeElement("span", { class: cls })
+          : writer.createAttributeElement("span", {
+              style: `font-size:${value}`,
+            });
       },
     });
 
-    // ── fontColor ─────────────────────────────────────────────────────────────
-    // CKEditor ya emite color inline, pero lo normalizamos por consistencia.
+    // ── fontColor → clase Tailwind (fallback inline si no está en paleta) ──
     conversion.for("dataDowncast").attributeToElement({
       model: "fontColor",
       converterPriority: "high",
-      view: (value, { writer }) =>
-        writer.createAttributeElement("span", {
-          style: `color:${value}`,
-        }),
+      view: (value, { writer }) => {
+        const cls = colorClass(value as string, TEXT_COLOR_CLASS);
+        return cls
+          ? writer.createAttributeElement("span", { class: cls })
+          : writer.createAttributeElement("span", { style: `color:${value}` });
+      },
     });
 
-    // ── fontBackgroundColor ───────────────────────────────────────────────────
+    // ── fontBackgroundColor → clase Tailwind (fallback inline) ──────────────
     conversion.for("dataDowncast").attributeToElement({
       model: "fontBackgroundColor",
       converterPriority: "high",
-      view: (value, { writer }) =>
-        writer.createAttributeElement("span", {
-          style: `background-color:${value}`,
-        }),
+      view: (value, { writer }) => {
+        const cls = colorClass(value as string, BG_COLOR_CLASS);
+        return cls
+          ? writer.createAttributeElement("span", { class: cls })
+          : writer.createAttributeElement("span", {
+              style: `background-color:${value}`,
+            });
+      },
     });
 
-
-    // ── upcast: figura con width inline → imageBlock con resizedWidth ──────────
-    // Restaura el tamaño al cargar HTML guardado.
+    // ── upcast: figure con width inline → imageBlock con tamaño (igual) ─────
     conversion.for("upcast").elementToElement({
-      view: {
-        name:   "figure",
-        styles: { width: true },
-      },
+      view: { name: "figure", styles: { width: true } },
       model: (viewElement, { writer }) => {
-        // Leer src y alt del <img> hijo
         let src = "";
         let alt = "";
         for (const child of viewElement.getChildren()) {
-          const el = child as { name?: string; getAttribute?: (k: string) => string | null };
+          const el = child as {
+            name?: string;
+            getAttribute?: (k: string) => string | null;
+          };
           if (el.name === "img") {
             src = el.getAttribute?.("src") ?? "";
             alt = el.getAttribute?.("alt") ?? "";
@@ -129,60 +80,36 @@ export class InlineStylesPlugin extends Plugin {
           }
         }
         const width = viewElement.getStyle("width") ?? undefined;
-        // Determinar si es px o % para usar el atributo correcto del modelo
         const isPx = width?.endsWith("px");
         return writer.createElement("imageBlock", {
           src,
           alt,
-          ...(width
-            ? isPx
-              ? { width }
-              : { resizedWidth: width }
-            : {}),
+          ...(width ? (isPx ? { width } : { resizedWidth: width }) : {}),
         });
       },
       converterPriority: "high",
     });
 
-    // ── imageBlock → <figure style="...centrado..."><img style="..."> ──────────
-    // CKEditor emite <figure class="image"> por defecto.
-    // Aquí lo sobreescribimos para que el HTML guardado tenga estilos inline
-    // y la imagen se vea centrada en Canvas y cualquier LMS.
+    // ── imageBlock → <figure class="..."><img class="..."> ──────────────────
     conversion.for("dataDowncast").elementToElement({
       model: "imageBlock",
       converterPriority: "high",
       view: (modelElement, { writer }) => {
-        const src   = String(modelElement.getAttribute("src")  ?? "");
-        const alt   = String(modelElement.getAttribute("alt")  ?? "");
-        // CKEditor usa "resizedWidth" con % y "width" con px
-        const width = (
-          modelElement.getAttribute("resizedWidth") ??
-          modelElement.getAttribute("width")
-        ) as string | undefined;
-
-        const figureStyle = [
-          "display:block",
-          "margin:1em auto",
-          "text-align:center",
-          "max-width:100%",
-          ...(width ? [`width:${width}`] : []),
-        ].join(";");
-
-        const imgStyle = [
-          "max-width:100%",
-          "height:auto",
-          "display:block",
-          "margin:0 auto",
-        ].join(";");
+        const src = String(modelElement.getAttribute("src") ?? "");
+        const alt = String(modelElement.getAttribute("alt") ?? "");
+        const width = (modelElement.getAttribute("resizedWidth") ??
+          modelElement.getAttribute("width")) as string | undefined;
 
         const figure = writer.createContainerElement("figure", {
-          style: figureStyle,
+          class: "block mx-auto text-center my-4 max-w-full",
+          // ancho dinámico = inline (valor arbitrario)
+          ...(width ? { style: `width:${width}` } : {}),
         });
 
         const img = writer.createEmptyElement("img", {
           src,
           alt,
-          style: imgStyle,
+          class: "block mx-auto max-w-full h-auto",
         });
 
         writer.insert(writer.createPositionAt(figure, 0), img);
@@ -190,7 +117,7 @@ export class InlineStylesPlugin extends Plugin {
       },
     });
 
-    // ── imageInline → <img style="..."> (sin figure, va dentro del texto) ─────
+    // ── imageInline → <img class="..."> ─────────────────────────────────────
     conversion.for("dataDowncast").elementToElement({
       model: "imageInline",
       converterPriority: "high",
@@ -200,26 +127,43 @@ export class InlineStylesPlugin extends Plugin {
         return writer.createEmptyElement("img", {
           src,
           alt,
-          style: [
-            "max-width:100%",
-            "height:auto",
-            "vertical-align:middle",
-          ].join(";"),
+          class: "inline align-middle max-w-full h-auto",
         });
       },
     });
   }
 }
 
-// Mapa de nombres predefinidos de fontSize → valor CSS
-// Coincide con las clases que define CKEditor en su CSS:
-//   .text-tiny   → 0.7em
-//   .text-small  → 0.85em
-//   .text-big    → 1.4em
-//   .text-huge   → 1.8em
-const FONT_SIZE_MAP: Record<string, string> = {
-  tiny: "0.7em",
-  small: "0.85em",
-  big: "1.4em",
-  huge: "1.8em",
+// fontSize nombrado → clase Tailwind
+const FONT_SIZE_CLASS: Record<string, string> = {
+  tiny: "text-xs",
+  small: "text-sm",
+  big: "text-xl",
+  huge: "text-2xl",
 };
+
+// paleta hex → clase Tailwind (calza con paleta Canvas)
+const TEXT_COLOR_CLASS: Record<string, string> = {
+  "#0d9488": "text-teal-600",
+  "#0f172a": "text-slate-900",
+  "#64748b": "text-slate-500",
+  "#16a34a": "text-green-600",
+  "#dc2626": "text-red-600",
+};
+
+const BG_COLOR_CLASS: Record<string, string> = {
+  "#fef9c3": "bg-yellow-100",
+  "#dcfce7": "bg-green-100",
+  "#fee2e2": "bg-red-100",
+  "#f1f5f9": "bg-slate-100",
+};
+
+// Normaliza el valor de color y busca su clase. Acepta #hex, rgb(...) no.
+function colorClass(
+  value: string,
+  map: Record<string, string>,
+): string | undefined {
+  if (!value) return undefined;
+  const hex = value.trim().toLowerCase();
+  return map[hex];
+}

@@ -81,6 +81,8 @@ const Login = () => {
     try {
       const resp = await fetchSinToken("api/auth/login");
       const body = await resp.json();
+
+      console.log(body)
       if (body.ok) {
         window.location.href = body.url;
       } else {

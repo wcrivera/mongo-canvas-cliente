@@ -29,31 +29,60 @@ export type TipoEntorno =
   | "observacion";
 
 export const ENTORNO_LABELS: Record<TipoEntorno, string> = {
-  definicion:   "Definición",
-  teorema:      "Teorema",
-  proposicion:  "Proposición",
-  corolario:    "Corolario",
-  lema:         "Lema",
-  ejemplo:      "Ejemplo",
+  definicion: "Definición",
+  teorema: "Teorema",
+  proposicion: "Proposición",
+  corolario: "Corolario",
+  lema: "Lema",
+  ejemplo: "Ejemplo",
   demostracion: "Demostración",
-  observacion:  "Observación",
+  observacion: "Observación",
 };
 
-export const ENTORNO_COLORS: Record<TipoEntorno, { border: string; bg: string; label: string }> = {
-  definicion:   { border: "#2563b4", bg: "rgba(37,99,180,0.07)",   label: "#1d4ed8" },
-  teorema:      { border: "#15803d", bg: "rgba(21,128,61,0.07)",   label: "#166534" },
-  proposicion:  { border: "#7c3aed", bg: "rgba(109,40,217,0.07)",  label: "#6d28d9" },
-  corolario:    { border: "#0284c7", bg: "rgba(2,132,199,0.07)",   label: "#0369a1" },
-  lema:         { border: "#0d9488", bg: "rgba(13,148,136,0.07)",  label: "#0f766e" },
-  ejemplo:      { border: "none", bg: "none",   label: "none" },
-  // ejemplo:      { border: "#ea580c", bg: "rgba(234,88,12,0.07)",   label: "#c2410c" },
-  demostracion: { border: "#94a3b8", bg: "rgba(100,116,139,0.06)", label: "#475569" },
-  observacion:  { border: "#ca8a04", bg: "rgba(202,138,4,0.08)",   label: "#92400e" },
+export const ENTORNO_COLORS: Record<
+  TipoEntorno,
+  { border: string; bg: string; label: string }
+> = {
+  definicion: {
+    border: "#2563b4",
+    bg: "rgba(37,99,180,0.07)",
+    label: "#1d4ed8",
+  },
+  teorema: { border: "#15803d", bg: "rgba(21,128,61,0.07)", label: "#166534" },
+  proposicion: {
+    border: "#7c3aed",
+    bg: "rgba(109,40,217,0.07)",
+    label: "#6d28d9",
+  },
+  corolario: {
+    border: "#0284c7",
+    bg: "rgba(2,132,199,0.07)",
+    label: "#0369a1",
+  },
+  lema: { border: "#0d9488", bg: "rgba(13,148,136,0.07)", label: "#0f766e" },
+  // ejemplo: { border: "none", bg: "none", label: "none" },
+  ejemplo: { border: "#ea580c", bg: "rgba(234,88,12,0.07)", label: "#c2410c" },
+  demostracion: {
+    border: "#94a3b8",
+    bg: "rgba(100,116,139,0.06)",
+    label: "#475569",
+  },
+  observacion: {
+    border: "#ca8a04",
+    bg: "rgba(202,138,4,0.08)",
+    label: "#92400e",
+  },
 };
 
 const TIPOS_ORDEN: TipoEntorno[] = [
-  "definicion", "teorema", "proposicion", "corolario",
-  "lema", "ejemplo", "demostracion", "observacion",
+  "definicion",
+  "teorema",
+  "proposicion",
+  "corolario",
+  "lema",
+  "ejemplo",
+  "demostracion",
+  "observacion",
 ];
 
 export interface MathBlockPluginConfig {
@@ -83,7 +112,7 @@ class InsertMathEnvironmentCommand extends Command {
   }
 
   override refresh(): void {
-    const model     = this.editor.model;
+    const model = this.editor.model;
     const selection = model.document.selection;
     const allowedIn = model.schema.findAllowedParent(
       selection.getFirstPosition()!,
@@ -95,9 +124,9 @@ class InsertMathEnvironmentCommand extends Command {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function createMathEnvironment(writer: any, tipo: TipoEntorno): any {
-  const env   = writer.createElement("mathEnvironment", { tipo });
+  const env = writer.createElement("mathEnvironment", { tipo });
   const title = writer.createElement("mathEnvironmentTitle");
-  const body  = writer.createElement("mathEnvironmentBody");
+  const body = writer.createElement("mathEnvironmentBody");
 
   writer.append(title, env);
   writer.append(body, env);
@@ -135,19 +164,19 @@ export class MathBlockPlugin extends Plugin {
     const { schema } = this.editor.model;
 
     schema.register("mathEnvironment", {
-      inheritAllFrom:  "$blockObject",
+      inheritAllFrom: "$blockObject",
       allowAttributes: ["tipo"],
     });
 
     schema.register("mathEnvironmentTitle", {
-      isLimit:        true,
-      allowIn:        "mathEnvironment",
+      isLimit: true,
+      allowIn: "mathEnvironment",
       allowContentOf: "$block",
     });
 
     schema.register("mathEnvironmentBody", {
-      isLimit:        true,
-      allowIn:        "mathEnvironment",
+      isLimit: true,
+      allowIn: "mathEnvironment",
       allowContentOf: "$root",
     });
 
@@ -163,26 +192,59 @@ export class MathBlockPlugin extends Plugin {
 
   // ── Converters ────────────────────────────────────────────────────────────
 
+  // ── Converters ────────────────────────────────────────────────────────────
+
   private _defineConverters(): void {
     const { conversion } = this.editor;
 
     // ── mathEnvironment ──────────────────────────────────────────────────────
 
+    // Upcast LEGADO: contenido viejo guardado como <section> sigue cargando.
     conversion.for("upcast").elementToElement({
       model: (viewEl, { writer }) => {
-        const tipo = (viewEl.getAttribute("data-tipo") ?? "definicion") as TipoEntorno;
+        const tipo = (viewEl.getAttribute("data-tipo") ??
+          "definicion") as TipoEntorno;
         return writer.createElement("mathEnvironment", { tipo });
       },
       view: { name: "section", classes: "math-environment" },
     });
 
+    // Upcast NUEVO: contenido nuevo guardado como <div>.
+    conversion.for("upcast").elementToElement({
+      model: (viewEl, { writer }) => {
+        const tipo = (viewEl.getAttribute("data-tipo") ??
+          "definicion") as TipoEntorno;
+        return writer.createElement("mathEnvironment", { tipo });
+      },
+      view: { name: "div", classes: "math-environment" },
+    });
+
+    // dataDowncast: <div> con estilo INLINE por tipo → se ve en Canvas.
+    // Colores arbitrarios de dominio (rgba/hex fuera de la paleta Tailwind)
+    // → van inline directo, no como clase. "none" (ejemplo) = caja sin borde/fondo.
     conversion.for("dataDowncast").elementToElement({
       model: "mathEnvironment",
       view: (modelEl, { writer }) => {
-        const tipo = (modelEl.getAttribute("tipo") ?? "definicion") as TipoEntorno;
-        return writer.createContainerElement("section", {
-          class:      "math-environment",
+        const tipo = (modelEl.getAttribute("tipo") ??
+          "definicion") as TipoEntorno;
+        const colors = ENTORNO_COLORS[tipo];
+
+        const styleParts: string[] = [
+          "border-radius:6px",
+          "padding-left: 1em",
+          "margin-bottom: 2em",
+        ];
+        if (colors.border !== "none") {
+          styleParts.unshift(`border-left:4px solid ${colors.border}`);
+        }
+        if (colors.bg !== "none") {
+          styleParts.push(`background:${colors.bg}`);
+        }
+
+        return writer.createContainerElement("div", {
+          class: "math-environment",
           "data-tipo": tipo,
+          style: styleParts.join(";"),
         });
       },
     });
@@ -190,19 +252,20 @@ export class MathBlockPlugin extends Plugin {
     conversion.for("editingDowncast").elementToElement({
       model: "mathEnvironment",
       view: (modelEl, { writer }) => {
-        const tipo   = (modelEl.getAttribute("tipo") ?? "definicion") as TipoEntorno;
+        const tipo = (modelEl.getAttribute("tipo") ??
+          "definicion") as TipoEntorno;
         const colors = ENTORNO_COLORS[tipo];
 
-        const section = writer.createContainerElement("section", {
-          class:      "math-environment",
+        const section = writer.createContainerElement("div", {
+          class: "math-environment",
           "data-tipo": tipo,
           style: [
             `border-left: 4px solid ${colors.border}`,
-            `background: ${colors.bg}`,
+            // `background: ${colors.bg}`,
             "border-radius: 6px",
-            "padding: 0.5em 1em 0.7em 1em",
-            "margin: 0.6em 0",
-          ].join("; "),
+            "padding-left: 1em",
+            "margin-bottom: 2em",
+          ].join(";"),
         });
 
         return toWidget(section, writer, { label: ENTORNO_LABELS[tipo] });
@@ -216,9 +279,32 @@ export class MathBlockPlugin extends Plugin {
       view: { name: "h2", classes: "math-environment-title" },
     });
 
+    // dataDowncast: <h2> con color INLINE por tipo → título visible en Canvas.
+    // Se omite font-family 'Zapf-Chancery' (no existe en Canvas; caería a fallback).
     conversion.for("dataDowncast").elementToElement({
       model: "mathEnvironmentTitle",
-      view: { name: "h2", classes: "math-environment-title" },
+      view: (modelEl, { writer }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tipo = ((modelEl as any).parent?.getAttribute("tipo") ??
+          "definicion") as TipoEntorno;
+        const colors = ENTORNO_COLORS[tipo];
+
+        const styleParts: string[] = [
+          "font-family: 'Zapf-Chancery'!important;",
+          "font-weight:700",
+          "font-size:1.3em",
+          "letter-spacing:0.04em",
+          "margin: 0",
+        ];
+        if (colors.label !== "none") {
+          styleParts.unshift(`color:${colors.label}`);
+        }
+
+        return writer.createContainerElement("h2", {
+          class: "math-environment-title",
+          style: styleParts.join(";"),
+        });
+      },
     });
 
     // El editing downcast del título lee el tipo del padre para colorear
@@ -226,7 +312,8 @@ export class MathBlockPlugin extends Plugin {
       model: "mathEnvironmentTitle",
       view: (modelEl, { writer }) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const tipo   = ((modelEl as any).parent?.getAttribute("tipo") ?? "definicion") as TipoEntorno;
+        const tipo = ((modelEl as any).parent?.getAttribute("tipo") ??
+          "definicion") as TipoEntorno;
         const colors = ENTORNO_COLORS[tipo];
 
         const h2 = writer.createEditableElement("h2", {
@@ -235,10 +322,11 @@ export class MathBlockPlugin extends Plugin {
             `color: ${colors.label}`,
             "font-family: 'Zapf-Chancery'!important;",
             "font-weight: 700",
-            "font-size: 0.85em",
+            "font-size: 1.3em",
             "letter-spacing: 0.04em",
-            // "text-transform: uppercase",
-            "margin: 0 0 0.3em 0",
+            "margin: 0",
+            // "margin: 0 0 0.3em 0",
+
           ].join("; "),
         });
         return toWidgetEditable(h2, writer);
@@ -276,11 +364,11 @@ export class MathBlockPlugin extends Plugin {
 
     editor.ui.componentFactory.add("insertMathEnvironment", (locale) => {
       const dropdown = createDropdown(locale);
-      const command  = editor.commands.get("insertMathEnvironment")!;
+      const command = editor.commands.get("insertMathEnvironment")!;
 
       dropdown.buttonView.set({
-        icon:    iconMathBlock,
-        label:   "Entorno",
+        icon: iconMathBlock,
+        label: "Entorno",
         tooltip: "Insertar entorno matemático",
       });
 
@@ -292,8 +380,8 @@ export class MathBlockPlugin extends Plugin {
         items.add({
           type: "button" as const,
           model: new UIModel({
-            withText:     true,
-            label:        ENTORNO_LABELS[tipo],
+            withText: true,
+            label: ENTORNO_LABELS[tipo],
             commandParam: tipo,
           }),
         });
@@ -302,7 +390,8 @@ export class MathBlockPlugin extends Plugin {
       addListToDropdown(dropdown, items);
 
       dropdown.on("execute", (evt) => {
-        const tipo = (evt.source as { commandParam?: TipoEntorno }).commandParam;
+        const tipo = (evt.source as { commandParam?: TipoEntorno })
+          .commandParam;
         if (!tipo) return;
         editor.execute("insertMathEnvironment", { tipo });
         editor.editing.view.focus();

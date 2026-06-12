@@ -1,20 +1,10 @@
 import { Plugin } from "ckeditor5";
 
 /**
- * InlineTablePlugin
+ * InlineTablePlugin (Tailwind)
  *
- * Sobreescribe los conversores dataDowncast del plugin Table de CKEditor
- * para emitir estilos inline en lugar del wrapper <figure class="table">
- * y clases CSS.
- *
- * Maneja correctamente:
- *  - colspan y rowspan
- *  - celdas header (th) vs normales (td)
- *  - thead/tbody automático según headingRows
- *
- * Guarda de seguridad: cuando GHS está activo, algunos nodos de tabla
- * pueden no ser iterables (son nodos GHS, no nodos del TablePlugin nativo).
- * En ese caso se omite la detección de header y se emite <td> por defecto.
+ * dataDowncast del Table sin el wrapper <figure class="table">, emitiendo
+ * clases Tailwind. Conserva la lógica de colspan/rowspan y detección th/td.
  */
 export class InlineTablePlugin extends Plugin {
   static get pluginName(): string {
@@ -24,85 +14,72 @@ export class InlineTablePlugin extends Plugin {
   init(): void {
     const { conversion } = this.editor;
 
-    // ── table → <table style="..."> (sin <figure> wrapper) ────────────────────
     conversion.for("dataDowncast").elementToElement({
       model: "table",
       converterPriority: "high",
-      view: (_modelElement, { writer }) =>
+      view: (_m, { writer }) =>
         writer.createContainerElement("table", {
-          style: [
-            "border-collapse:collapse",
-            "width:100%",
-            "margin:0.75em 0",
-            "font-size:inherit",
-          ].join(";"),
+          class: "border-collapse w-full my-3",
         }),
     });
 
-    // ── tableRow → <tr> ────────────────────────────────────────────────────────
     conversion.for("dataDowncast").elementToElement({
       model: "tableRow",
       converterPriority: "high",
-      view: (_modelElement, { writer }) =>
-        writer.createContainerElement("tr"),
+      view: (_m, { writer }) => writer.createContainerElement("tr"),
     });
 
-    // ── tableCell → <td> o <th> con estilos inline ─────────────────────────────
     conversion.for("dataDowncast").elementToElement({
       model: "tableCell",
       converterPriority: "high",
       view: (modelElement, { writer }) => {
         const tableRaw = modelElement.parent?.parent;
-        const row      = modelElement.parent;
-
-        // Acotar a ModelElement (que tiene getAttribute e Symbol.iterator)
-        // ModelDocumentFragment no tiene getAttribute — lo descartamos.
+        const row = modelElement.parent;
         const table = tableRaw?.is("element") ? tableRaw : undefined;
 
-        // Guarda: si table o row no son iterables (puede ocurrir cuando GHS
-        // maneja nodos de tabla que el TablePlugin no registró), salir con <td>
-        const tableIterable = table != null && typeof (table as unknown as { [Symbol.iterator]?: unknown })[Symbol.iterator] === "function";
-        const rowIterable   = row   != null && typeof (row   as unknown as { [Symbol.iterator]?: unknown })[Symbol.iterator] === "function";
+        const tableIterable =
+          table != null &&
+          typeof (table as unknown as { [Symbol.iterator]?: unknown })[
+            Symbol.iterator
+          ] === "function";
+        const rowIterable =
+          row != null &&
+          typeof (row as unknown as { [Symbol.iterator]?: unknown })[
+            Symbol.iterator
+          ] === "function";
 
-        const headingRows    = (table?.getAttribute("headingRows")    as number | undefined) ?? 0;
-        const headingColumns = (table?.getAttribute("headingColumns") as number | undefined) ?? 0;
+        const headingRows =
+          (table?.getAttribute("headingRows") as number | undefined) ?? 0;
+        const headingColumns =
+          (table?.getAttribute("headingColumns") as number | undefined) ?? 0;
 
         const rowIndex = tableIterable
-          ? [...(table as unknown as Iterable<unknown>)].indexOf(row as unknown)
+          ? [...(table as unknown as Iterable<unknown>)].indexOf(
+              row as unknown,
+            )
           : -1;
-
         const colIndex = rowIterable
           ? [...(row as unknown as Iterable<unknown>)].indexOf(modelElement)
           : -1;
 
         const isHeader =
-          (headingRows    > 0 && rowIndex >= 0 && rowIndex < headingRows)    ||
+          (headingRows > 0 && rowIndex >= 0 && rowIndex < headingRows) ||
           (headingColumns > 0 && colIndex >= 0 && colIndex < headingColumns);
 
         const tagName = isHeader ? "th" : "td";
 
-        const baseStyle = [
-          "border:1px solid #cbd5e1",
-          "padding:6px 10px",
-          "vertical-align:top",
-          "line-height:1.5",
-        ];
+        const cls = isHeader
+          ? "border border-slate-300 px-2.5 py-1.5 align-top leading-normal font-semibold bg-slate-100 text-left"
+          : "border border-slate-300 px-2.5 py-1.5 align-top leading-normal";
 
-        if (isHeader) {
-          baseStyle.push(
-            "font-weight:600",
-            "background:#f1f5f9",
-            "text-align:left",
-          );
-        }
+        const attrs: Record<string, string> = { class: cls };
 
-        const attrs: Record<string, string> = {
-          style: baseStyle.join(";"),
-        };
-
-        const colspan = modelElement.getAttribute("colspan") as number | undefined;
-        const rowspan = modelElement.getAttribute("rowspan") as number | undefined;
-
+        const colspan = modelElement.getAttribute("colspan") as
+          | number
+          | undefined;
+        const rowspan = modelElement.getAttribute("rowspan") as
+          | number
+          | undefined;
         if (colspan && colspan > 1) attrs["colspan"] = String(colspan);
         if (rowspan && rowspan > 1) attrs["rowspan"] = String(rowspan);
 

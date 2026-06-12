@@ -29,11 +29,21 @@ import CheckIcon from "@mui/icons-material/Check";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { actualizarDiapositiva, eliminarDiapositiva } from "../../store/slices/diapositiva";
+import {
+  actualizarDiapositiva,
+  eliminarDiapositiva,
+} from "../../store/slices/diapositiva";
 import { fetchConToken } from "../../helpers/fetch";
 import MathTextEditor from "../../components/CKEditor/MathTextEditorDiapositiva";
-import SlidePreview from "./SlidePreview"; // mismo directorio: src/pages/diapositiva/
+import SlidePreviewMiniatura from "./components/SlidePreviewMiniatura"; // mismo directorio: src/pages/diapositiva/
 import { normalizeForEditor } from "../../components/CKEditor/mathUtils";
+import ModalPreview from "./components/ModalPreview";
+
+// ── Wrapper que mide el espacio disponible y centra el preview ────────────────
+// Mide su propio contenedor (que llena el DialogContent fullScreen) y le pasa
+// las dimensiones reales a SlidePreview, que escala con min(ancho, alto).
+
+
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -101,8 +111,8 @@ const EditorDiapositiva = () => {
   const [msgOk, setMsgOk] = useState<string | null>(null);
   const [msgErr, setMsgErr] = useState<string | null>(null);
   const [modalConfig, setModalConfig] = useState(false);
-  const [modalPreview,  setModalPreview]  = useState<number | null>(null);
-  const [eliminando,    setEliminando]    = useState(false);
+  const [modalPreview, setModalPreview] = useState<number | null>(null);
+  const [eliminando, setEliminando] = useState(false);
   const [modalEliminar, setModalEliminar] = useState(false);
 
   const diapId = useRef<string | null>(null);
@@ -118,7 +128,9 @@ const EditorDiapositiva = () => {
 
     const cargar = async () => {
       try {
-        const resp = await fetchConToken(`api/admin/diapositivas/${recurso_id}`);
+        const resp = await fetchConToken(
+          `api/admin/diapositivas/${recurso_id}`,
+        );
         const body = await resp.json();
 
         if (body.ok && body.data) {
@@ -134,7 +146,9 @@ const EditorDiapositiva = () => {
             );
           }
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const savedConfig = (body.data as any).config as IConfigReveal | undefined;
+          const savedConfig = (body.data as any).config as
+            | IConfigReveal
+            | undefined;
           if (savedConfig) setConfig(savedConfig);
         }
       } catch (e) {
@@ -190,7 +204,7 @@ const EditorDiapositiva = () => {
     if (!diapId.current) return;
     setGuardando(true);
     setMsgErr(null);
-    
+
     const resp = await fetchConToken(
       `api/admin/diapositivas/${diapId.current}/slides`,
       { slides, config },
@@ -341,7 +355,10 @@ const EditorDiapositiva = () => {
             <IconButton
               size="small"
               onClick={() => setModalEliminar(true)}
-              sx={{ color: "#94a3b8", "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" } }}
+              sx={{
+                color: "#94a3b8",
+                "&:hover": { color: "#ef4444", bgcolor: "#fef2f2" },
+              }}
             >
               <DeleteOutlineIcon fontSize="small" />
             </IconButton>
@@ -392,7 +409,7 @@ const EditorDiapositiva = () => {
         {/* ── Panel izquierdo: lista de slides ── */}
         <div
           style={{
-            width: 160,
+            width: 150,
             flexShrink: 0,
             borderRight: "1px solid #e2e8f0",
             background: "white",
@@ -419,7 +436,7 @@ const EditorDiapositiva = () => {
               }}
             >
               {/* Miniatura en tiempo real */}
-              <SlidePreview slide={s} config={config} width={140} height={88} />
+              <SlidePreviewMiniatura slide={s} config={config} width={128} height={80} />
 
               {/* Controles */}
               <div
@@ -562,7 +579,7 @@ const EditorDiapositiva = () => {
             </div>
           )}
 
-          {/* Columna derecha */}
+          {/* Columna derecha
           {slide.layout === "dos_columnas" && (
             <div>
               <Typography
@@ -588,7 +605,7 @@ const EditorDiapositiva = () => {
                 />
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Código */}
           {slide.layout === "codigo" && (
@@ -745,54 +762,68 @@ const EditorDiapositiva = () => {
       </Dialog>
 
       {/* ── Modal: vista previa completa ── */}
-      <Dialog
-        open={modalPreview !== null}
-        onClose={() => setModalPreview(null)}
-        fullScreen
-      >
-        <DialogContent>
-          <IconButton
-            size="small"
-            onClick={() => setModalPreview(null)}
-            style={{ position: "absolute", right: 8, top: 8, zIndex: 1 }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-          {modalPreview !== null && (
-            <SlidePreview
-              slide={slides[modalPreview]}
-              config={config}
-              width={1280}
-              height={800}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <ModalPreview
+        modalPreview={modalPreview}
+        setModalPreview={setModalPreview}
+        slides={slides}
+        config={config}
+      />
       {/* ── Modal: confirmar eliminar ── */}
-      <Dialog open={modalEliminar} onClose={() => setModalEliminar(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ bgcolor: "#fef2f2", color: "#991b1b", display: "flex", alignItems: "center", gap: 1.5, py: 2 }}>
+      <Dialog
+        open={modalEliminar}
+        onClose={() => setModalEliminar(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle
+          sx={{
+            bgcolor: "#fef2f2",
+            color: "#991b1b",
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            py: 2,
+          }}
+        >
           <DeleteOutlineIcon />
           <span>Eliminar diapositiva</span>
         </DialogTitle>
         <DialogContent sx={{ pt: 3, pb: 1 }}>
           <Typography variant="body2" sx={{ color: "#374151" }}>
-            Se eliminará la diapositiva, sus slides y el contenido en Canvas. Esta acción no se puede deshacer.
+            Se eliminará la diapositiva, sus slides y el contenido en Canvas.
+            Esta acción no se puede deshacer.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
-          <Button onClick={() => setModalEliminar(false)} variant="outlined"
-            sx={{ borderColor: "#d1d5db", color: "#374151", borderRadius: 2 }}>
+          <Button
+            onClick={() => setModalEliminar(false)}
+            variant="outlined"
+            sx={{ borderColor: "#d1d5db", color: "#374151", borderRadius: 2 }}
+          >
             Cancelar
           </Button>
-          <Button onClick={handleEliminar} variant="contained" disabled={eliminando}
-            startIcon={eliminando ? <CircularProgress size={14} color="inherit" /> : undefined}
-            sx={{ bgcolor: "#dc2626", borderRadius: 2, px: 3, fontWeight: 600, boxShadow: "none",
-              "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" } }}>
+          <Button
+            onClick={handleEliminar}
+            variant="contained"
+            disabled={eliminando}
+            startIcon={
+              eliminando ? (
+                <CircularProgress size={14} color="inherit" />
+              ) : undefined
+            }
+            sx={{
+              bgcolor: "#dc2626",
+              borderRadius: 2,
+              px: 3,
+              fontWeight: 600,
+              boxShadow: "none",
+              "&:hover": { bgcolor: "#b91c1c", boxShadow: "none" },
+            }}
+          >
             {eliminando ? "Eliminando..." : "Sí, eliminar"}
           </Button>
         </DialogActions>
       </Dialog>
-
     </div>
   );
 };

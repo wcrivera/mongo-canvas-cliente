@@ -228,8 +228,8 @@ export class MathPlugin extends Plugin {
             "data-latex": latex,
             style:
               "display:inline-flex;align-items:center;cursor:pointer;" +
-              "background: #eef3f8b8;border:1px solid #c9dae8b7;" +
-              "border-radius:4px;padding:0px 0px;margin:0 0px;vertical-align:middle;",
+              // "background: #eef3f8b8;border:1px solid #c9dae8b7;" +
+              "border-radius:4px;padding:0px 0px;margin:0 0px",
           },
           (el) => {
             el.innerHTML = renderKatexInline(latex);
@@ -252,7 +252,7 @@ export class MathPlugin extends Plugin {
           "data-latex": latex,
           style:
             "text-align:center;padding:0px;margin:0px;" +
-            "background: #eef3f8b8;border:1px solid #c9dae8b7;" +
+            // "background: #eef3f8b8;border:1px solid #c9dae8b7;" +
             "border-radius:4px;padding:0px 0px;margin:0 0px;vertical-align:middle;",
         });
 

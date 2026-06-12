@@ -82,7 +82,7 @@ const FormOpciones = ({ tipo, opciones, onChange }: Props) => {
             <MathTextEditorInline
               initialData={op.texto}
               onChange={(html) => handleTexto(idx, html)}
-              placeholder={`Opción ${idx + 1}`}
+              // placeholder={`Opción ${idx + 1}`}
             />
           )}
 

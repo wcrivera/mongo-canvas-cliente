@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@source inline("text-xs text-sm text-lg text-xl text-2xl text-3xl text-teal-600 text-slate-900 text-slate-500 text-green-600 text-red-600 bg-yellow-100 bg-green-100 bg-red-100 bg-slate-100 font-bold font-semibold leading-tight leading-snug leading-normal my-2 my-3 my-4 border-collapse w-full border border-slate-300 px-2.5 py-1.5 align-top text-left block mx-auto text-center max-w-full h-auto inline align-middle");
+
+/* tu resto de CSS / capas */
+
 @theme {
   /* Colores personalizados */
   --color-chapter-blue: #4A6D8C;

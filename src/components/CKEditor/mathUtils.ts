@@ -195,14 +195,14 @@ const ENTORNO_LABELS: Record<string, string> = {
 };
 
 const ENTORNO_COLORS: Record<string, { border: string; bg: string; title: string }> = {
-  definicion:   { border: "#2563b4", bg: "rgba(37,99,180,0.07)",   title: "#1d4ed8" },
-  teorema:      { border: "#15803d", bg: "rgba(21,128,61,0.07)",   title: "#166534" },
-  proposicion:  { border: "#7c3aed", bg: "rgba(109,40,217,0.07)",  title: "#6d28d9" },
-  corolario:    { border: "#0284c7", bg: "rgba(2,132,199,0.07)",   title: "#0369a1" },
-  lema:         { border: "#0d9488", bg: "rgba(13,148,136,0.07)",  title: "#0f766e" },
-  ejemplo:      { border: "#ea580c", bg: "rgba(234,88,12,0.07)",   title: "#c2410c" },
-  demostracion: { border: "#94a3b8", bg: "rgba(100,116,139,0.06)", title: "#475569" },
-  observacion:  { border: "#ca8a04", bg: "rgba(202,138,4,0.08)",   title: "#92400e" },
+  definicion:   { border: "#2563b4", bg: "transparent",   title: "#1d4ed8" },
+  teorema:      { border: "#15803d", bg: "transparent",   title: "#166534" },
+  proposicion:  { border: "#7c3aed", bg: "transparent",  title: "#6d28d9" },
+  corolario:    { border: "#0284c7", bg: "transparent",   title: "#0369a1" },
+  lema:         { border: "#0d9488", bg: "transparent",  title: "#0f766e" },
+  ejemplo:      { border: "#ea580c", bg: "transparent",   title: "#c2410c" },
+  demostracion: { border: "#94a3b8", bg: "transparent", title: "#475569" },
+  observacion:  { border: "#ca8a04", bg: "transparent",   title: "#92400e" },
 };
 
 function renderMathEnvironments(html: string): string {

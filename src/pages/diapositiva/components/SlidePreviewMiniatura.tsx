@@ -3,15 +3,14 @@ import { useEffect, useRef } from "react";
 import Reveal from "reveal.js";
 import RevealMath from "reveal.js";
 // import RevealMath from "reveal.js/plugin/math/math.js";
-import type { ISlide, IConfigReveal } from "./EditorDiapositiva";
-import { transformarHtmlParaReveal } from "./compilarHtmlReveal";
-import TiptapRenderer from "../../components/CKEditor/TiptapRenderer";
+import type { ISlide, IConfigReveal } from "./../EditorDiapositiva";
+import TiptapRenderer from "../../../components/CKEditor/TiptapRenderer";
 
 interface Props {
   slide: ISlide;
   config: IConfigReveal;
-  width?: number;
-  height?: number;
+  width: number;
+  height: number;
 }
 
 const CANVAS_W = 1280;
@@ -50,8 +49,8 @@ function injectGlobalResources() {
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
-const SlidePreview = ({ slide, config, width = 140, height = 88 }: Props) => {
-  const scale = width / CANVAS_W;
+const SlidePreview = ({ slide, config, width, height }: Props) => {
+  const scale = Math.min(width / CANVAS_W, height / CANVAS_H);
   const deckDivRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const deckRef = useRef<any>(null);
@@ -144,9 +143,6 @@ const SlidePreview = ({ slide, config, width = 140, height = 88 }: Props) => {
     config.tema,
   ]);
 
-  const contenido = transformarHtmlParaReveal(slide.contenido ?? "");
-  const fondoAttr = slide.fondo ? { "data-background-color": slide.fondo } : {};
-
   return (
     <div
       style={{
@@ -174,12 +170,10 @@ const SlidePreview = ({ slide, config, width = 140, height = 88 }: Props) => {
           style={{ width: CANVAS_W, height: CANVAS_H }}
         >
           <div className="slides">
-            <section
-            {...fondoAttr}
-            // dangerouslySetInnerHTML={{ __html: <TiptapRenderer>{contenido}</TiptapRenderer> }}
-            style={{ textAlign: "left", fontSize: "28px" }}
-            >
-              <TiptapRenderer style={{ textAlign: "left", fontSize: "28px" }}>{contenido}</TiptapRenderer>
+            <section>
+              <TiptapRenderer style={{ textAlign: "left", fontSize: "28px" }}>
+                {slide.contenido}
+              </TiptapRenderer>
             </section>
           </div>
         </div>
