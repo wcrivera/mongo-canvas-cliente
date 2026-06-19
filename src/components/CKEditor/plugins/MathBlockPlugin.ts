@@ -45,31 +45,31 @@ export const ENTORNO_COLORS: Record<
 > = {
   definicion: {
     border: "#2563b4",
-    bg: "rgba(37,99,180,0.07)",
+    bg: "transparent",
     label: "#1d4ed8",
   },
-  teorema: { border: "#15803d", bg: "rgba(21,128,61,0.07)", label: "#166534" },
+  teorema: { border: "#15803d", bg: "transparent", label: "#166534" },
   proposicion: {
     border: "#7c3aed",
-    bg: "rgba(109,40,217,0.07)",
+    bg: "transparent",
     label: "#6d28d9",
   },
   corolario: {
     border: "#0284c7",
-    bg: "rgba(2,132,199,0.07)",
+    bg: "transparent",
     label: "#0369a1",
   },
-  lema: { border: "#0d9488", bg: "rgba(13,148,136,0.07)", label: "#0f766e" },
+  lema: { border: "#0d9488", bg: "transparent", label: "#0f766e" },
   // ejemplo: { border: "none", bg: "none", label: "none" },
-  ejemplo: { border: "#ea580c", bg: "rgba(234,88,12,0.07)", label: "#c2410c" },
+  ejemplo: { border: "#ea580c", bg: "transparent", label: "#c2410c" },
   demostracion: {
     border: "#94a3b8",
-    bg: "rgba(100,116,139,0.06)",
+    bg: "transparent",
     label: "#475569",
   },
   observacion: {
     border: "#ca8a04",
-    bg: "rgba(202,138,4,0.08)",
+    bg: "transparent",
     label: "#92400e",
   },
 };
@@ -237,9 +237,9 @@ export class MathBlockPlugin extends Plugin {
         if (colors.border !== "none") {
           styleParts.unshift(`border-left:4px solid ${colors.border}`);
         }
-        if (colors.bg !== "none") {
-          styleParts.push(`background:${colors.bg}`);
-        }
+        // if (colors.bg !== "none") {
+        //   styleParts.push(`background:${colors.bg}`);
+        // }
 
         return writer.createContainerElement("div", {
           class: "math-environment",
@@ -290,7 +290,7 @@ export class MathBlockPlugin extends Plugin {
         const colors = ENTORNO_COLORS[tipo];
 
         const styleParts: string[] = [
-          "font-family: 'Zapf-Chancery'!important;",
+          "font-family:'Cormorant SC',serif",
           "font-weight:700",
           "font-size:1.3em",
           "letter-spacing:0.04em",
@@ -320,13 +320,12 @@ export class MathBlockPlugin extends Plugin {
           class: "math-environment-title",
           style: [
             `color: ${colors.label}`,
-            "font-family: 'Zapf-Chancery'!important;",
+            "font-family: 'Cormorant SC', serif",
             "font-weight: 700",
             "font-size: 1.3em",
             "letter-spacing: 0.04em",
             "margin: 0",
             // "margin: 0 0 0.3em 0",
-
           ].join("; "),
         });
         return toWidgetEditable(h2, writer);

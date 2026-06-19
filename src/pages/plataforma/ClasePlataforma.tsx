@@ -13,6 +13,7 @@ import QuizIcon            from "@mui/icons-material/Quiz";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { obtenerClasePlataforma }         from "../../store/slices/plataforma";
 import { calcularIndicador }              from "../../helpers/indicadorIntento";
+import { chapter } from "../../db/db";
 
 const ClasePlataforma = () => {
   const { curso_id, capitulo_id, clase_id } = useParams<{
@@ -32,7 +33,7 @@ const ClasePlataforma = () => {
         <Button startIcon={<ArrowBackIcon />}
           onClick={() => navigate(`/plataforma/cursos/${curso_id}/capitulos/${capitulo_id}`)}
           sx={{ color: "#6793ba", mb: 3 }}>
-          Volver al capítulo
+          Volver al {chapter.name}
         </Button>
 
         {isLoading && <div className="flex justify-center py-16"><CircularProgress sx={{ color: "#4A6D8C" }} /></div>}

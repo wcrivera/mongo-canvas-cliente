@@ -13,6 +13,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import InfoIcon from "@mui/icons-material/Info";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
+import { chapter } from "../../../db/db";
 
 interface Paso {
   msg: string;
@@ -162,7 +163,7 @@ const ModalSincronizar = ({
                 {progreso.msg}
               </Typography>
               <Typography variant="caption" sx={{ color: "#6793ba" }}>
-                {progreso.actual}/{progreso.total} capítulos
+                {progreso.actual}/{progreso.total} {chapter.pluralName}
               </Typography>
             </div>
             <LinearProgress
@@ -187,13 +188,13 @@ const ModalSincronizar = ({
             </Typography>
             <div className="flex flex-col gap-1.5">
               {[
-                "Módulos por capítulo",
+                `Módulos por ${chapter.name}`,
                 "Páginas de diapositivas y videos",
                 "Quizzes con preguntas",
                 "Ayudantías con soluciones, videos y quizzes",
                 "Ejercicios",
                 "Páginas HTML de clases, ayudantías y ejercicios",
-                "Índice general de capítulos",
+                `Índice general de ${chapter.pluralName}`,
               ].map((item) => (
                 <div key={item} className="flex items-center gap-2">
                   <div

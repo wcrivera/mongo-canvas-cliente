@@ -6,6 +6,7 @@ import {
 import LayersIcon from "@mui/icons-material/Layers";
 import { useAppDispatch } from "../../../store/hooks";
 import { crearCapitulo } from "../../../store/slices/capitulo";
+import { chapter } from "../../../db/db";
 
 const ModalCrearCapitulo = ({
   curso_id,
@@ -47,12 +48,12 @@ const ModalCrearCapitulo = ({
         display: "flex", alignItems: "center", gap: 1.5, py: 2,
       }}>
         <LayersIcon />
-        <span>Nuevo capítulo</span>
+        <span>Nuevo {chapter.name}</span>
       </DialogTitle>
 
       <DialogContent sx={{ pt: "20px !important", pb: 1, overflow: "visible" }}>
         <TextField
-          label="Nombre del capítulo"
+          label={`Nombre del ${chapter.name}`}
           placeholder="ej: Límites y continuidad"
           value={nombre}
           onChange={(e) => { setNombre(e.target.value); setError(null); }}

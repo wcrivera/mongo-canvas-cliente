@@ -3,6 +3,7 @@ import { useAppDispatch } from "../../../store/hooks";
 import { eliminarCapitulo, type ICapitulo } from "../../../store/slices/capitulo";
 import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import { WarningAmber } from "@mui/icons-material";
+import { chapter } from "../../../db/db";
 
 export const ModalEliminarCapitulo = ({
   capitulo,
@@ -31,12 +32,12 @@ export const ModalEliminarCapitulo = ({
         display: "flex", alignItems: "center", gap: 1.5, py: 2,
       }}>
         <WarningAmber />
-        <span>Eliminar capítulo</span>
+        <span>Eliminar {chapter.name}</span>
       </DialogTitle>
 
       <DialogContent sx={{ mt: 3, pt: 3, pb: 1 }}>
         <Typography variant="body2" sx={{ color: "#374151", mb: 1.5 }}>
-          ¿Eliminar el capítulo <strong>{capitulo.position}. {capitulo.nombre}</strong>?
+          ¿Eliminar el {chapter.name} <strong>{capitulo.position}. {capitulo.nombre}</strong>?
         </Typography>
         <Typography variant="body2" sx={{ color: "#6b7280", mb: tieneSynced ? 2 : 0 }}>
           Se eliminarán todas las clases, temas y recursos asociados.

@@ -127,7 +127,7 @@ const MathBlockModal = ({
         {/* Preview */}
         <div style={{
           borderLeft: `4px solid ${colors.border}`,
-          background: colors.bg,
+          // background: colors.bg,
           borderRadius: "6px",
           padding: "10px 14px",
         }}>

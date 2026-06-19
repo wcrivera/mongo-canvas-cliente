@@ -64,6 +64,7 @@ export const REVEAL_STYLES = `
   box-sizing: border-box;
 }
 .reveal .math-block-title {
+  font-family: 'Cormorant SC', serif; 
   font-weight: 700;
   font-size: 0.9em;
   letter-spacing: 0.03em;
@@ -74,49 +75,42 @@ export const REVEAL_STYLES = `
 
 /* ── Definición — azul ── */
 .reveal .definicion {
-  background: rgba(37, 99, 180, 0.07);
   border-left: 4px solid #2563b4;
 }
 .reveal .definicion .math-block-title { color: #1d4ed8; }
 
 /* ── Teorema — verde oscuro ── */
 .reveal .teorema {
-  background: rgba(21, 128, 61, 0.07);
   border-left: 4px solid #15803d;
 }
 .reveal .teorema .math-block-title { color: #166534; }
 
 /* ── Proposición — morado ── */
 .reveal .proposicion {
-  background: rgba(109, 40, 217, 0.07);
   border-left: 4px solid #7c3aed;
 }
 .reveal .proposicion .math-block-title { color: #6d28d9; }
 
 /* ── Corolario — azul cielo ── */
 .reveal .corolario {
-  background: rgba(2, 132, 199, 0.07);
   border-left: 4px solid #0284c7;
 }
 .reveal .corolario .math-block-title { color: #0369a1; }
 
 /* ── Lema — teal ── */
 .reveal .lema {
-  background: rgba(13, 148, 136, 0.07);
   border-left: 4px solid #0d9488;
 }
 .reveal .lema .math-block-title { color: #0f766e; }
 
 /* ── Ejemplo — naranja ── */
 .reveal .ejemplo {
-  background: rgba(234, 88, 12, 0.07);
   border-left: 4px solid #ea580c;
 }
 .reveal .ejemplo .math-block-title { color: #c2410c; }
 
 /* ── Demostración — gris, cursiva ── */
 .reveal .demostracion {
-  background: rgba(100, 116, 139, 0.06);
   border-left: 4px solid #94a3b8;
   font-style: italic;
 }
@@ -136,7 +130,6 @@ export const REVEAL_STYLES = `
 
 /* ── Observación — amarillo ── */
 .reveal .observacion {
-  background: rgba(202, 138, 4, 0.08);
   border-left: 4px solid #ca8a04;
 }
 .reveal .observacion .math-block-title { color: #92400e; }
@@ -173,25 +166,25 @@ export type ComponenteMatematico =
   | "observacion";
 
 export const COMPONENTES_LABELS: Record<ComponenteMatematico, string> = {
-  definicion:   "Definición",
-  teorema:      "Teorema",
-  proposicion:  "Proposición",
-  corolario:    "Corolario",
-  lema:         "Lema",
-  ejemplo:      "Ejemplo",
+  definicion: "Definición",
+  teorema: "Teorema",
+  proposicion: "Proposición",
+  corolario: "Corolario",
+  lema: "Lema",
+  ejemplo: "Ejemplo",
   demostracion: "Demostración",
-  observacion:  "Observación",
+  observacion: "Observación",
 };
 
 export const COMPONENTES_COLORS: Record<ComponenteMatematico, string> = {
-  definicion:   "#1d4ed8",
-  teorema:      "#166534",
-  proposicion:  "#6d28d9",
-  corolario:    "#0369a1",
-  lema:         "#0f766e",
-  ejemplo:      "#c2410c",
+  definicion: "#1d4ed8",
+  teorema: "#166534",
+  proposicion: "#6d28d9",
+  corolario: "#0369a1",
+  lema: "#0f766e",
+  ejemplo: "#c2410c",
   demostracion: "#475569",
-  observacion:  "#92400e",
+  observacion: "#92400e",
 };
 
 /**
@@ -200,8 +193,8 @@ export const COMPONENTES_COLORS: Record<ComponenteMatematico, string> = {
  */
 export const htmlComponente = (
   tipo: ComponenteMatematico,
-  titulo: string,  // ej: "Teorema de Bolzano" — puede estar vacío
-  cuerpo: string,  // HTML del contenido
+  titulo: string, // ej: "Teorema de Bolzano" — puede estar vacío
+  cuerpo: string, // HTML del contenido
 ): string => {
   const label = COMPONENTES_LABELS[tipo];
   const tituloCompleto = titulo.trim()

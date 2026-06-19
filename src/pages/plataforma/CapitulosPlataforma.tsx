@@ -6,6 +6,7 @@ import ArrowBackIcon    from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { obtenerCapitulosPlataforma, obtenerCursosPlataforma } from "../../store/slices/plataforma";
+import { chapter } from "../../db/db";
 
 const CapitulosPlataforma = () => {
   const { curso_id } = useParams<{ curso_id: string }>();
@@ -46,7 +47,7 @@ const CapitulosPlataforma = () => {
                 "&:hover": { boxShadow: "0 4px 16px rgba(74,109,140,0.1)" } }}>
               <CardContent sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", p: "16px 20px !important" }}>
                 <div>
-                  <Typography variant="caption" sx={{ color: "#8daecb" }}>Capítulo {cap.position}</Typography>
+                  <Typography variant="caption" sx={{ color: "#8daecb" }}>{chapter.capitalName} {cap.position}</Typography>
                   <Typography variant="subtitle1" sx={{ color: "#1f2c38", fontWeight: 600 }}>{cap.nombre}</Typography>
                 </div>
                 <Button endIcon={<ArrowForwardIcon />}

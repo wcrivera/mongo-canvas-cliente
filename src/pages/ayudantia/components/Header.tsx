@@ -7,6 +7,7 @@ import type { ICapitulo } from "../../../store/slices/capitulo";
 import { fetchConToken } from "../../../helpers/fetch";
 import { useAppSelector } from "../../../store/hooks";
 import { useState } from "react";
+import { chapter } from "../../../db/db";
 
 // ── Tabs de navegación ────────────────────────────────────────────────────────
 const TABS = [
@@ -117,13 +118,13 @@ const Header = ({ curso_id, capitulo, setMsgDeploy }: HeaderProps) => {
                 (e.currentTarget.style.color = "rgba(255,255,255,0.35)")
               }
             >
-              Capítulos
+              {chapter.capitalPluralName}
             </button>
             <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 11 }}>
               /
             </span>
             <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
-              Cap. {capitulo?.position}
+              {chapter.capitalName} {capitulo?.position}
             </span>
           </div>
 

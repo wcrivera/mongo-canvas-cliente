@@ -31,6 +31,7 @@ import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
 import SortableCapituloCard from "./components/SortableCapituloCard";
 import ModalCrearCapitulo from "./components/ModalCrearCapitulo";
 import Header from "./components/Header";
+import { chapter } from "../../db/db";
 
 const Capitulos = () => {
   const { curso_id } = useParams<{ curso_id: string }>();
@@ -102,7 +103,7 @@ const Capitulos = () => {
           variant="outlined"
           startIcon={<AddIcon />}
         >
-          Agregar capítulo
+          Agregar {chapter.name}
         </Button>
       </div>
 

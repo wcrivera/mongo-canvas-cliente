@@ -8,6 +8,7 @@ import VideoLibraryIcon    from "@mui/icons-material/VideoLibrary";
 import { fetchConToken }              from "../../helpers/fetch";
 import { calcularIndicador }          from "../../helpers/indicadorIntento";
 import TiptapRenderer                 from "../../components/CKEditor/TiptapRenderer";
+import { chapter } from "../../db/db";
 
 const AyudantiaPlataforma = () => {
   const { curso_id, capitulo_id, ayudantia_id } = useParams<{
@@ -32,7 +33,7 @@ const AyudantiaPlataforma = () => {
         <Button startIcon={<ArrowBackIcon />}
           onClick={() => navigate(`/plataforma/cursos/${curso_id}/capitulos/${capitulo_id}`)}
           sx={{ color: "#6793ba", mb: 3 }}>
-          Volver al capítulo
+          Volver al {chapter.name}
         </Button>
 
         {cargando && <div className="flex justify-center py-16"><CircularProgress sx={{ color: "#4A6D8C" }} /></div>}

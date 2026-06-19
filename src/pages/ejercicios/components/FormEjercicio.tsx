@@ -26,6 +26,7 @@ import type {
   IRespuestaNumericaEjercicio,
 } from "../../../store/slices/ejercicio";
 import MathTextEditor from "../../../components/CKEditor/MathTextEditor";
+import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
 
 const enunciadoVacio = (html: string) =>
   !html || html.replace(/<[^>]*>/g, "").trim() === "";
@@ -214,7 +215,7 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
             Enunciado
           </Typography>
           <MathTextEditor
-            initialData={form.enunciado}
+            initialData={normalizeForEditor(form.enunciado)}
             onChange={(html) => setForm((f) => ({ ...f, enunciado: html }))}
             siglaCurso={siglaCurso}
           />

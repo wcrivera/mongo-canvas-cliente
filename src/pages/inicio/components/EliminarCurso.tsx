@@ -5,6 +5,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useAppDispatch } from "../../../store/hooks";
 import { eliminarMongoCurso } from "../../../store/slices/mongoCurso";
 import { useState } from "react";
+import { chapter } from "../../../db/db";
 
 interface Props {
   curso: IMongoCurso;
@@ -81,7 +82,7 @@ const EliminarCurso = ({ curso, onClose }: Props) => {
       </Typography>
 
       <Typography variant="body2" sx={{ color: "#64748B", lineHeight: 1.65 }}>
-        Se eliminarán permanentemente todos los capítulos, clases, temas,
+        Se eliminarán permanentemente todos los {chapter.pluralName}, clases, temas,
         recursos, quizzes, ayudantías y ejercicios asociados. Esta acción no se
         puede deshacer.
       </Typography>

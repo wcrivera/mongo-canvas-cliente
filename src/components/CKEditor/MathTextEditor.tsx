@@ -177,12 +177,6 @@ const TOOLBAR_ITEMS = [
 
 const HTML_SUPPORT_CONFIG = {
   allow: [
-    {
-      name: /.*/,          // cualquier elemento HTML
-      attributes: true,    // cualquier atributo
-      classes: true,       // cualquier clase
-      styles: true,        // cualquier estilo inline
-    },
     { name: "ol", attributes: { type: true }, classes: true, styles: true },
     { name: "div", attributes: true, classes: true, styles: true },
     { name: "section", attributes: true, classes: true, styles: true },

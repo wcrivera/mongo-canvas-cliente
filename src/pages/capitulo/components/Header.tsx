@@ -7,6 +7,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import UploadIcon from "@mui/icons-material/Upload";
 import type { ICapitulo } from "../../../store/slices/capitulo";
 import { useAppSelector } from "../../../store/hooks";
+import { chapter } from "../../../db/db";
 
 type HeaderProps = {
   curso_id: string | null;
@@ -119,7 +120,7 @@ const Header = ({
           {!isLoading && (
             <div className="flex items-center gap-3">
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
-                {capitulos.length} capítulo{capitulos.length !== 1 ? "s" : ""}
+                {capitulos.length} {chapter.name}{capitulos.length !== 1 ? "s" : ""}
               </span>
               <span style={{ color: "rgba(255,255,255,0.15)" }}>·</span>
               <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>

@@ -42,6 +42,7 @@ import {
 import SortableAyudantiaCard from "./components/SortableAyudantiaCard";
 import Header from "./components/Header";
 import ModalCrearAyudantia from "./components/ModalCrearAyudantia";
+import { chapter } from "../../db/db";
 
 // ── Componente ────────────────────────────────────────────────────────────────
 const Ayudantias = () => {
@@ -157,7 +158,7 @@ const Ayudantias = () => {
               <GroupsIcon sx={{ fontSize: 28, color: "#93C5FD" }} />
             </div>
             <p className="text-[15px] font-medium text-[#64748B]">
-              No hay ayudantías en este capítulo
+              No hay ayudantías en este {chapter.name}
             </p>
             <p className="text-[13px] text-[#94A3B8]">
               Crea la primera con el botón de abajo

@@ -24,6 +24,7 @@
  */
 
 import katex from "katex";
+import { KATEX_MACROS } from "./components/katexMacros";
 
 // ── Helper interno ────────────────────────────────────────────────────────────
 
@@ -132,7 +133,7 @@ export function prepareForEditor(html: string): string {
     .replace(
       /\\\[([\s\S]*?)\\\]/g,
       (_, latex) =>
-        `<span data-type="math-inline-block" data-latex="${escapeAttr(latex.trim())}"></span>`,
+        `<div data-type="block-math" data-latex="${escapeAttr(latex.trim())}"></div>`,
     )
     // \(...\) → span para mathInline upcast
     .replace(
@@ -147,12 +148,12 @@ export function prepareForEditor(html: string): string {
 // Convierte el span temporal generado por prepareForEditor al div que
 // el upcast de MathPlugin espera para bloques.
 
-export function prepareBlocksForEditor(html: string): string {
-  return html.replace(
-    /<span data-type="math-inline-block" data-latex="([^"]*)"><\/span>/g,
-    (_, latex) => `<div data-type="block-math" data-latex="${latex}"></div>`,
-  );
-}
+// export function prepareBlocksForEditor(html: string): string {
+//   return html.replace(
+//     /<span data-type="math-inline-block" data-latex="([^"]*)"><\/span>/g,
+//     (_, latex) => `<div data-type="block-math" data-latex="${latex}"></div>`,
+//   );
+// }
 
 /**
  * normalizeForEditor — pipeline de entrada unificado para CKEditor.
@@ -169,8 +170,8 @@ export function normalizeForEditor(html: string): string {
   const stepA = sanitizeHtml(html);            // HTML malformado → limpio
   const step0 = sanitizeTables(stepA);         // tablas desnudas → <figure class="table">
   const step1 = prepareForEditor(step0);       // \(...\) → spans intermedios
-  const step2 = prepareBlocksForEditor(step1); // spans → divs para mathBlock
-  return step2;
+  // const step2 = prepareBlocksForEditor(step1); // spans → divs para mathBlock
+  return step1;
 }
 
 // ── 3. Entornos matemáticos (data-math-block) ─────────────────────────────────
@@ -222,7 +223,7 @@ function renderMathEnvironments(html: string): string {
         : label;
 
       return (
-        `<div style="border-left:4px solid ${colors.border};background:${colors.bg};` +
+        `<div style="border-left:4px solid ${colors.border};` +
         `border-radius:6px;padding:0.7em 1em;margin:0.6em 0;line-height:1.65;">` +
         `<div style="color:${colors.title};font-weight:700;font-size:0.85em;` +
         `letter-spacing:0.04em;text-transform:uppercase;margin-bottom:0.4em;">` +
@@ -329,15 +330,3 @@ export function renderLatexInHtml(html: string): string {
 
   return result;
 }
-
-// ── Macros KaTeX compartidos ──────────────────────────────────────────────────
-//
-// Exportados para uso en MathEditModal y otros previews.
-
-export const KATEX_MACROS: Record<string, string> = {
-  "\\R": "\\mathbb{R}",
-  "\\N": "\\mathbb{N}",
-  "\\Z": "\\mathbb{Z}",
-  "\\C": "\\mathbb{C}",
-  "\\E": "\\mathbb{E}",
-};

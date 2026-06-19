@@ -9,6 +9,7 @@ import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { obtenerCapituloPlataforma } from "../../store/slices/plataforma";
 import { calcularIndicador } from "../../helpers/indicadorIntento";
+import { chapter } from "../../db/db";
 
 const CapituloPlataforma = () => {
   const { curso_id, capitulo_id } = useParams<{ curso_id: string; capitulo_id: string }>();
@@ -26,7 +27,7 @@ const CapituloPlataforma = () => {
         <Button startIcon={<ArrowBackIcon />}
           onClick={() => navigate(`/plataforma/cursos/${curso_id}`)}
           sx={{ color: "#6793ba", mb: 3 }}>
-          Capítulos
+          {chapter.capitalPluralName}
         </Button>
 
         {isLoading && <div className="flex justify-center py-16"><CircularProgress sx={{ color: "#4A6D8C" }} /></div>}

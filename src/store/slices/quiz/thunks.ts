@@ -144,28 +144,31 @@ export const eliminarQuiz = ({ quiz_id }: { quiz_id: string }) => {
 // ─── Preguntas ────────────────────────────────────────────────────────────────
 
 export const crearPregunta = ({
-  quiz_id, enunciado, tipo, puntos, tipo_pimu, respuesta_lti,
-  opciones, pares, respuesta_numerica, formula, variables, decimales_resultado,
+  quiz_id, enunciado, enunciado_contexto, columnas, tipo, puntos, tipo_pimu, respuesta_lti,
+  opciones, pares, respuesta_numerica, formula, variables, decimales_resultado, items
 }: {
   quiz_id:             string;
   enunciado:           string;
+  enunciado_contexto?: string;          // ← nuevo
+  columnas?:           number;          // ← nuevo
   tipo:                TipoPregunta;
   puntos:              number;
   tipo_pimu?:          string | null;
   respuesta_lti?:      string | null;
-  opciones?:           { texto: string; es_correcta: boolean; blank_id?: string | null }[];
+  opciones?:           { texto: string; es_correcta: boolean; blank_id?: string | null; tipo_pimu?: string | null }[];  // ← + tipo_pimu
   pares?:              { izquierda: string; derecha: string }[];
   respuesta_numerica?: { tipo: "exact" | "range" | "precision"; exacto?: number; margen?: number; minimo?: number; maximo?: number; precision?: number };
   formula?:            string;
   variables?:          { nombre: string; minimo: number; maximo: number; decimales: number }[];
   decimales_resultado?: number;
+  items?:              { id: string; enunciado: string; respuesta: string; tipo_pimu: string }[];  // ← nuevo
 }) => {
   return async (dispatch: AppDispatch) => {
     dispatch(startLoadingQuiz());
     try {
       const resp = await fetchConToken(
         `api/admin/quizzes/${quiz_id}/preguntas`,
-        { quiz_id, enunciado, tipo, puntos, tipo_pimu, respuesta_lti, opciones, pares, respuesta_numerica, formula, variables, decimales_resultado },
+        { quiz_id, enunciado, enunciado_contexto, columnas, tipo, puntos, tipo_pimu, respuesta_lti, opciones, pares, respuesta_numerica, formula, variables, decimales_resultado, items },
         "POST",
       );
       const body = await resp.json();

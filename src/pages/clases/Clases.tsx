@@ -47,6 +47,7 @@ import {
 import SortableClaseCard from "./components/SortableClaseCard";
 import Header from "./components/Header";
 import ModalCrearClase from "./components/ModalCrearClase";
+import { chapter } from "../../db/db";
 
 // ── Componente ────────────────────────────────────────────────────────────────
 const Clases = () => {
@@ -160,7 +161,7 @@ const Clases = () => {
               <ClassIcon sx={{ fontSize: 28, color: "#93C5FD" }} />
             </div>
             <p className="text-[15px] font-medium text-[#64748B]">
-              No hay clases en este capítulo
+              No hay clases en este {chapter.name}
             </p>
             <p className="text-[13px] text-[#94A3B8]">
               Crea la primera con el botón

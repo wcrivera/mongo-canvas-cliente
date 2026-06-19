@@ -10,6 +10,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { fetchConToken }     from "../../helpers/fetch";
 import { calcularIndicador } from "../../helpers/indicadorIntento";
 import { renderLatexInHtml } from "../../components/CKEditor/mathUtils";
+import { chapter } from "../../db/db";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -288,7 +289,7 @@ const EjercicioPlataforma = () => {
         <Button startIcon={<ArrowBackIcon />}
           onClick={() => navigate(`/plataforma/cursos/${curso_id}/capitulos/${capitulo_id}`)}
           sx={{ color: "#6793ba", mb: 3 }}>
-          Volver al capítulo
+          Volver al {chapter.name}
         </Button>
 
         {/* ── Header ── */}

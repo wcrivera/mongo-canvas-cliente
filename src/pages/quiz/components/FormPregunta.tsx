@@ -20,6 +20,7 @@ import FormMatching from "./tipos/FormMatching";
 import type { IParForm } from "./tipos/FormMatching";
 import FormNumerical from "./tipos/FormNumerical";
 import type { IRespuestaNumForm } from "./tipos/FormNumerical";
+import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
 
 // ── Tipos de pregunta Canvas ──────────────────────────────────────────────────
 
@@ -256,7 +257,7 @@ const FormPregunta = ({ quiz_id, onCreada }: Props) => {
             : "Enunciado"}
         </Typography>
         <MathTextEditor
-          initialData={enunciado}
+          initialData={normalizeForEditor(enunciado)}
           onChange={setEnunciado}
           siglaCurso={siglaCurso}
         />

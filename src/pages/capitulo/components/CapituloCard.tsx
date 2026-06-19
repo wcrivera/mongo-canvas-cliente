@@ -30,6 +30,7 @@ import { editarCapitulo } from "../../../store/slices/capitulo";
 import type { ICapitulo } from "../../../store/slices/capitulo";
 import { ModalEliminarCapitulo } from "./ModalEliminarCapitulo";
 import { iconBtnActiveSx, iconBtnSx } from "../../../styles/iconButtons";
+import { chapter } from "../../../db/db";
 
 interface Props {
   capitulo: ICapitulo;
@@ -463,7 +464,7 @@ const CapituloCard = ({
             {!editando && (
               <button
                 onClick={handleNavegar}
-                aria-label="Ver clases del capítulo"
+                aria-label={`Ver clases del ${chapter.name}`}
                 style={{
                   width: 52,
                   background: "#F8FAFC",
