@@ -253,13 +253,15 @@ export class MathPlugin extends Plugin {
           style:
             "text-align:center;padding:0px;margin:0px;" +
             // "background: #eef3f8b8;border:1px solid #c9dae8b7;" +
-            "border-radius:4px;padding:0px 0px;margin:0 0px;vertical-align:middle;",
+            "border-radius:4px;padding:0px 0px;margin:0 0px;vertical-align:middle;" + 
+            "cursor:pointer;",
+
         });
 
         // RawElement interno para el HTML de KaTeX (no editable)
         const inner = writer.createRawElement(
           "div",
-          { style: "pointer-events:none;" },
+          { style: "" },
           (el) => {
             el.innerHTML = renderKatexBlock(latex);
           },
@@ -341,12 +343,8 @@ export class MathPlugin extends Plugin {
       const domTarget = data.domTarget as HTMLElement | null;
       if (!domTarget) return;
 
-      const mathEl =
-        domTarget.closest<HTMLElement>(".ck-math-block") ??
-        domTarget.closest<HTMLElement>("[data-latex]");
-
-      // Solo si tiene clase ck-math-block (el widget de bloque)
-      if (!mathEl?.classList.contains("ck-math-block")) return;
+      const mathEl = domTarget.closest<HTMLElement>(".ck-math-block");
+      if (!mathEl) return;
 
       const latex = mathEl.getAttribute("data-latex") ?? "";
       data.preventDefault();
