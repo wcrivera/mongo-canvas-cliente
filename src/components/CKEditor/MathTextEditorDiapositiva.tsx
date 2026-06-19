@@ -615,6 +615,13 @@ const MathTextEditorDiapositiva: React.FC<EditorProps> = ({
           }}
           data={initialDataFixed}
           onReady={(editor) => {
+            // FIX #3: sin esta asignación, editorRef.current queda en null y
+            // los comandos de inserción (insertMathInline/insertMathBlock,
+            // insertImageFromUrl, insertGeoGebra) ejecutados desde los modales
+            // hacen no-op silencioso. La edición de fórmulas sí funcionaba
+            // porque usa el `editor` del propio MathPlugin, no este ref.
+            editorRef.current = editor;
+
             const root = editor.editing.view.document.getRoot();
             if (root) {
               editor.editing.view.change((writer: ViewDowncastWriter) => {

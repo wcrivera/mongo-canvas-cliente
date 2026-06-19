@@ -52,11 +52,12 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
   const siglaCurso = useAppSelector(s => s.mongoCurso.cursoActivo?.codigo ?? "");
 
   const [form, setForm] = useState({
-    nombre:        "",
-    enunciado:     "",
-    tipo_pregunta: "multiple_choice" as TipoPreguntaEjercicio,
-    puntos:        1,
-    published:     false,
+    nombre:          "",
+    enunciado:       "",
+    tipo_pregunta:   "multiple_choice" as TipoPreguntaEjercicio,
+    puntos:          1,
+    published_canvas: false,
+    published_api:   false,
   });
 
   const [opciones, setOpciones] = useState<IOpcionEjercicio[]>([
@@ -400,8 +401,8 @@ const FormEjercicio = ({ capitulo_id, onCreado, onCancelar }: Props) => {
         <FormControlLabel
           control={
             <Switch
-              checked={form.published}
-              onChange={(e) => setForm((f) => ({ ...f, published: e.target.checked }))}
+              checked={form.published_canvas}
+              onChange={(e) => setForm((f) => ({ ...f, published_canvas: e.target.checked }))}
               sx={{ "& .MuiSwitch-switchBase.Mui-checked": { color: "#4A6D8C" } }}
             />
           }

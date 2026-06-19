@@ -3,14 +3,15 @@
  *
  * Plugin CKEditor 5 para fórmulas LaTeX.
  *
- * UPCAST  : acepta Tiptap legado, formato intermedio y \(...\) / \[...\]
+ * UPCAST  : acepta Tiptap legado, formato intermedio, \(...\) / \[...\] y
+ *           ahora también \(...\) en texto plano (paste / source / span pelado)
  * EDITING : KaTeX visual
  *   - mathInline: RawElement (inline widget)
  *   - mathBlock:  ContainerElement decorado con toWidget() → activa las
  *                 flechas de inserción de párrafo arriba/abajo
  * DATA    : emite \(...\) y \[...\] limpios para la DB
  * TOOLBAR : botón f(x) para insertar nueva fórmula
- * CLICK   : abre modal de edición al hacer clic en una fórmula
+ * CLICK   : abre modal de edición al hacer clic en una fórmula (inline o block)
  */
 
 import { Plugin, ButtonView, Command, Widget, toWidget } from "ckeditor5";
@@ -106,24 +107,20 @@ class UpdateMathCommand extends Command {
     const selected = model.document.selection.getSelectedElement();
     if (!selected) return;
 
-    const currentType = selected.name as "mathInline" | "mathBlock";
-
-    if (
-      (type === "inline" && currentType === "mathInline") ||
-      (type === "block" && currentType === "mathBlock")
-    ) {
-      model.change((writer) => {
-        writer.setAttribute("latex", latex, selected);
-      });
-    } else {
-      const newName = type === "inline" ? "mathInline" : "mathBlock";
-      model.change((writer) => {
-        const newNode = writer.createElement(newName, { latex });
-        writer.insert(newNode, selected, "before");
-        writer.remove(selected);
-        writer.setSelection(writer.createRangeOn(newNode));
-      });
-    }
+    // FIX #2: recrear SIEMPRE el nodo (no usar setAttribute).
+    // El editingDowncast está definido con elementToElement, que solo se
+    // ejecuta al CREAR el elemento, no al cambiar un atributo. Si solo
+    // hacemos setAttribute("latex", ...) el modelo se actualiza pero el
+    // RawElement de KaTeX conserva su innerHTML viejo → el cambio no se ve
+    // hasta refrescar. Recrear el nodo fuerza un nuevo elementToElement y
+    // re-renderiza KaTeX en vivo. Vale para inline y block, cambie o no el tipo.
+    const newName = type === "inline" ? "mathInline" : "mathBlock";
+    model.change((writer) => {
+      const newNode = writer.createElement(newName, { latex });
+      writer.insert(newNode, selected, "before");
+      writer.remove(selected);
+      writer.setSelection(writer.createRangeOn(newNode));
+    });
   }
 
   override refresh(): void {
@@ -214,6 +211,81 @@ export class MathPlugin extends Plugin {
         }),
     });
 
+    // ── Upcast a nivel de TEXTO: \(...\) en texto plano → mathInline ──────────
+    // FIX #4 / #5 (inline). Cubre los caminos que NO pasan por
+    // normalizeForEditor/prepareForEditor y por eso dejaban el LaTeX como texto
+    // crudo hasta recargar:
+    //   - salir de SourceEditing con \(...\) escrito a mano
+    //   - pegar texto que contiene \(...\)
+    //   - el <span> sin atributos que emite el dataDowncast (su texto interno
+    //     cae aquí, así que ahora hace round-trip sin recargar)
+    //
+    // Como troceamos el texto nosotros, el espacio que sigue a la fórmula se
+    // conserva en su propia pieza de texto (arregla el "2xes" de #5).
+    //
+    // Solo maneja \(...\) (inline). Para \[...\] (block) ver nota en la
+    // conversación: depende del esquema de mathBlock (block-widget vs inline).
+    editor.conversion.for("upcast").add((dispatcher) => {
+      dispatcher.on(
+        "text",
+        (_evt, data, conversionApi) => {
+          const viewItem = data.viewItem;
+          const text: string = viewItem.data ?? "";
+
+          const RE = /\\\(([\s\S]*?)\\\)/g;
+          if (!RE.test(text)) return; // sin \( ... \) → manejo por defecto
+          RE.lastIndex = 0;
+
+          // Solo si el texto es consumible y en este contexto se permite texto
+          // (e inline). Si no, dejamos el converter de texto por defecto.
+          if (!conversionApi.consumable.test(viewItem)) return;
+          if (!conversionApi.schema.checkChild(data.modelCursor, "$text")) {
+            return;
+          }
+
+          const writer = conversionApi.writer;
+
+          // Trocear en [texto | mathInline | texto | ...]
+          type Pieza = { t: "text"; v: string } | { t: "math"; l: string };
+          const piezas: Pieza[] = [];
+          let last = 0;
+          let m: RegExpExecArray | null;
+          while ((m = RE.exec(text)) !== null) {
+            if (m.index > last) {
+              piezas.push({ t: "text", v: text.slice(last, m.index) });
+            }
+            piezas.push({ t: "math", l: m[1].trim() });
+            last = RE.lastIndex;
+          }
+          if (last < text.length) {
+            piezas.push({ t: "text", v: text.slice(last) });
+          }
+
+          conversionApi.consumable.consume(viewItem);
+
+          const start = data.modelCursor;
+          let position = start;
+
+          for (const p of piezas) {
+            if (p.t === "text") {
+              if (!p.v) continue;
+              const node = writer.createText(p.v);
+              writer.insert(node, position);
+              position = writer.createPositionAfter(node);
+            } else {
+              const el = writer.createElement("mathInline", { latex: p.l });
+              writer.insert(el, position);
+              position = writer.createPositionAfter(el);
+            }
+          }
+
+          data.modelRange = writer.createRange(start, position);
+          data.modelCursor = position;
+        },
+        { priority: "highest" },
+      );
+    });
+
     // ── Editing Downcast ────────────────────────────────────────────────────
 
     // mathInline: RawElement con cursor:pointer para el click handler
@@ -253,19 +325,14 @@ export class MathPlugin extends Plugin {
           style:
             "text-align:center;padding:0px;margin:0px;" +
             // "background: #eef3f8b8;border:1px solid #c9dae8b7;" +
-            "border-radius:4px;padding:0px 0px;margin:0 0px;vertical-align:middle;" + 
+            "border-radius:4px;padding:0px 0px;margin:0 0px;vertical-align:middle;" +
             "cursor:pointer;",
-
         });
 
         // RawElement interno para el HTML de KaTeX (no editable)
-        const inner = writer.createRawElement(
-          "div",
-          { style: "" },
-          (el) => {
-            el.innerHTML = renderKatexBlock(latex);
-          },
-        );
+        const inner = writer.createRawElement("div", { style: "" }, (el) => {
+          el.innerHTML = renderKatexBlock(latex);
+        });
 
         writer.insert(writer.createPositionAt(container, 0), inner);
 
@@ -298,11 +365,12 @@ export class MathPlugin extends Plugin {
     });
 
     // ── Click handler ───────────────────────────────────────────────────────
-    // Para mathInline usamos el evento click de la vista.
-    // Para mathBlock, el widget captura el click vía selección —
-    // escuchamos el cambio de selección del modelo.
+    // FIX #1: un único listener de `click` maneja inline Y block.
+    // Antes el block solo abría con `dblclick`; un clic simple solo lo
+    // seleccionaba (es widget). Ahora ambos abren el modal con clic simple.
+    // En ambos casos seleccionamos explícitamente el nodo modelo para que
+    // updateMath encuentre getSelectedElement() al guardar.
 
-    // Click en mathInline (RawElement, no widget)
     editor.editing.view.document.on("click", (_evt, data) => {
       const config = editor.config.get("math") as MathPluginConfig | undefined;
       if (!config?.onEdit) return;
@@ -310,12 +378,15 @@ export class MathPlugin extends Plugin {
       const domTarget = data.domTarget as HTMLElement | null;
       if (!domTarget) return;
 
-      const mathEl = domTarget.closest<HTMLElement>(".ck-math-inline");
+      const mathEl = domTarget.closest<HTMLElement>(
+        ".ck-math-inline, .ck-math-block",
+      );
       if (!mathEl) return;
 
+      const isBlock = mathEl.classList.contains("ck-math-block");
       const latex = mathEl.getAttribute("data-latex") ?? "";
 
-      // Seleccionar el nodo modelo
+      // Seleccionar el nodo modelo correspondiente
       const viewEl = editor.editing.view.domConverter.domToView(mathEl);
       if (viewEl) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -329,27 +400,7 @@ export class MathPlugin extends Plugin {
 
       data.preventDefault();
 
-      config.onEdit(latex, "inline", (newLatex, newType) => {
-        editor.execute("updateMath", { latex: newLatex, type: newType });
-        editor.editing.view.focus();
-      });
-    });
-
-    // Doble click en mathBlock (widget — el click simple lo usa CKEditor para seleccionar)
-    editor.editing.view.document.on("dblclick", (_evt, data) => {
-      const config = editor.config.get("math") as MathPluginConfig | undefined;
-      if (!config?.onEdit) return;
-
-      const domTarget = data.domTarget as HTMLElement | null;
-      if (!domTarget) return;
-
-      const mathEl = domTarget.closest<HTMLElement>(".ck-math-block");
-      if (!mathEl) return;
-
-      const latex = mathEl.getAttribute("data-latex") ?? "";
-      data.preventDefault();
-
-      config.onEdit(latex, "block", (newLatex, newType) => {
+      config.onEdit(latex, isBlock ? "block" : "inline", (newLatex, newType) => {
         editor.execute("updateMath", { latex: newLatex, type: newType });
         editor.editing.view.focus();
       });
