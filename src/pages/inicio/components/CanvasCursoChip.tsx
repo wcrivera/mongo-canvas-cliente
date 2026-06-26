@@ -1,9 +1,9 @@
 // src/pages/inicio/components/CanvasCursoChip.tsx
 import { IconButton, Tooltip }       from "@mui/material";
 import DeleteOutlineOutlinedIcon     from "@mui/icons-material/DeleteOutlineOutlined";
-import { useAppDispatch }            from "../../../store/hooks";
-import { eliminarCanvasCurso }       from "../../../store/slices/mongoCurso";
-import type { ICanvasCursoAsociado } from "../../../store/slices/mongoCurso";
+import { useAppDispatch }            from "@/store/hooks";
+import { eliminarCanvasCurso }       from "@/store/slices/mongoCurso";
+import type { ICanvasCursoAsociado } from "@/store/slices/mongoCurso";
 
 interface Props {
   curso_id:    string;

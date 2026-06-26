@@ -1,4 +1,5 @@
-import { createSlice } from "@reduxjs/toolkit";
+import type { SyncStatus } from "@/types/entities";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────
 export type TipoPreguntaEjercicio =
@@ -36,7 +37,7 @@ export interface ICanvasDeploymentEjercicio {
   canvas_curso_id: number;
   canvas_quiz_id:  number | null;
   canvas_item_id:  number | null;
-  status:          "pending" | "synced" | "dirty" | "missing" | "error";
+  status:         SyncStatus
   synced_at:       string | null;
   error_msg:       string;
 }
@@ -77,24 +78,24 @@ export const ejercicioMongoSlice = createSlice({
   name: "ejercicioMongo",
   initialState,
   reducers: {
-    setEjercicios: (state, action) => {
+    setEjercicios: (state, action: PayloadAction<IEjercicio[]>) => {
       state.ejercicios = action.payload;
     },
-    agregarEjercicio: (state, action) => {
+    agregarEjercicio: (state, action: PayloadAction<IEjercicio>) => {
       state.ejercicios.push(action.payload);
     },
-    actualizarEjercicio: (state, action) => {
+    actualizarEjercicio: (state, action: PayloadAction<IEjercicio>) => {
       const idx = state.ejercicios.findIndex(e => e._id === action.payload._id);
       if (idx !== -1) state.ejercicios[idx] = action.payload;
     },
-    intercambiarEjercicios: (state, action) => {
-      action.payload.forEach((e: IEjercicio) => {
+    intercambiarEjercicios: (state, action: PayloadAction<IEjercicio[]>) => {
+      action.payload.forEach((e) => {
         const idx = state.ejercicios.findIndex(x => x._id === e._id);
         if (idx !== -1) state.ejercicios[idx] = e;
       });
       state.ejercicios.sort((a, b) => a.position - b.position);
     },
-    eliminarEjercicioState: (state, action) => {
+    eliminarEjercicioState: (state, action: PayloadAction<string>) => {
       state.ejercicios = state.ejercicios.filter(e => e._id !== action.payload);
     },
     limpiarEjercicios: (state) => {
@@ -107,7 +108,7 @@ export const ejercicioMongoSlice = createSlice({
     endLoadingEjercicio: (state) => {
       state.isLoading = false;
     },
-    setErrorEjercicio: (state, action) => {
+    setErrorEjercicio: (state, action: PayloadAction<string | null>) => {
       state.isLoading = false;
       state.error     = action.payload;
     },

@@ -1,9 +1,9 @@
 // src/pages/capitulos/DeploymentBadge.tsx
 import { Chip, Tooltip, IconButton, CircularProgress } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import type { ICanvasDeployment } from "../../../store/slices/capitulo";
-import { useAppDispatch } from "../../../store/hooks";
-import { reintentarCapitulo } from "../../../store/slices/capitulo";
+import type { ICanvasDeployment } from "@/store/slices/capitulo";
+import { useAppDispatch } from "@/store/hooks";
+import { reintentarCapitulo } from "@/store/slices/capitulo";
 import { useState } from "react";
 
 interface Props {

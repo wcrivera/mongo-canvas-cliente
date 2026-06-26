@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@mui/material";
 // import Diapositiva from "./Diapositiva";
-import type { IDiapositiva } from "../../../store/slices/diapositiva";
+import type { IDiapositiva } from "@/store/slices/diapositiva";
 import Diapositivas from "./Diapositivas";
 
 interface ModalVerProps {

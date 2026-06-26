@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, IconButton } from "@mui/material";
-import type { IConfigReveal, ISlide } from "../EditorDiapositiva";
+import type { IConfigReveal, ISlide } from "@/EditorDiapositiva";
 import SlidePreview from "./SlidePreview";
 
 import CloseIcon from "@mui/icons-material/Close";

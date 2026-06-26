@@ -17,16 +17,16 @@ import {
 import AddIcon    from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { crearEjercicio } from "../../../store/slices/ejercicio";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { crearEjercicio } from "@/store/slices/ejercicio";
 import type {
   TipoPreguntaEjercicio,
   IOpcionEjercicio,
   IParEjercicio,
   IRespuestaNumericaEjercicio,
-} from "../../../store/slices/ejercicio";
-import MathTextEditor from "../../../components/CKEditor/MathTextEditor";
-import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
+} from "@/store/slices/ejercicio";
+import MathTextEditor from "@/components/CKEditor/MathTextEditor";
+import { normalizeForEditor } from "@/components/CKEditor/mathUtils";
 
 const enunciadoVacio = (html: string) =>
   !html || html.replace(/<[^>]*>/g, "").trim() === "";

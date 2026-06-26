@@ -1,11 +1,11 @@
 // ─── Modal eliminar ───────────────────────────────────────────────────────────
 
 import { useState } from "react";
-import { useAppDispatch } from "../../../store/hooks";
+import { useAppDispatch } from "@/store/hooks";
 import {
   eliminarAyudantia,
   type IAyudantia,
-} from "../../../store/slices/ayudantia";
+} from "@/store/slices/ayudantia";
 import {
   Button,
   CircularProgress,

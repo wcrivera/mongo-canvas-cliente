@@ -3,8 +3,8 @@ import { useEffect, useRef } from "react";
 import Reveal from "reveal.js";
 import RevealMath from "reveal.js";
 // import RevealMath from "reveal.js/plugin/math/math.js";
-import type { ISlide, IConfigReveal } from "./../EditorDiapositiva";
-import TiptapRenderer from "../../../components/CKEditor/TiptapRenderer";
+import type { ISlide, IConfigReveal } from "../EditorDiapositiva";
+import TiptapRenderer from "@/components/CKEditor/TiptapRenderer";
 
 interface Props {
   slide: ISlide;
@@ -49,7 +49,7 @@ function injectGlobalResources() {
 
 // ── Componente ────────────────────────────────────────────────────────────────
 
-const SlidePreview = ({ slide, config, width, height }: Props) => {
+const SlidePreviewMiniatura = ({ slide, config, width, height }: Props) => {
   const scale = Math.min(width / CANVAS_W, height / CANVAS_H);
   const deckDivRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -182,4 +182,4 @@ const SlidePreview = ({ slide, config, width, height }: Props) => {
   );
 };
 
-export default SlidePreview;
+export default SlidePreviewMiniatura;

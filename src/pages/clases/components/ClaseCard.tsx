@@ -39,14 +39,14 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { editarClase } from "../../../store/slices/clase";
-import { cambiarPositionTema } from "../../../store/slices/tema";
-import type { IClase } from "../../../store/slices/clase";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { editarClase } from "@/store/slices/clase";
+import { cambiarPositionTema } from "@/store/slices/tema";
+import type { IClase } from "@/store/slices/clase";
 import SortableTemaRow from "./SortableTemaRow";
 import { ModalEliminarClase } from "./ModalEliminarClase";
 import ModalCrearTema from "./ModalCrearTema";
-import { iconBtnActiveSx, iconBtnSx } from "../../../styles/iconButtons";
+import { iconBtnActiveSx, iconBtnSx } from "@/styles/iconButtons";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {

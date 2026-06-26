@@ -12,13 +12,13 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import QuizIcon from "@mui/icons-material/Quiz";
-import { useAppDispatch } from "../../../store/hooks";
+import { useAppDispatch } from "@/store/hooks";
 import {
   crearQuiz,
   editarQuiz,
   eliminarQuiz,
-} from "../../../store/slices/quiz";
-import type { IQuiz } from "../../../store/slices/quiz";
+} from "@/store/slices/quiz";
+import type { IQuiz } from "@/store/slices/quiz";
 
 interface Props {
   contexto: "clase" | "ayudantia" | "ejercicio";

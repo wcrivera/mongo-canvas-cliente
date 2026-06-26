@@ -1,6 +1,6 @@
 import { Button, Typography } from "@mui/material";
 
-import type { IMongoCurso } from "../../../store/slices/mongoCurso";
+import type { IMongoCurso } from "@/store/slices/mongoCurso";
 
 import AddIcon from "@mui/icons-material/Add";
 import MenuBookIcon from "@mui/icons-material/MenuBook";

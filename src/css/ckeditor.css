@@ -373,6 +373,16 @@ margin-left: -15px;
 .ck-content ol {
     list-style-type: decimal;
 }
+
+.ck-content ol li {
+    padding-left: 0.5em!important; 
+    margin-bottom: 0.5em !important;
+}
+
+.ck-content ol li::marker {
+    color: #5280af;
+    font-weight: bold;
+}
 /* @ckeditor/ckeditor5-list/theme/list.css */
 .ck-content ol ol {
     list-style-type: lower-latin;

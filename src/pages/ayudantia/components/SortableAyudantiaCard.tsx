@@ -1,7 +1,7 @@
 // src/pages/ayudantia/components/SortableAyudantiaCard.tsx
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS }         from "@dnd-kit/utilities";
-import type { IAyudantia } from "../../../store/slices/ayudantia";
+import type { IAyudantia } from "@/store/slices/ayudantia";
 import AyudantiaCard   from "./AyudantiaCard";
 
 interface Props {

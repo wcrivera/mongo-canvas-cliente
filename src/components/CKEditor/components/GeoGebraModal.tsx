@@ -10,7 +10,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
-import type { GeoGebraParams } from "../plugins/InsertGeoGebraPlugin";
+import type { GeoGebraParams } from "@/plugins/InsertGeoGebraPlugin";
 
 interface GeoGebraModalProps {
   onInsert: (params: GeoGebraParams) => void;

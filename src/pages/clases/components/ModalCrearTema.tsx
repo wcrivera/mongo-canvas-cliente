@@ -4,8 +4,8 @@ import {
   DialogTitle, TextField, CircularProgress,
 } from "@mui/material";
 import TopicIcon from "@mui/icons-material/Topic";
-import { useAppDispatch } from "../../../store/hooks";
-import { crearTema } from "../../../store/slices/tema";
+import { useAppDispatch } from "@/store/hooks";
+import { crearTema } from "@/store/slices/tema";
 
 const ModalCrearTema = ({
   clase_id,

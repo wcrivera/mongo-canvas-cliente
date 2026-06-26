@@ -4,9 +4,9 @@ import {
   Button, TextField, Typography, CircularProgress,
 } from "@mui/material";
 import SlideshowIcon from "@mui/icons-material/Slideshow";
-import { useAppDispatch } from "../../../store/hooks";
-import { crearDiapositiva, editarUrlDiapositiva, eliminarDiapositiva } from "../../../store/slices/diapositiva";
-import type { IDiapositiva } from "../../../store/slices/diapositiva";
+import { useAppDispatch } from "@/store/hooks";
+import { crearUrlDiapositiva, editarUrlDiapositiva, eliminarDiapositiva } from "@/store/slices/diapositiva";
+import type { IDiapositiva } from "@/store/slices/diapositiva";
 
 interface Props {
   contexto:      "clase" | "ayudantia";
@@ -36,7 +36,7 @@ const ModalUrlDiapositiva = ({ contexto, tema_id, ayudantia_id, capitulo_id, cur
     if (esEdicion) {
       resultado = await dispatch(editarUrlDiapositiva({ diapositiva_id: diapositiva._id, url }));
     } else {
-      resultado = await dispatch(crearDiapositiva({ contexto, tema_id, ayudantia_id, capitulo_id, curso_id, titulo, url }));
+      resultado = await dispatch(crearUrlDiapositiva({ contexto, tema_id, ayudantia_id, capitulo_id, curso_id, titulo, url }));
     }
     setGuardando(false);
     if ((resultado as { ok: boolean }).ok) { onClose(); }

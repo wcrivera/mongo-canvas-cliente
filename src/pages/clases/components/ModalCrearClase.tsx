@@ -9,8 +9,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
-import { useAppDispatch } from "../../../store/hooks";
-import { crearClase } from "../../../store/slices/clase";
+import { useAppDispatch } from "@/store/hooks";
+import { crearClase } from "@/store/slices/clase";
 
 const ModalCrearClase = ({
   capitulo_id,

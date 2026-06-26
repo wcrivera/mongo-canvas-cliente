@@ -6,10 +6,10 @@ import {
 } from "@mui/material";
 import ArrowBackIcon    from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { obtenerCapituloPlataforma } from "../../store/slices/plataforma";
-import { calcularIndicador } from "../../helpers/indicadorIntento";
-import { chapter } from "../../db/db";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { obtenerCapituloPlataforma } from "@/store/slices/plataforma";
+import { calcularIndicador } from "@/helpers/indicadorIntento";
+import { chapter } from "@/db/db";
 
 const CapituloPlataforma = () => {
   const { curso_id, capitulo_id } = useParams<{ curso_id: string; capitulo_id: string }>();

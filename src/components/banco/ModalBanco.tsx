@@ -10,7 +10,7 @@ import CloseIcon      from "@mui/icons-material/Close";
 import SearchIcon     from "@mui/icons-material/Search";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import SchoolIcon     from "@mui/icons-material/School";
-import { fetchConToken } from "../../helpers/fetch";
+import { fetchConToken } from "@/helpers/fetch";
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 

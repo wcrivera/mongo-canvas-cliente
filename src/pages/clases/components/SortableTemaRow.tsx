@@ -1,7 +1,7 @@
 // src/pages/clases/components/SortableTemaRow.tsx
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS }         from "@dnd-kit/utilities";
-import type { ITema }  from "../../../store/slices/tema";
+import type { ITema }  from "@/store/slices/tema";
 import TemaRow         from "./TemaRow";
 
 interface Props {

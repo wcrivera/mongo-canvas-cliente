@@ -19,30 +19,30 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
-import { obtenerCapituloActivo } from "../../store/slices/capitulo";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { obtenerMongoCurso } from "@/store/slices/mongoCurso";
+import { obtenerCapituloActivo } from "@/store/slices/capitulo";
 import {
   obtenerAyudantiasPorCapitulo,
   limpiarAyudantias,
   cambiarPositionAyudantia,
-} from "../../store/slices/ayudantia";
+} from "@/store/slices/ayudantia";
 import {
   obtenerSolucionesPorCapitulo,
   limpiarSoluciones,
-} from "../../store/slices/solucionTexto";
+} from "@/store/slices/solucionTexto";
 import {
   obtenerVideosPorCapitulo,
   limpiarVideos,
-} from "../../store/slices/video";
+} from "@/store/slices/video";
 import {
   obtenerQuizzesPorCapitulo,
   limpiarQuizzes,
-} from "../../store/slices/quiz";
+} from "@/store/slices/quiz";
 import SortableAyudantiaCard from "./components/SortableAyudantiaCard";
 import Header from "./components/Header";
 import ModalCrearAyudantia from "./components/ModalCrearAyudantia";
-import { chapter } from "../../db/db";
+import { chapter } from "@/db/db";
 
 // ── Componente ────────────────────────────────────────────────────────────────
 const Ayudantias = () => {

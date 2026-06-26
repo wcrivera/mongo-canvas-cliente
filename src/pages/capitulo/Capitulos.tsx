@@ -19,19 +19,19 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   obtenerCapitulos,
   limpiarCapitulos,
   cambiarPositionCapitulo,
-} from "../../store/slices/capitulo";
-import { obtenerClasesPorCurso, limpiarClases } from "../../store/slices/clase";
-import { obtenerTemasPorCurso, limpiarTemas } from "../../store/slices/tema";
-import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
+} from "@/store/slices/capitulo";
+import { obtenerClasesPorCurso, limpiarClases } from "@/store/slices/clase";
+import { obtenerTemasPorCurso, limpiarTemas } from "@/store/slices/tema";
+import { obtenerMongoCurso } from "@/store/slices/mongoCurso";
 import SortableCapituloCard from "./components/SortableCapituloCard";
 import ModalCrearCapitulo from "./components/ModalCrearCapitulo";
 import Header from "./components/Header";
-import { chapter } from "../../db/db";
+import { chapter } from "@/db/db";
 
 const Capitulos = () => {
   const { curso_id } = useParams<{ curso_id: string }>();

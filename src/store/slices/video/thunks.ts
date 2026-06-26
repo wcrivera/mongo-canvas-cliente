@@ -1,5 +1,5 @@
 // src/store/slices/video/thunks.ts
-import { fetchConToken } from "../../../helpers/fetch";
+import { fetchConToken } from "@/helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
   startLoadingVideo,

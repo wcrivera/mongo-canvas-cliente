@@ -7,11 +7,11 @@ import {
 } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 
-import { useAppDispatch }  from "../../../store/hooks";
+import { useAppDispatch }  from "@/store/hooks";
 import {
   crearEjercicio,
   type TipoPreguntaEjercicio,
-} from "../../../store/slices/ejercicio";
+} from "@/store/slices/ejercicio";
 
 interface Props {
   capitulo_id: string;

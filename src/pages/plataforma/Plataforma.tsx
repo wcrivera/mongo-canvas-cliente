@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Typography, CircularProgress, Card, CardContent, Button } from "@mui/material";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SchoolIcon       from "@mui/icons-material/School";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { obtenerCursosPlataforma } from "../../store/slices/plataforma";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { obtenerCursosPlataforma } from "@/store/slices/plataforma";
 
 const Plataforma = () => {
   const navigate = useNavigate();

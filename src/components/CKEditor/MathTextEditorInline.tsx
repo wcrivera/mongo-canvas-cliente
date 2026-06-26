@@ -5,7 +5,10 @@ import {
   Bold,
   Italic,
   Essentials,
+  Paragraph,
   Heading,
+  FontSize,
+  FontColor,
   SourceEditing,
   Image,
   ImageToolbar,
@@ -39,57 +42,37 @@ import {
 import { InsertImageUrlModal } from "./components/InsertImageUrlModal";
 import MathEditModal from "./components/MathEditModal";
 import MathBlockModal from "./components/MathBlockModal";
+import {
+  type LatexModalState,
+  type UrlModalState,
+  type EnvModalState,
+  LATEX_MODAL_CLOSED,
+  ENV_MODAL_CLOSED,
+  HTML_SUPPORT_CONFIG,
+  FONT_COLORS,
+} from "./mathEditorShared";
+import { normalizeForEditor, cleanForDB } from "./mathUtils";
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
 interface EditorProps {
+  // Se espera contenido LIMPIO (\(...\) / \[...\]). El editor normaliza
+  // internamente para mostrar y devuelve contenido limpio en onChange.
   initialData?: string;
   onChange?: (data: string) => void;
   siglaCurso?: string;
 }
 
-interface LatexModalState {
-  open: boolean;
-  latex: string;
-  type: "inline" | "block";
-  onSave: ((latex: string, type: "inline" | "block") => void) | null;
-}
-
-interface UrlModalState {
-  open: boolean;
-  tab?: 0 | 1;
-}
-
-interface EnvModalState {
-  open: boolean;
-  tipo: TipoEntorno;
-  subtituloActual: string;
-  modoInsertar: boolean;
-  onSave: ((subtitulo: string) => void) | null;
-}
-
-// ── Constantes ────────────────────────────────────────────────────────────────
-
-const LATEX_MODAL_CLOSED: LatexModalState = {
-  open: false,
-  latex: "",
-  type: "inline",
-  onSave: null,
-};
-
-const ENV_MODAL_CLOSED: EnvModalState = {
-  open: false,
-  tipo: "definicion",
-  subtituloActual: "",
-  modoInsertar: true,
-  onSave: null,
-};
+// ── Constantes propias del Inline ─────────────────────────────────────────────
 
 const BASE_PLUGINS = [
   Essentials,
+  Paragraph,
   Bold,
   Italic,
   Heading,
+  FontSize,
+  FontColor,
   SourceEditing,
   Image,
   ImageToolbar,
@@ -112,74 +95,13 @@ const TOOLBAR_ITEMS = [
   "bold",
   "italic",
   "|",
+  "fontSize",
+  "fontColor",
+  "|",
   "insertImageMenu",
   "insertMath",
   "|",
   "sourceEditing",
-];
-
-// ── htmlSupport config — fuera del componente para referencia estable ─────────
-
-const HTML_SUPPORT_CONFIG = {
-  allow: [
-    {
-      name: /.*/,          // cualquier elemento HTML
-      attributes: true,    // cualquier atributo
-      classes: true,       // cualquier clase
-      styles: true,        // cualquier estilo inline
-    },
-    { name: "ol", attributes: { type: true }, classes: true, styles: true },
-    { name: "div", attributes: true, classes: true, styles: true },
-    { name: "section", attributes: true, classes: true, styles: true },
-    {
-      name: "iframe",
-      attributes: [
-        "src",
-        "width",
-        "height",
-        "style",
-        "scrolling",
-        "allowfullscreen",
-        "fullscreen",
-        "frameborder",
-        "border",
-      ],
-      classes: false,
-      styles: true,
-    },
-    {
-      name: "table",
-      attributes: ["border", "cellpadding", "cellspacing", "align"],
-      classes: false,
-      styles: true,
-    },
-    {
-      name: "td",
-      attributes: ["width", "valign", "align"],
-      classes: false,
-      styles: true,
-    },
-    {
-      name: "th",
-      attributes: ["width", "valign", "align"],
-      classes: false,
-      styles: true,
-    },
-    { name: "tbody", attributes: ["align"], classes: false, styles: false },
-    { name: "center", attributes: false, classes: false, styles: false },
-    { name: "u", attributes: false, classes: false, styles: false },
-    { name: "h5", attributes: false, classes: false, styles: true },
-    { name: /.*/, attributes: /^data-/, classes: false, styles: false },
-  ],
-};
-
-// Paleta de color de texto — calza 1:1 con TEXT_COLOR_CLASS del InlineStylesPlugin
-const FONT_COLORS = [
-  { color: "#0f172a", label: "Slate" },
-  { color: "#64748b", label: "Gris" },
-  { color: "#0d9488", label: "Teal" },
-  { color: "#16a34a", label: "Verde" },
-  { color: "#dc2626", label: "Rojo" },
 ];
 
 // ── Componente ────────────────────────────────────────────────────────────────
@@ -189,8 +111,6 @@ const MathTextEditorInline: React.FC<EditorProps> = ({
   onChange,
   siglaCurso = "",
 }) => {
-
-  console.log(initialData)
   const [latexModal, setLatexModal] =
     useState<LatexModalState>(LATEX_MODAL_CLOSED);
   const [urlModal, setUrlModal] = useState<UrlModalState>({ open: false });
@@ -198,6 +118,15 @@ const MathTextEditorInline: React.FC<EditorProps> = ({
 
   // Ref al editor — asignado en onReady, leído en handlers
   const editorRef = useRef<Editor | null>(null);
+
+  // Dato inicial NORMALIZADO y CONGELADO una sola vez al montar.
+  // - Normaliza el \(...\) limpio que llega como prop para que el editor lo
+  //   renderice (spans intermedios → nodos mathInline vía MathPlugin).
+  // - Congela con useMemo([]) para que los re-render del padre NO re-pasen
+  //   data al wrapper de CKEditor (eso provocaba setData() en cada tecla y
+  //   revertía la edición en curso → "solo se guardaba la última opción").
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const initialDataFixed = useMemo(() => normalizeForEditor(initialData), []);
 
   // Refs a los callbacks onSave de los modales — actualizados via useEffect
   // para no violar react-hooks/refs (prohibido escribir refs durante render).
@@ -339,9 +268,6 @@ const MathTextEditorInline: React.FC<EditorProps> = ({
             },
           ],
         },
-        table: {
-          contentToolbar: ["tableColumn", "tableRow", "mergeTableCells"],
-        },
         htmlSupport: HTML_SUPPORT_CONFIG,
         image: {
           toolbar: ["imageTextAlternative"],
@@ -389,7 +315,7 @@ const MathTextEditorInline: React.FC<EditorProps> = ({
         <CKEditor
           editor={ClassicEditor}
           config={editorConfig}
-          data={initialData}
+          data={initialDataFixed}
           onReady={(editor) => {
             editorRef.current = editor;
             const root = editor.editing.view.document.getRoot();
@@ -411,7 +337,7 @@ const MathTextEditorInline: React.FC<EditorProps> = ({
               });
             }
           }}
-          onChange={(_event, editor) => onChange?.(editor.getData())}
+          onChange={(_event, editor) => onChange?.(cleanForDB(editor.getData()))}
           onFocus={handleFocus}
           onBlur={handleBlur}
         />

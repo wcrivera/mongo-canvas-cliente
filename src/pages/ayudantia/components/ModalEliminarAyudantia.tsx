@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useAppDispatch } from "../../../store/hooks";
-import { eliminarAyudantia, type IAyudantia } from "../../../store/slices/ayudantia";
+import { useAppDispatch } from "@/store/hooks";
+import { eliminarAyudantia, type IAyudantia } from "@/store/slices/ayudantia";
 import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber"
 

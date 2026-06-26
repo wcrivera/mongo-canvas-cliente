@@ -8,8 +8,8 @@ import {
   TextField, Divider,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { fetchConToken }     from "../../helpers/fetch";
-import { calcularIndicador } from "../../helpers/indicadorIntento";
+import { fetchConToken }     from "@/helpers/fetch";
+import { calcularIndicador } from "@/helpers/indicadorIntento";
 
 interface IOpcion { _id: string; texto: string; es_correcta: boolean; }
 

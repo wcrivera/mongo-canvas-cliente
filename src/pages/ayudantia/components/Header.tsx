@@ -2,12 +2,12 @@ import { Button, CircularProgress, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import UploadIcon from "@mui/icons-material/Upload";
 import { useNavigate } from "react-router-dom";
-import type { ICapitulo } from "../../../store/slices/capitulo";
+import type { ICapitulo } from "@/store/slices/capitulo";
 
-import { fetchConToken } from "../../../helpers/fetch";
-import { useAppSelector } from "../../../store/hooks";
+import { fetchConToken } from "@/helpers/fetch";
+import { useAppSelector } from "@/store/hooks";
 import { useState } from "react";
-import { chapter } from "../../../db/db";
+import { chapter } from "@/db/db";
 
 // ── Tabs de navegación ────────────────────────────────────────────────────────
 const TABS = [
@@ -124,7 +124,7 @@ const Header = ({ curso_id, capitulo, setMsgDeploy }: HeaderProps) => {
               /
             </span>
             <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
-              {chapter.capitalName} {capitulo?.position}
+              {chapter.capitalShortName} {capitulo?.position}
             </span>
           </div>
 

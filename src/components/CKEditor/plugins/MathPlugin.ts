@@ -378,6 +378,10 @@ export class MathPlugin extends Plugin {
       const domTarget = data.domTarget as HTMLElement | null;
       if (!domTarget) return;
 
+      if (domTarget.closest(".ck-widget__type-around")) {
+        return;
+      }
+
       const mathEl = domTarget.closest<HTMLElement>(
         ".ck-math-inline, .ck-math-block",
       );

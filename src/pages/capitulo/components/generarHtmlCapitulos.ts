@@ -1,7 +1,7 @@
-import type { ICapitulo }   from "../../../store/slices/capitulo";
-import type { IMongoCurso } from "../../../store/slices/mongoCurso";
-import type { IClase }      from "../../../store/slices/clase";
-import type { ITema }       from "../../../store/slices/tema";
+import type { ICapitulo }   from "@/store/slices/capitulo";
+import type { IMongoCurso } from "@/store/slices/mongoCurso";
+import type { IClase }      from "@/store/slices/clase";
+import type { ITema }       from "@/store/slices/tema";
 
 interface GenerarHtmlCapitulosParams {
   curso:           IMongoCurso;

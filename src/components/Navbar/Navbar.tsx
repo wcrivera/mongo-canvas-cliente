@@ -1,8 +1,8 @@
 // src/components/Navbar/Navbar.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { logout } from "../../store/slices/auth/authSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { logout } from "@/store/slices/auth/authSlice";
 import {
   IconButton,
   Menu,

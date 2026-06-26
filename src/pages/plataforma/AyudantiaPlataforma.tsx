@@ -5,10 +5,10 @@ import { Typography, CircularProgress, Button, Chip, Divider } from "@mui/materi
 import ArrowBackIcon       from "@mui/icons-material/ArrowBack";
 import DescriptionIcon     from "@mui/icons-material/Description";
 import VideoLibraryIcon    from "@mui/icons-material/VideoLibrary";
-import { fetchConToken }              from "../../helpers/fetch";
-import { calcularIndicador }          from "../../helpers/indicadorIntento";
-import TiptapRenderer                 from "../../components/CKEditor/TiptapRenderer";
-import { chapter } from "../../db/db";
+import { fetchConToken }              from "@/helpers/fetch";
+import { calcularIndicador }          from "@/helpers/indicadorIntento";
+import TiptapRenderer                 from "@/components/CKEditor/TiptapRenderer";
+import { chapter } from "@/db/db";
 
 const AyudantiaPlataforma = () => {
   const { curso_id, capitulo_id, ayudantia_id } = useParams<{

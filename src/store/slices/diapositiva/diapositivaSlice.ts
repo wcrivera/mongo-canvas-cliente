@@ -1,5 +1,6 @@
-import { createSlice } from "@reduxjs/toolkit";
-import type { ISlide } from "../../../pages/diapositiva/EditorDiapositiva";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type { ISlide } from "@/pages/diapositiva/EditorDiapositiva";
+import type { SyncStatus } from "@/types/entities";
 
 export type ContextoDiapositiva = "clase" | "ayudantia";
 
@@ -10,7 +11,7 @@ export interface ICanvasDeploymentDiapositiva {
   canvas_page_id:   number | null;
   canvas_page_url:  string;
   canvas_item_id:   number | null;
-  status:           "pending" | "synced" | "dirty" | "missing" | "error";
+  status:           SyncStatus
   synced_at:        string | null;
   error_msg:        string;
 }
@@ -51,17 +52,17 @@ export const diapositivaMongoSlice = createSlice({
   name: "diapositivaMongo",
   initialState,
   reducers: {
-    setDiapositivas: (state, action) => {
+    setDiapositivas: (state, action: PayloadAction<IDiapositiva[]>) => {
       state.diapositivas = action.payload;
     },
-    agregarDiapositiva: (state, action) => {
+    agregarDiapositiva: (state, action: PayloadAction<IDiapositiva>) => {
       state.diapositivas.push(action.payload);
     },
-    actualizarDiapositiva: (state, action) => {
+    actualizarDiapositiva: (state, action: PayloadAction<IDiapositiva>) => {
       const idx = state.diapositivas.findIndex((d) => d._id === action.payload._id);
       if (idx !== -1) state.diapositivas[idx] = action.payload;
     },
-    eliminarDiapositivaState: (state, action) => {
+    eliminarDiapositivaState: (state, action: PayloadAction<string>) => {
       state.diapositivas = state.diapositivas.filter((d) => d._id !== action.payload);
     },
     limpiarDiapositivas: (state) => {
@@ -74,7 +75,7 @@ export const diapositivaMongoSlice = createSlice({
     endLoadingDiapositiva: (state) => {
       state.isLoading = false;
     },
-    setErrorDiapositiva: (state, action) => {
+    setErrorDiapositiva: (state, action: PayloadAction<string | null>) => {
       state.isLoading = false;
       state.error     = action.payload;
     },

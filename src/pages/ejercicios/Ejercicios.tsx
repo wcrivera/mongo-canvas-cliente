@@ -4,11 +4,11 @@ import { useParams } from "react-router-dom";
 import { Button, Typography, CircularProgress, Alert } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import AddIcon from "@mui/icons-material/Add";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { obtenerEjercicios, obtenerPreguntas } from "../../store/slices/quiz";
-import type { IQuiz } from "../../store/slices/quiz";
-import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
-import { obtenerCapitulos } from "../../store/slices/capitulo";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { cambiarPositionEjercicioQuiz, obtenerEjercicios, obtenerPreguntas } from "@/store/slices/quiz";
+import type { IQuiz } from "@/store/slices/quiz";
+import { obtenerMongoCurso } from "@/store/slices/mongoCurso";
+import { obtenerCapitulos } from "@/store/slices/capitulo";
 import ModalCrearQuiz from "../clases/components/ModalCrearQuiz";
 import Header from "./components/Header";
 import {
@@ -24,7 +24,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { cambiarPositionEjercicio } from "../../store/slices/ejercicio";
 import SortableEjercicioCard from "./components/SortableEjercicioCard";
 
 const Ejercicios = () => {
@@ -39,9 +38,9 @@ const Ejercicios = () => {
   );
   const { capitulos } = useAppSelector((s) => s.capituloMongo);
 
-  const ejercicios: IQuiz[] = quizzes.filter(
-    (q) => q.contexto === "ejercicio" && q.capitulo_id === capitulo_id,
-  );
+  const ejercicios: IQuiz[] = quizzes
+    .filter((q) => q.contexto === "ejercicio" && q.capitulo_id === capitulo_id)
+    .sort((a, b) => a.position - b.position);
 
   const capituloActivo = capitulos.find((c) => c._id === capitulo_id);
 
@@ -90,8 +89,8 @@ const Ejercicios = () => {
     const steps = Math.abs(newIndex - oldIndex);
     for (let i = 0; i < steps; i++) {
       await dispatch(
-        cambiarPositionEjercicio({
-          ejercicio_id: String(active.id),
+        cambiarPositionEjercicioQuiz({
+          quiz_id: String(active.id),
           direction,
         }),
       );

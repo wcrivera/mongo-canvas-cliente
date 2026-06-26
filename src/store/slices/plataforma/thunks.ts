@@ -1,5 +1,5 @@
-import { fetchConToken } from "../../../helpers/fetch";
-import type { AppDispatch } from "../..";
+import { fetchConToken } from "@/helpers/fetch";
+import type { AppDispatch } from "@/..";
 import {
   startLoading, endLoading, setError,
   setCursos, setCapitulos, setClases, setAyudantias, setEjercicios, setTemas,

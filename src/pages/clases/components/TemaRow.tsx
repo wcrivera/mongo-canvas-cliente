@@ -25,13 +25,16 @@ import SlideshowIcon from "@mui/icons-material/Slideshow";
 import PlayCircleIcon from "@mui/icons-material/PlayCircle";
 import QuizIcon from "@mui/icons-material/Quiz";
 
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { editarTema } from "../../../store/slices/tema";
-import { eliminarDiapositiva } from "../../../store/slices/diapositiva";
-import { eliminarVideo } from "../../../store/slices/video";
-import { eliminarQuiz } from "../../../store/slices/quiz";
-import type { ITema } from "../../../store/slices/tema";
-import type { IQuiz } from "../../../store/slices/quiz";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { editarTema } from "@/store/slices/tema";
+import {
+  crearDiapositiva,
+  eliminarDiapositiva,
+} from "@/store/slices/diapositiva";
+import { eliminarVideo } from "@/store/slices/video";
+import { eliminarQuiz } from "@/store/slices/quiz";
+import type { ITema } from "@/store/slices/tema";
+import type { IQuiz } from "@/store/slices/quiz";
 import ModalElegirDiapositiva from "./ModalElegirDiapositiva";
 import ModalUrlDiapositiva from "./ModalUrlDiapositiva";
 import ModalUrlVideo from "./ModalUrlVideo";
@@ -39,7 +42,7 @@ import ModalCrearQuiz from "./ModalCrearQuiz";
 import RecursoSlot from "./RecursoSlot";
 import ModalEliminarTema from "./ModalEliminarTema";
 import ModalVerDiapositiva from "./ModalVerDiapositiva";
-import { iconBtnXsActiveSx, iconBtnXsSx } from "../../../styles/iconButtons";
+import { iconBtnXsActiveSx, iconBtnXsSx } from "@/styles/iconButtons";
 
 interface Props {
   tema: ITema;
@@ -144,16 +147,37 @@ const TemaRow = ({
   };
   const handleElegirEditor = () => {
     setModalElegir(false);
+    console.log(diapoTema)
     // Si ya existe diapositiva con editor, navegar a ella
     if (diapoTema?._id) {
       navigate(
         `/cursos/${tema.curso_id}/capitulos/${capitulo_id}/clases/${tema.clase_id}/diapositiva/${diapoTema._id}`,
       );
     }
+
+    dispatch(
+      crearDiapositiva({
+        contexto: "clase",
+        tema_id: tema._id,
+        capitulo_id,
+        curso_id: tema.curso_id,
+        titulo: `Diapositiva · ${tema.nombre}`,
+        url: "",
+        slides: [{
+          layout: "default",
+          contenido: "<div class=\"math-environment\" style=\"border-left:4px solid #2563b4;bor…",
+          notas: "",
+          fondo: "",
+          id: "y5hp7l4",
+          pagina: 1
+        }],
+      }),
+    );
   };
 
   // Navegación a diapositiva existente (Ver / Editar → misma ruta, EditorDiapositiva maneja el modo)
   const irADiapositiva = () => {
+    console.log(diapoTema)
     if (!diapoTema) return;
     if (diapoTema.slides && diapoTema.slides.length > 0) {
       // Modo editor

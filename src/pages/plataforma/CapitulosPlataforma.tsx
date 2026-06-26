@@ -4,9 +4,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Typography, CircularProgress, Card, CardContent, Button } from "@mui/material";
 import ArrowBackIcon    from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { obtenerCapitulosPlataforma, obtenerCursosPlataforma } from "../../store/slices/plataforma";
-import { chapter } from "../../db/db";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { obtenerCapitulosPlataforma, obtenerCursosPlataforma } from "@/store/slices/plataforma";
+import { chapter } from "@/db/db";
 
 const CapitulosPlataforma = () => {
   const { curso_id } = useParams<{ curso_id: string }>();

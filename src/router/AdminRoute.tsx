@@ -5,8 +5,8 @@
 
 import type { ReactNode } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAppSelector } from '../store/hooks';
-import Navbar from '../components/Navbar/Navbar';
+import { useAppSelector } from '@/store/hooks';
+import Navbar from '@/components/Navbar/Navbar';
 import { CircularProgress } from '@mui/material';
 
 interface Props {

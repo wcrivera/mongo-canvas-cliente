@@ -9,7 +9,7 @@
  *   Canvas  →  \[ latex \]           →  toEditorHTML  →  <div  data-latex="latex" ...>
  *
  * Uso al cargar contenido guardado en Canvas hacia el editor:
- *   import { toEditorHTML } from '../../components/Editor'
+ *   import { toEditorHTML } from '@/components/Editor'
  *   const contenidoEditor = toEditorHTML(recurso.contenido)
  */
 export function toEditorHTML(html: string): string {

@@ -4,9 +4,9 @@ import {
   Button, TextField, Typography, CircularProgress,
 } from "@mui/material";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutlineOutlined";
-import { useAppDispatch } from "../../../store/hooks";
-import { crearVideo, editarUrlVideo, eliminarVideo } from "../../../store/slices/video";
-import type { IVideo } from "../../../store/slices/video";
+import { useAppDispatch } from "@/store/hooks";
+import { crearVideo, editarUrlVideo, eliminarVideo } from "@/store/slices/video";
+import type { IVideo } from "@/store/slices/video";
 
 interface Props {
   contexto:      "clase" | "ayudantia";

@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   editarAyudantia,
   type IAyudantia,
-} from "../../../store/slices/ayudantia";
+} from "@/store/slices/ayudantia";
 import {
   Button,
   CircularProgress,
@@ -12,10 +12,10 @@ import {
   DialogContent,
   DialogTitle,
 } from "@mui/material";
-import MathTextEditor from "../../../components/CKEditor/MathTextEditor";
+import MathTextEditor from "@/components/CKEditor/MathTextEditor";
 
 import EditNoteIcon from "@mui/icons-material/EditNote";
-import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
+import { normalizeForEditor } from "@/components/CKEditor/mathUtils";
 
 export const ModalEnunciado = ({
   ayudantia,

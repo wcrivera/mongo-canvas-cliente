@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useAppDispatch } from "../../../store/hooks";
-import { eliminarClase, type IClase } from "../../../store/slices/clase";
+import { useAppDispatch } from "@/store/hooks";
+import { eliminarClase, type IClase } from "@/store/slices/clase";
 import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import { WarningAmber } from "@mui/icons-material";
 

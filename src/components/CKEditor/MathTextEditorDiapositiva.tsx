@@ -77,7 +77,8 @@ import { InsertImageUrlModal } from "./components/InsertImageUrlModal";
 import { GeoGebraModal } from "./components/GeoGebraModal"; // + GEOGEBRA
 import MathEditModal from "./components/MathEditModal";
 import MathBlockModal from "./components/MathBlockModal";
-import { SLIDE } from "../../pages/diapositiva/slideConstants";
+import { SLIDE } from "@/pages/diapositiva/slideConstants";
+import { cleanForDB } from "./mathUtils";
 
 // ── Inyectar CSS de Reveal-WYSIWYG y Tailwind en el documento ────────────────
 // El área editable se comporta como un lienzo de slide: ancho lógico
@@ -640,13 +641,14 @@ const MathTextEditorDiapositiva: React.FC<EditorProps> = ({
                 writer.setStyle("box-sizing", "border-box", root);
                 writer.setStyle("text-align", "justify!important", root);
                 writer.setStyle("line-height", "1.8!important", root);
+
               });
             }
             requestAnimationFrame(() =>
               requestAnimationFrame(() => recalcularEscalaRef.current()),
             );
           }}
-          onChange={(_event, editor) => onChange?.(editor.getData())}
+          onChange={(_event, editor) => onChange?.(cleanForDB(editor.getData()))}
           onFocus={handleFocus}
           onBlur={handleBlur}
         />

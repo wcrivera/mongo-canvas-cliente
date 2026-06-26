@@ -2,25 +2,24 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import PrivateRoute      from "./PrivateRoute";
 import AdminRoute        from "./AdminRoute";
-import Inicio            from "../pages/inicio/Inicio";
-import Plataforma          from "../pages/plataforma/Plataforma";
-import CapitulosPlataforma from "../pages/plataforma/CapitulosPlataforma";
-import CapituloPlataforma  from "../pages/plataforma/CapituloPlataforma";
-import ClasePlataforma     from "../pages/plataforma/ClasePlataforma";
-import AyudantiaPlataforma from "../pages/plataforma/AyudantiaPlataforma";
-import EjercicioPlataforma from "../pages/plataforma/EjercicioPlataforma";
-import QuizPlataforma      from "../pages/plataforma/QuizPlataforma";
-import Capitulos         from "../pages/capitulo/Capitulos";
-import Clases            from "../pages/clases/Clases";
-import Quiz              from "../pages/quiz/Quiz";
-import Ayudantias        from "../pages/ayudantia/Ayudantias";
-import Ejercicios        from "../pages/ejercicios/Ejercicios";
-import EditorDiapositiva from "../pages/diapositiva/EditorDiapositiva";
-import AuthCallback      from "../pages/auth/AuthCallback";
-import Login             from "../pages/auth/Login";
-import TokenCanvas       from "../pages/auth/TokenCanvas";
-import TestEditor        from "../pages/test/TestEditor";
-import QuizLti           from "../pages/lti/QuizLti";
+import Inicio            from "@/pages/inicio/Inicio";
+import Plataforma          from "@/pages/plataforma/Plataforma";
+import CapitulosPlataforma from "@/pages/plataforma/CapitulosPlataforma";
+import CapituloPlataforma  from "@/pages/plataforma/CapituloPlataforma";
+import ClasePlataforma     from "@/pages/plataforma/ClasePlataforma";
+import AyudantiaPlataforma from "@/pages/plataforma/AyudantiaPlataforma";
+import EjercicioPlataforma from "@/pages/plataforma/EjercicioPlataforma";
+import QuizPlataforma      from "@/pages/plataforma/QuizPlataforma";
+import Capitulos         from "@/pages/capitulo/Capitulos";
+import Clases            from "@/pages/clases/Clases";
+import Quiz              from "@/pages/quiz/Quiz";
+import Ayudantias        from "@/pages/ayudantia/Ayudantias";
+import Ejercicios        from "@/pages/ejercicios/Ejercicios";
+import EditorDiapositiva from "@/pages/diapositiva/EditorDiapositiva";
+import AuthCallback      from "@/pages/auth/AuthCallback";
+import Login             from "@/pages/auth/Login";
+import TokenCanvas       from "@/pages/auth/TokenCanvas";
+import QuizLti           from "@/pages/lti/QuizLti";
 
 const Router = () => {
   return (
@@ -97,10 +96,6 @@ const Router = () => {
         <Route
           path="/cursos/:curso_id/capitulos/:capitulo_id/ejercicios"
           element={<AdminRoute><Ejercicios /></AdminRoute>}
-        />
-        <Route
-          path="/inicio/test-editor"
-          element={<AdminRoute><TestEditor /></AdminRoute>}
         />
 
         {/* ── Redirección por defecto ───────────────────────────────────── */}

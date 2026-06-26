@@ -9,8 +9,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
-import { useAppDispatch } from "../../../store/hooks";
-import { crearAyudantia } from "../../../store/slices/ayudantia";
+import { useAppDispatch } from "@/store/hooks";
+import { crearAyudantia } from "@/store/slices/ayudantia";
 
 const ModalCrearAyudantia = ({
   capitulo_id,

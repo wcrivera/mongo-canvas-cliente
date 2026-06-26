@@ -1,6 +1,6 @@
 // src/pages/auth/Login.tsx
 import { useState } from "react";
-import { fetchSinToken } from "../../helpers/fetch";
+import { fetchSinToken } from "@/helpers/fetch";
 
 // ── Datos decorativos ─────────────────────────────────────────────────────────
 

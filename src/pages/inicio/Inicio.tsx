@@ -4,11 +4,11 @@ import { CircularProgress, Alert } from "@mui/material";
 
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   obtenerMongoCursos,
   type IMongoCurso,
-} from "../../store/slices/mongoCurso";
+} from "@/store/slices/mongoCurso";
 import MongoCursoCard from "./components/MongoCursoCard";
 
 import CrearCurso from "./components/CrearCurso";

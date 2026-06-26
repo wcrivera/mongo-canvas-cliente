@@ -23,31 +23,31 @@ import {
 } from "@dnd-kit/sortable";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { obtenerMongoCurso } from "../../store/slices/mongoCurso";
-import { obtenerCapituloActivo } from "../../store/slices/capitulo";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { obtenerMongoCurso } from "@/store/slices/mongoCurso";
+import { obtenerCapituloActivo } from "@/store/slices/capitulo";
 import {
   obtenerClasesPorCapitulo,
   limpiarClases,
   cambiarPositionClase,
-} from "../../store/slices/clase";
-import { obtenerTemasPorCapitulo, limpiarTemas } from "../../store/slices/tema";
+} from "@/store/slices/clase";
+import { obtenerTemasPorCapitulo, limpiarTemas } from "@/store/slices/tema";
 import {
   obtenerDiapositivasPorCapitulo,
   limpiarDiapositivas,
-} from "../../store/slices/diapositiva";
+} from "@/store/slices/diapositiva";
 import {
   obtenerVideosPorCapitulo,
   limpiarVideos,
-} from "../../store/slices/video";
+} from "@/store/slices/video";
 import {
   obtenerQuizzesPorCapitulo,
   limpiarQuizzes,
-} from "../../store/slices/quiz";
+} from "@/store/slices/quiz";
 import SortableClaseCard from "./components/SortableClaseCard";
 import Header from "./components/Header";
 import ModalCrearClase from "./components/ModalCrearClase";
-import { chapter } from "../../db/db";
+import { chapter } from "@/db/db";
 
 // ── Componente ────────────────────────────────────────────────────────────────
 const Clases = () => {

@@ -16,12 +16,9 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 
-import { useAppDispatch } from "../../../store/hooks";
-import {
-  editarPregunta,
-  cambiarPositionPregunta,
-} from "../../../store/slices/quiz";
-import type { IPregunta } from "../../../store/slices/quiz/quizSlice";
+import { useAppDispatch } from "@/store/hooks";
+import { editarPregunta, cambiarPositionPregunta } from "@/store/slices/quiz";
+import type { IPregunta } from "@/store/slices/quiz/quizSlice";
 
 import PreguntaEditor, {
   type IOpcionEditor,
@@ -31,13 +28,16 @@ import PreguntaEditor, {
   type IDropdownBlancoEditorForm,
   type TipoPreguntaEditor,
   type TipoPimu,
-} from "../../../components/quiz/PreguntaEditor";
+} from "@/components/quiz/PreguntaEditor";
 import PreguntaViewer, {
   type TipoPreguntaViewer,
   type IItemFIBViewer,
-} from "../../../components/quiz/PreguntaViewer";
+} from "@/components/quiz/PreguntaViewer";
 import ModalEliminar from "../ModalEliminar";
-import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
+import {
+  cleanForDB,
+  normalizeForEditor,
+} from "@/components/CKEditor/mathUtils";
 
 // ── Labels y colores por tipo ─────────────────────────────────────────────────
 
@@ -153,9 +153,6 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
       : pregunta.enunciado,
   );
 
-  const enunciadoPregunta = esFIB
-    ? pregunta?.enunciado_contexto || pregunta?.enunciado || ""
-    : (pregunta?.enunciado ?? "");
   const [puntos, setPuntos] = useState(pregunta.puntos);
 
   const [opciones, setOpciones] = useState<IOpcionEditor[]>(
@@ -166,12 +163,6 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
     })),
   );
 
-  const opcionesPregunta = (pregunta?.opciones ?? []).map((op) => ({
-    texto: normalizeForEditor(op.texto),
-    es_correcta: op.es_correcta,
-    blank_id: op.blank_id ?? null,
-  }));
-  
   const [pares, setPares] = useState<IParEditor[]>(
     (pregunta.pares ?? []).map((p) => ({
       izquierda: p.izquierda,
@@ -283,9 +274,10 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
   // ── Guardar ───────────────────────────────────────────────────────────────
   const handleGuardar = async () => {
     setGuardando(true);
+
     const payload: Parameters<typeof editarPregunta>[0] = {
       pregunta_id: pregunta._id,
-      enunciado,
+      enunciado: cleanForDB(enunciado), // ← limpiar
       puntos,
     };
 
@@ -293,7 +285,10 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
       case "multiple_choice":
       case "multiple_answers":
       case "true_false":
-        payload.opciones = opciones;
+        payload.opciones = opciones.map((op) => ({
+          ...op,
+          texto: cleanForDB(op.texto), // ← limpiar cada alternativa
+        }));
         break;
       case "matching":
         payload.pares = pares;
@@ -302,7 +297,7 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
         payload.respuesta_numerica = respNum;
         break;
       case "fill_in_multiple_blanks":
-        payload.enunciado_contexto = enunciado;
+        payload.enunciado_contexto = cleanForDB(enunciado);
         payload.columnas = columnas;
         payload.tipo_pimu = items[0]?.tipoPimu ?? "numero";
         payload.items = items.map((it) => ({
@@ -323,7 +318,7 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
           b.opciones
             .filter((o) => o.texto.trim())
             .map((o) => ({
-              texto: o.texto.trim(),
+              texto: cleanForDB(o.texto.trim()), // ← limpiar
               es_correcta: o.es_correcta,
               blank_id: b.blank_id,
             })),
@@ -510,11 +505,11 @@ const PreguntaCard = ({ pregunta, esPrimero, esUltimo }: Props) => {
             {editando ? (
               <PreguntaEditor
                 tipo={pregunta.tipo as TipoPreguntaEditor}
-                enunciado={normalizeForEditor(enunciadoPregunta)}
+                enunciado={normalizeForEditor(enunciado)}
                 onEnunciadoChange={setEnunciado}
                 puntos={puntos}
                 onPuntosChange={setPuntos}
-                opciones={opcionesPregunta}
+                opciones={opciones}
                 onOpcionesChange={setOpciones}
                 pares={pares}
                 onParesChange={setPares}

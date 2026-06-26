@@ -4,7 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
-import MathTextEditorInline from "../../../../components/CKEditor/MathTextEditorInline";
+import MathTextEditorInline from "@/components/CKEditor/MathTextEditorInline";
 
 export interface IOpcionForm {
   texto: string;
@@ -50,8 +50,15 @@ const FormOpciones = ({ tipo, opciones, onChange }: Props) => {
           : "Opciones — marca la correcta"}
       </Typography>
 
+      {/* key depende de la longitud: editar (longitud estable) NO remonta el
+          editor congelado → sin churn → persisten todas las alternativas.
+          Agregar/eliminar (cambia la longitud) remonta los editores leyendo
+          el estado actual → contenido correcto, incluido borrar del medio. */}
       {opciones.map((op, idx) => (
-        <div key={idx} className="flex items-center gap-2">
+        <div
+          key={`${opciones.length}-${idx}`}
+          className="flex items-center gap-2"
+        >
           {/* ── Selector correcto/incorrecto ── */}
           {esMultiple ? (
             <Checkbox
@@ -82,7 +89,6 @@ const FormOpciones = ({ tipo, opciones, onChange }: Props) => {
             <MathTextEditorInline
               initialData={op.texto}
               onChange={(html) => handleTexto(idx, html)}
-              // placeholder={`Opción ${idx + 1}`}
             />
           )}
 

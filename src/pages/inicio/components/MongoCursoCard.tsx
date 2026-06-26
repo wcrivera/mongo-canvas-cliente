@@ -19,13 +19,13 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import SchoolIcon from "@mui/icons-material/School";
 
-import { useAppDispatch } from "../../../store/hooks";
-import { editarPublishedApiCurso } from "../../../store/slices/mongoCurso";
-import type { IMongoCurso } from "../../../store/slices/mongoCurso";
+import { useAppDispatch } from "@/store/hooks";
+import { editarPublishedApiCurso } from "@/store/slices/mongoCurso";
+import type { IMongoCurso } from "@/store/slices/mongoCurso";
 import CanvasCursoChip from "./CanvasCursoChip";
 import ModalAsociarCanvas from "./ModalAsociarCanvas";
 import ModalSincronizar from "./ModalSincronizar";
-import { iconBtnActiveSx, iconBtnSx } from "../../../styles/iconButtons";
+import { iconBtnActiveSx, iconBtnSx } from "@/styles/iconButtons";
 
 // ── Paleta de 6 colores cíclica ───────────────────────────────────────────────
 const COLOR_PALETTE = [

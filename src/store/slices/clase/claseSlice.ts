@@ -1,6 +1,5 @@
-import { createSlice } from "@reduxjs/toolkit";
-
-export type SyncStatus = 'pending' | 'synced' | 'dirty' | 'missing' | 'error';
+import type { SyncStatus } from "@/types/entities";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface ICanvasDeploymentClase {
   canvas_curso_id: number;
@@ -42,24 +41,24 @@ export const claseMongoSlice = createSlice({
   name: "claseMongo",
   initialState,
   reducers: {
-    setClases: (state, action) => {
+    setClases: (state, action: PayloadAction<IClase[]>) => {
       state.clases = action.payload;
     },
-    setClaseActiva: (state, action) => {
+    setClaseActiva: (state, action: PayloadAction<IClase | null>) => {
       state.claseActiva = action.payload;
     },
-    agregarClase: (state, action) => {
+    agregarClase: (state, action: PayloadAction<IClase>) => {
       state.clases.push(action.payload);
     },
-    actualizarClase: (state, action) => {
+    actualizarClase: (state, action: PayloadAction<IClase>) => {
       state.claseActiva = action.payload;
       const idx = state.clases.findIndex(c => c._id === action.payload._id);
       if (idx !== -1) state.clases[idx] = action.payload;
     },
-    intercambiarClases: (state, action) => {
+    intercambiarClases: (state, action: PayloadAction<IClase[]>) => {
       state.clases = action.payload;
     },
-    eliminarClaseState: (state, action) => {
+    eliminarClaseState: (state, action: PayloadAction<string>) => {
       state.clases = state.clases.filter(c => c._id !== action.payload);
       if (state.claseActiva?._id === action.payload) {
         state.claseActiva = null;
@@ -76,7 +75,7 @@ export const claseMongoSlice = createSlice({
     endLoadingClase: (state) => {
       state.isLoading = false;
     },
-    setErrorClase: (state, action) => {
+    setErrorClase: (state, action: PayloadAction<string | null>) => {
       state.isLoading = false;
       state.error     = action.payload;
     },

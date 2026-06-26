@@ -1,7 +1,7 @@
 // src/pages/capitulo/components/SortableCapituloCard.tsx
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { ICapitulo } from "../../../store/slices/capitulo";
+import type { ICapitulo } from "@/store/slices/capitulo";
 import CapituloCard from "./CapituloCard";
 
 interface Props {

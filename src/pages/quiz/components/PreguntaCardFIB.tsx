@@ -12,10 +12,10 @@ import SettingsIcon      from "@mui/icons-material/Settings";
 import EditOutlinedIcon  from "@mui/icons-material/EditOutlined";
 import CheckIcon         from "@mui/icons-material/Check";
 import GridViewIcon      from "@mui/icons-material/GridView";
-import { useAppDispatch } from "../../../store/hooks";
-import { editarItemFIB, editarPregunta } from "../../../store/slices/quiz";
-import type { IPregunta, IItemFIB } from "../../../store/slices/quiz/quizSlice";
-import { renderLatexInHtml } from "../../../components/CKEditor/mathUtils";
+import { useAppDispatch } from "@/store/hooks";
+import { editarItemFIB, editarPregunta } from "@/store/slices/quiz";
+import type { IPregunta, IItemFIB } from "@/store/slices/quiz/quizSlice";
+import { renderLatexInHtml } from "@/components/CKEditor/mathUtils";
 
 // ─── Tipos de validación LTI disponibles ─────────────────────────────────────
 

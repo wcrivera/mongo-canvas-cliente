@@ -1,9 +1,10 @@
-import { createSlice } from "@reduxjs/toolkit";
+import type { SyncStatus } from "@/types/entities";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface ICanvasDeploymentTema {
   canvas_curso_id: number;
   canvas_id:       number | null;
-  status:          "pending" | "synced" | "dirty" | "missing" | "error";
+  status:          SyncStatus
   synced_at:       string | null;
   error_msg:       string;
 }
@@ -38,22 +39,22 @@ export const temaMongoSlice = createSlice({
   name: "temaMongo",
   initialState,
   reducers: {
-    setTemas: (state, action) => {
+    setTemas: (state, action: PayloadAction<ITema[]>) => {
       state.temas = action.payload;
     },
-    agregarTema: (state, action) => {
+    agregarTema: (state, action: PayloadAction<ITema>) => {
       state.temas.push(action.payload);
     },
-    actualizarTema: (state, action) => {
+    actualizarTema: (state, action: PayloadAction<ITema>) => {
       const idx = state.temas.findIndex((t) => t._id === action.payload._id);
       if (idx !== -1) state.temas[idx] = action.payload;
     },
     // Usado al eliminar — reemplaza la lista completa con posiciones renumeradas
-    eliminarTemaState: (state, action) => {
+    eliminarTemaState: (state, action: PayloadAction<string>) => {
       state.temas = state.temas.filter((t) => t._id !== action.payload);
     },
     // Usado al cambiar posición — actualiza posiciones de los afectados
-    intercambiarTemas: (state, action) => {
+    intercambiarTemas: (state, action: PayloadAction<ITema[]>) => {
       state.temas = action.payload;
     },
     limpiarTemas: (state) => {
@@ -66,7 +67,7 @@ export const temaMongoSlice = createSlice({
     endLoadingTema: (state) => {
       state.isLoading = false;
     },
-    setErrorTema: (state, action) => {
+    setErrorTema: (state, action: PayloadAction<string | null>) => {
       state.isLoading = false;
       state.error     = action.payload;
     },

@@ -1,11 +1,12 @@
-import { createSlice } from "@reduxjs/toolkit";
+import type { SyncStatus } from "@/types/entities";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 export interface ICanvasDeploymentSolucion {
   canvas_curso_id: number;
   canvas_page_id:  number | null;
   canvas_page_url: string;
   canvas_item_id:  number | null;
-  status:          'pending' | 'synced' | 'dirty' | 'missing' | 'error';
+  status:          SyncStatus
   synced_at:       string | null;
   error_msg:       string;
 }
@@ -39,10 +40,10 @@ export const solucionTextoMongoSlice = createSlice({
   name: "solucionTextoMongo",
   initialState,
   reducers: {
-    setSoluciones: (state, action) => {
+    setSoluciones: (state, action: PayloadAction<ISolucionTexto[]>) => {
       state.soluciones = action.payload;
     },
-    agregarSolucion: (state, action) => {
+    agregarSolucion: (state, action: PayloadAction<ISolucionTexto>) => {
       const idx = state.soluciones.findIndex(
         s => s.ayudantia_id === action.payload.ayudantia_id
       );
@@ -52,10 +53,10 @@ export const solucionTextoMongoSlice = createSlice({
         state.soluciones.push(action.payload);
       }
     },
-    eliminarSolucionState: (state, action) => {
+    eliminarSolucionState: (state, action: PayloadAction<string>) => {
       state.soluciones = state.soluciones.filter((s) => s._id !== action.payload);
     },
-    actualizarSolucion: (state, action) => {
+    actualizarSolucion: (state, action: PayloadAction<ISolucionTexto>) => {
       const idx = state.soluciones.findIndex(
         s => s._id === action.payload._id
       );
@@ -71,7 +72,7 @@ export const solucionTextoMongoSlice = createSlice({
     endLoadingSolucion: (state) => {
       state.isLoading = false;
     },
-    setErrorSolucion: (state, action) => {
+    setErrorSolucion: (state, action: PayloadAction<string | null>) => {
       state.isLoading = false;
       state.error     = action.payload;
     },

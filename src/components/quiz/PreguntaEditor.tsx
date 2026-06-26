@@ -2,25 +2,25 @@
 // Componente de edición inline para una pregunta existente.
 // Usado en: PreguntaCard (quiz), EjercicioCard (ejercicios)
 import { Typography, TextField, Divider, Alert } from "@mui/material";
-import { useAppSelector } from "../../store/hooks";
+import { useAppSelector } from "@/store/hooks";
 import MathTextEditor from "../CKEditor/MathTextEditor";
 
 import FormOpciones, {
   type IOpcionForm,
-} from "../../pages/quiz/components/tipos/FormOpciones";
+} from "@/pages/quiz/components/tipos/FormOpciones";
 import FormFIB, {
   type IItemFIBForm,
-} from "../../pages/quiz/components/tipos/FormFIB";
+} from "@/pages/quiz/components/tipos/FormFIB";
 import FormDropdowns, {
   type IDropdownBlancoForm,
-} from "../../pages/quiz/components/tipos/FormDropdowns";
+} from "@/pages/quiz/components/tipos/FormDropdowns";
 import FormMatching, {
   type IParForm,
-} from "../../pages/quiz/components/tipos/FormMatching";
+} from "@/pages/quiz/components/tipos/FormMatching";
 import FormNumerical, {
   type IRespuestaNumForm,
-} from "../../pages/quiz/components/tipos/FormNumerical";
-export type { TipoPimu } from "../../pages/quiz/components/tipos/FormFIB";
+} from "@/pages/quiz/components/tipos/FormNumerical";
+export type { TipoPimu } from "@/pages/quiz/components/tipos/FormFIB";
 
 // ── Tipos re-exportados para compatibilidad con PreguntaCard / EjercicioCard ─
 export type IOpcionEditor = IOpcionForm;

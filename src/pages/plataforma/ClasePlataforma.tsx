@@ -10,10 +10,10 @@ import ExpandMoreIcon      from "@mui/icons-material/ExpandMore";
 import SlideshowIcon       from "@mui/icons-material/Slideshow";
 import VideoLibraryIcon    from "@mui/icons-material/VideoLibrary";
 import QuizIcon            from "@mui/icons-material/Quiz";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { obtenerClasePlataforma }         from "../../store/slices/plataforma";
-import { calcularIndicador }              from "../../helpers/indicadorIntento";
-import { chapter } from "../../db/db";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { obtenerClasePlataforma }         from "@/store/slices/plataforma";
+import { calcularIndicador }              from "@/helpers/indicadorIntento";
+import { chapter } from "@/db/db";
 
 const ClasePlataforma = () => {
   const { curso_id, capitulo_id, clase_id } = useParams<{

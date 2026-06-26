@@ -13,7 +13,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ErrorIcon from "@mui/icons-material/Error";
 import InfoIcon from "@mui/icons-material/Info";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
-import { chapter } from "../../../db/db";
+import { chapter } from "@/db/db";
 
 interface Paso {
   msg: string;

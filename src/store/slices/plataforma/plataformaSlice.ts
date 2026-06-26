@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { IUltimoIntento } from "../../../helpers/indicadorIntento";
+import type { IUltimoIntento } from "@/helpers/indicadorIntento";
 
 export interface ICursoPlataforma {
   _id:          string;

@@ -330,3 +330,44 @@ export function renderLatexInHtml(html: string): string {
 
   return result;
 }
+
+
+// ── 5. Limpiar contenido del editor para guardar en DB ───────────────────────
+//
+// Inverso de prepareForEditor: convierte el formato intermedio del editor
+// (<span data-type="math-inline" data-latex="X">) y los formatos legados de
+// vuelta al canónico \(...\) / \[...\] que se persiste en la DB.
+// Garantiza que lo guardado nunca sea el formato intermedio (que Canvas
+// renderiza vacío). Idempotente: si ya está limpio, no toca nada.
+
+function decodeLatexAttr(s: string): string {
+  return s
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
+export function cleanForDB(html: string): string {
+  if (!html) return "";
+  return html
+    // inline: <span data-type="math-inline|inline-math" data-latex="X"></span> → \(X\)
+    .replace(
+      /<span\s[^>]*data-latex="([^"]*)"[^>]*data-type="(?:math-inline|inline-math)"[^>]*><\/span>/g,
+      (_, l) => `\\(${decodeLatexAttr(l)}\\)`,
+    )
+    .replace(
+      /<span\s[^>]*data-type="(?:math-inline|inline-math)"[^>]*data-latex="([^"]*)"[^>]*><\/span>/g,
+      (_, l) => `\\(${decodeLatexAttr(l)}\\)`,
+    )
+    // block: <div data-type="block-math|math-block" data-latex="X"></div> → \[X\]
+    .replace(
+      /<div\s[^>]*data-latex="([^"]*)"[^>]*data-type="(?:block-math|math-block)"[^>]*><\/div>/g,
+      (_, l) => `\\[${decodeLatexAttr(l)}\\]`,
+    )
+    .replace(
+      /<div\s[^>]*data-type="(?:block-math|math-block)"[^>]*data-latex="([^"]*)"[^>]*><\/div>/g,
+      (_, l) => `\\[${decodeLatexAttr(l)}\\]`,
+    );
+}

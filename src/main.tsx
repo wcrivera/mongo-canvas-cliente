@@ -9,11 +9,12 @@ import App from "./App.tsx";
 import "./index.css";
 import "katex/dist/katex.min.css";
 import "./css/ckeditor.css"
+import { StrictMode } from "react";
 
 createRoot(document.getElementById("root")!).render(
-  // <StrictMode>
+  <StrictMode>
     <Provider store={store}>
       <App />
     </Provider>
-  // </StrictMode>,
+  </StrictMode>,
 );

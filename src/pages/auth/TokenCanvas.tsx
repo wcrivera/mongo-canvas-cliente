@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../../store/hooks';
-import { guardarTokenCanvas } from '../../store/slices/auth/thunks';
+import { useAppDispatch } from '@/store/hooks';
+import { guardarTokenCanvas } from '@/store/slices/auth/thunks';
 
 const TokenCanvas = () => {
   const dispatch = useAppDispatch();

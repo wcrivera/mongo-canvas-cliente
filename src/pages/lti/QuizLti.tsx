@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CircularProgress } from "@mui/material";
-import { setLtiToken, fetchLti } from "../../helpers/fetchLti";
+import { setLtiToken, fetchLti } from "@/helpers/fetchLti";
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 

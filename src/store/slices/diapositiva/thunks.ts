@@ -1,5 +1,5 @@
 // src/store/slices/diapositiva/thunks.ts
-import { fetchConToken } from "../../../helpers/fetch";
+import { fetchConToken } from "@/helpers/fetch";
 import type { AppDispatch } from "../..";
 import {
   startLoadingDiapositiva,
@@ -72,6 +72,56 @@ export const obtenerDiapositivasPorTema = ({
 // ─── Crear ────────────────────────────────────────────────────────────────────
 
 export const crearDiapositiva = ({
+  contexto,
+  tema_id,
+  ayudantia_id,
+  capitulo_id,
+  curso_id,
+  titulo,
+  url,
+  slides,
+}: {
+  contexto: "clase" | "ayudantia";
+  tema_id?: string;
+  ayudantia_id?: string;
+  capitulo_id: string;
+  curso_id: string;
+  titulo: string;
+  url: string;
+  slides?: Array<{
+    layout: string;
+    contenido: string;
+    notas: string;
+    fondo: string;
+    id: string;
+    pagina: number;
+  }>;
+}) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(startLoadingDiapositiva());
+    try {
+      const resp = await fetchConToken(
+        "api/admin/diapositivas",
+        { contexto, tema_id, ayudantia_id, capitulo_id, curso_id, titulo, url, slides },
+        "POST",
+      );
+      const body = await resp.json();
+      if (body.ok) {
+        dispatch(agregarDiapositiva(body.data));
+        dispatch(endLoadingDiapositiva());
+        return { ok: true, data: body.data };
+      }
+      dispatch(setErrorDiapositiva(body.msg));
+      return { ok: false, msg: body.msg };
+    } catch (error) {
+      console.log(error);
+      dispatch(setErrorDiapositiva(MSG_ERROR));
+      return { ok: false, msg: MSG_ERROR };
+    }
+  };
+};
+
+export const crearUrlDiapositiva = ({
   contexto,
   tema_id,
   ayudantia_id,

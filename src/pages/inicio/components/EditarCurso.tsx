@@ -1,9 +1,8 @@
-import type { IMongoCurso } from "../../../types/mongo.types";
-import { BaseModal } from "../../../components/BaseModal/BaseModal";
+import { BaseModal } from "@/components/BaseModal/BaseModal";
 import { Button, CircularProgress, TextField, Typography } from "@mui/material";
-import { editarMongoCurso } from "../../../store/slices/mongoCurso";
+import { editarMongoCurso, type IMongoCurso } from "@/store/slices/mongoCurso";
 import { useState } from "react";
-import { useAppDispatch } from "../../../store/hooks";
+import { useAppDispatch } from "@/store/hooks";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 
 interface Props {

@@ -8,9 +8,9 @@ import {
   Typography,
   CircularProgress,
 } from "@mui/material";
-import { eliminarPregunta } from "../../store/slices/quiz";
-import { useAppDispatch } from "../../store/hooks";
-import type { IPregunta } from "../../store/slices/quiz";
+import { eliminarPregunta } from "@/store/slices/quiz";
+import { useAppDispatch } from "@/store/hooks";
+import type { IPregunta } from "@/store/slices/quiz";
 
 interface Props {
   pregunta: IPregunta;

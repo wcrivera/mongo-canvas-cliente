@@ -1,7 +1,7 @@
 // src/pages/clases/components/SortableClaseCard.tsx
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS }         from "@dnd-kit/utilities";
-import type { IClase } from "../../../store/slices/clase";
+import type { IClase } from "@/store/slices/clase";
 import ClaseCard       from "./ClaseCard";
 
 interface Props {

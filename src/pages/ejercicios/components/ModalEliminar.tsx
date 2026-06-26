@@ -5,8 +5,8 @@ import {
   Button, Typography, CircularProgress,
 } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { useAppDispatch } from "../../../store/hooks";
-import { eliminarQuiz, type IQuiz } from "../../../store/slices/quiz";
+import { useAppDispatch } from "@/store/hooks";
+import { eliminarQuiz, type IQuiz } from "@/store/slices/quiz";
 
 interface Props {
   ejercicio: IQuiz;

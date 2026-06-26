@@ -25,32 +25,32 @@ import CloseIcon from "@mui/icons-material/Close";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import RefreshIcon from "@mui/icons-material/Refresh";
 
-import { useAppDispatch } from "../../../store/hooks";
+import { useAppDispatch } from "@/store/hooks";
 import {
   editarQuiz,
   editarPregunta,
   type IQuiz,
   type IPregunta,
-} from "../../../store/slices/quiz";
-import { reintentarEjercicio } from "../../../store/slices/ejercicio";
-import { iconBtnSx, iconBtnActiveSx } from "../../../styles/iconButtons";
-import { PreguntaViewer, PreguntaEditor } from "../../../components/quiz";
+} from "@/store/slices/quiz";
+import { reintentarEjercicio } from "@/store/slices/ejercicio";
+import { iconBtnSx, iconBtnActiveSx } from "@/styles/iconButtons";
+import { PreguntaViewer, PreguntaEditor } from "@/components/quiz";
 import type {
   IOpcionEditor,
   IParEditor,
   IRespuestaNumEditor,
   TipoPreguntaEditor,
-} from "../../../components/quiz";
+} from "@/components/quiz";
 import type {
   IItemFIBEditor,
   IDropdownBlancoEditorForm,
   TipoPimu,
-} from "../../../components/quiz/PreguntaEditor";
-import type { IItemFIBViewer } from "../../../components/quiz/PreguntaViewer";
+} from "@/components/quiz/PreguntaEditor";
+import type { IItemFIBViewer } from "@/components/quiz/PreguntaViewer";
 import ModalEliminar from "./ModalEliminar";
 import FormPregunta from "../../quiz/components/FormPregunta";
-import { obtenerPreguntas } from "../../../store/slices/quiz";
-import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
+import { obtenerPreguntas } from "@/store/slices/quiz";
+import { normalizeForEditor } from "@/components/CKEditor/mathUtils";
 
 // ── Colores por tipo ──────────────────────────────────────────────────────────
 

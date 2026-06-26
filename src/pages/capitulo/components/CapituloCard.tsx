@@ -25,12 +25,12 @@ import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import SchoolIcon from "@mui/icons-material/School";
 
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { editarCapitulo } from "../../../store/slices/capitulo";
-import type { ICapitulo } from "../../../store/slices/capitulo";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { editarCapitulo } from "@/store/slices/capitulo";
+import type { ICapitulo } from "@/store/slices/capitulo";
 import { ModalEliminarCapitulo } from "./ModalEliminarCapitulo";
-import { iconBtnActiveSx, iconBtnSx } from "../../../styles/iconButtons";
-import { chapter } from "../../../db/db";
+import { iconBtnActiveSx, iconBtnSx } from "@/styles/iconButtons";
+import { chapter } from "@/db/db";
 
 interface Props {
   capitulo: ICapitulo;

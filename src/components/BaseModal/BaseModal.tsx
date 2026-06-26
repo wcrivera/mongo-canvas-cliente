@@ -26,7 +26,7 @@ import {
   Button,
   CircularProgress,
 } from "@mui/material";
-import { CHROME, PRIMARY, RADIUS } from "../../styles/tokens";
+import { CHROME, PRIMARY, RADIUS } from "@/styles/tokens";
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 

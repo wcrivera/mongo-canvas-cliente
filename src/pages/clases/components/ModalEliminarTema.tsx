@@ -9,8 +9,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { useAppDispatch } from "../../../store/hooks";
-import type { ITema } from "../../../store/slices/tema";
+import { useAppDispatch } from "@/store/hooks";
+import type { ITema } from "@/store/slices/tema";
 
 const ModalEliminarTema = ({
   tema,
@@ -24,7 +24,7 @@ const ModalEliminarTema = ({
 
   const handleEliminar = async () => {
     setEliminando(true);
-    const { eliminarTema } = await import("../../../store/slices/tema");
+    const { eliminarTema } = await import("@/store/slices/tema");
     await dispatch(eliminarTema({ tema_id: tema._id }));
     setEliminando(false);
     onClose();

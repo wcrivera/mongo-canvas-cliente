@@ -1,7 +1,7 @@
 // src/pages/ejercicios/components/SortableEjercicioCard.tsx
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS }         from "@dnd-kit/utilities";
-import type { IQuiz, IPregunta } from "../../../store/slices/quiz";
+import type { IQuiz, IPregunta } from "@/store/slices/quiz";
 import EjercicioCard from "./EjercicioCard";
 
 interface Props {

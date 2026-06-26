@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { Button, CircularProgress, Typography } from "@mui/material";
 import { useState } from "react";
-import { fetchConToken } from "../../../helpers/fetch";
+import { fetchConToken } from "@/helpers/fetch";
 
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import UploadIcon from "@mui/icons-material/Upload";
-import type { ICapitulo } from "../../../store/slices/capitulo";
-import { useAppSelector } from "../../../store/hooks";
-import { chapter } from "../../../db/db";
+import type { ICapitulo } from "@/store/slices/capitulo";
+import { useAppSelector } from "@/store/hooks";
+import { chapter } from "@/db/db";
 
 type HeaderProps = {
   curso_id: string | null;

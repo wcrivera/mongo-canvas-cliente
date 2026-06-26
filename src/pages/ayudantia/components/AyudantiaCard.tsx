@@ -31,21 +31,21 @@ import EditNoteIcon from "@mui/icons-material/EditNote";
 
 import GroupsIcon from "@mui/icons-material/Groups";
 
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
-import { editarAyudantia } from "../../../store/slices/ayudantia";
-import { eliminarSolucionTexto } from "../../../store/slices/solucionTexto";
-import { eliminarVideo } from "../../../store/slices/video";
-import { eliminarQuiz } from "../../../store/slices/quiz";
-import type { IAyudantia } from "../../../store/slices/ayudantia";
-import type { IQuiz } from "../../../store/slices/quiz";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { editarAyudantia } from "@/store/slices/ayudantia";
+import { eliminarSolucionTexto } from "@/store/slices/solucionTexto";
+import { eliminarVideo } from "@/store/slices/video";
+import { eliminarQuiz } from "@/store/slices/quiz";
+import type { IAyudantia } from "@/store/slices/ayudantia";
+import type { IQuiz } from "@/store/slices/quiz";
 import ModalSolucionTexto from "./ModalSolucionTexto";
 import ModalUrlVideo from "../../clases/components/ModalUrlVideo";
 import ModalCrearQuiz from "../../clases/components/ModalCrearQuiz";
-import TiptapRenderer from "../../../components/CKEditor/TiptapRenderer";
+import TiptapRenderer from "@/components/CKEditor/TiptapRenderer";
 import RecursoSlot from "./RecursoSlot";
 import ModalEliminarAyudantia from "./ModalEliminarAyudantia";
 import { ModalEnunciado } from "./ModalEnunciado";
-import { iconBtnActiveSx, iconBtnSx } from "../../../styles/iconButtons";
+import { iconBtnActiveSx, iconBtnSx } from "@/styles/iconButtons";
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface Props {

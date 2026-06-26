@@ -12,17 +12,17 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import CheckIcon        from "@mui/icons-material/Check";
 import SchoolIcon       from "@mui/icons-material/School";
 import PublicIcon       from "@mui/icons-material/Public";
-import { fetchConToken } from "../../helpers/fetch";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { fetchConToken } from "@/helpers/fetch";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   obtenerPreguntas,
   editarQuiz,
   limpiarQuizActivo,
   setQuizActivo,
-} from "../../store/slices/quiz";
+} from "@/store/slices/quiz";
 import PreguntaCard from "./components/PreguntaCard";
 import FormPregunta from "./components/FormPregunta";
-import ModalBanco   from "../../components/banco/ModalBanco";
+import ModalBanco   from "@/components/banco/ModalBanco";
 
 // El parámetro en la ruta sigue llamándose :recurso_id por compatibilidad
 // pero ahora contiene directamente el quiz_id.

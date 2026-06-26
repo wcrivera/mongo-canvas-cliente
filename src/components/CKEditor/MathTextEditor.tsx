@@ -1,4 +1,17 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+// src/components/CKEditor/MathTextEditorDiapositiva.tsx
+//
+// Editor especializado para diapositivas. Extiende MathTextEditor con:
+//   - TwoColumnsPlugin   (bloques de dos columnas con ratios)
+//   - MultiColumnListPlugin (listas en 2/3/4 columnas)
+//   - Tailwind CDN inyectado en el <head> del documento para que las
+//     clases de los plugins se vean en el editor (el área editable es un
+//     contenteditable div en el mismo DOM, no un iframe).
+//
+// El área editable se comporta como un lienzo de slide (SLIDE.width @
+// SLIDE.baseFontPx) y se escala automáticamente al espacio disponible con
+// min(anchoPanel/width, altoPanel/height) para verse WYSIWYG sin desbordar.
+
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import {
   ClassicEditor,
@@ -11,7 +24,6 @@ import {
   Heading,
   Link,
   List,
-  ListProperties,
   BlockQuote,
   Alignment,
   FontSize,
@@ -31,6 +43,7 @@ import {
   type EditorConfig,
   type ViewDowncastWriter,
   type Editor,
+  ListProperties,
 } from "ckeditor5";
 
 import "ckeditor5/ckeditor5.css";
@@ -52,10 +65,69 @@ import {
   type MathBlockPluginConfig,
   type TipoEntorno,
 } from "./plugins/MathBlockPlugin";
-import { ListTypePlugin } from "./plugins/ListTypePlugin";
+import { TwoColumnsPlugin } from "./plugins/TwoColumnsPlugin";
+import { MultiColumnListPlugin } from "./plugins/MultiColumnListPlugin";
+import { FragmentPlugin } from "./plugins/FragmentPlugin";
+import {
+  InsertGeoGebraPlugin,
+  type InsertGeoGebraPluginConfig,
+  type GeoGebraParams,
+} from "./plugins/InsertGeoGebraPlugin"; // + GEOGEBRA
 import { InsertImageUrlModal } from "./components/InsertImageUrlModal";
+import { GeoGebraModal } from "./components/GeoGebraModal"; // + GEOGEBRA
 import MathEditModal from "./components/MathEditModal";
 import MathBlockModal from "./components/MathBlockModal";
+import { SLIDE } from "@/pages/diapositiva/slideConstants";
+import { cleanForDB } from "./mathUtils";
+
+// ── Inyectar CSS de Reveal-WYSIWYG y Tailwind en el documento ────────────────
+// El área editable se comporta como un lienzo de slide: ancho lógico
+// SLIDE.width @ SLIDE.baseFontPx. La escala tipográfica deriva de esa base,
+// NO compite con las clases Tailwind de heading (text-3xl, etc.) del
+// InlineHeadingPlugin. CKEditor usa contenteditable en el mismo DOM (no
+// iframe), por lo que los estilos del <head> aplican en el área editable.
+
+function injectRevealStyles(_tema: string) {
+  console.log(_tema);
+  // 1. Tailwind CDN — una sola vez
+  if (!document.getElementById("reveal-editor-tailwind")) {
+    const script = document.createElement("script");
+    script.id = "reveal-editor-tailwind";
+    script.src = "https://cdn.tailwindcss.com";
+    script.onload = () => {
+      const tw = (window as Window & { tailwind?: { config: object } })
+        .tailwind;
+      if (tw) tw.config = { corePlugins: { preflight: false } };
+    };
+    document.head.appendChild(script);
+  }
+
+  // 2. CSS scoped al área editable — base de fuente de slide + reset de
+  //    márgenes Reveal. NO define tamaños de heading: esos vienen de las
+  //    clases Tailwind del InlineHeadingPlugin.
+  const scopeId = "reveal-editor-scoped-css";
+  if (!document.getElementById(scopeId)) {
+    const style = document.createElement("style");
+    style.id = scopeId;
+    style.textContent = `
+      .ck-editor__editable.reveal-preview {
+        background: #ffffff;
+        line-height: 1.4;
+        text-align: left;
+        box-sizing: border-box;
+        padding: 24px;
+      }
+      .ck-editor__editable.reveal-preview p  { margin: 0.5em 0; }
+      .ck-editor__editable.reveal-preview ul,
+      .ck-editor__editable.reveal-preview ol { padding-left: 1.6em; margin: 0.5em 0; }
+      .ck-editor__editable.reveal-preview li { margin: 0.25em 0; }
+      .ck-editor__editable.reveal-preview strong { font-weight: bold; }
+      .ck-editor__editable.reveal-preview em { font-style: italic; }
+      .ck-editor__editable.reveal-preview iframe { max-width: 100%; }
+    `;
+    document.head.appendChild(style);
+  }
+}
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -63,6 +135,8 @@ interface EditorProps {
   initialData?: string;
   onChange?: (data: string) => void;
   siglaCurso?: string;
+  tema?: string;
+  porcentaje?: number; // porcentaje del tamaño de slide a usar en el editor (ej: 0.7 = 70%)
 }
 
 interface LatexModalState {
@@ -85,15 +159,12 @@ interface EnvModalState {
   onSave: ((subtitulo: string) => void) | null;
 }
 
-// ── Constantes ────────────────────────────────────────────────────────────────
-
 const LATEX_MODAL_CLOSED: LatexModalState = {
   open: false,
   latex: "",
   type: "inline",
   onSave: null,
 };
-
 const ENV_MODAL_CLOSED: EnvModalState = {
   open: false,
   tipo: "definicion",
@@ -101,6 +172,8 @@ const ENV_MODAL_CLOSED: EnvModalState = {
   modoInsertar: true,
   onSave: null,
 };
+
+// ── Plugins ───────────────────────────────────────────────────────────────────
 
 const BASE_PLUGINS = [
   Essentials,
@@ -133,9 +206,12 @@ const BASE_PLUGINS = [
   InsertImageUrlPlugin,
   MathPlugin,
   MathBlockPlugin,
+  TwoColumnsPlugin,
+  MultiColumnListPlugin,
+  FragmentPlugin,
+  InsertGeoGebraPlugin, // + GEOGEBRA
   InlineStylesPlugin,
   InlineHeadingPlugin,
-  ListTypePlugin, 
   GeneralHtmlSupport,
 ];
 
@@ -155,7 +231,8 @@ const TOOLBAR_ITEMS = [
   "fontColor",
   "|",
   "alignment",
-  "|",
+  // "|",
+  "-", // break point
   "link",
   "bulletedList",
   "numberedList",
@@ -165,7 +242,9 @@ const TOOLBAR_ITEMS = [
   "insertTable",
   "insertImageMenu",
   "insertMath",
+  "insertMathEnvironment",
   "insertFragment",
+  "insertGeoGebra", // + GEOGEBRA
   "insertTwoColumns",
   "insertMultiColList",
   "addMultiColListItem",
@@ -177,6 +256,12 @@ const TOOLBAR_ITEMS = [
 
 const HTML_SUPPORT_CONFIG = {
   allow: [
+    // {
+    //   name: /.*/, // cualquier elemento HTML
+    //   attributes: true, // cualquier atributo
+    //   classes: true, // cualquier clase
+    //   styles: true, // cualquier estilo inline
+    // },
     { name: "ol", attributes: { type: true }, classes: true, styles: true },
     { name: "div", attributes: true, classes: true, styles: true },
     { name: "section", attributes: true, classes: true, styles: true },
@@ -222,21 +307,43 @@ const HTML_SUPPORT_CONFIG = {
   ],
 };
 
+// Paleta de color de texto — calza 1:1 con TEXT_COLOR_CLASS del InlineStylesPlugin
+const FONT_COLORS = [
+  { color: "#0f172a", label: "Slate" },
+  { color: "#64748b", label: "Gris" },
+  { color: "#0d9488", label: "Teal" },
+  { color: "#16a34a", label: "Verde" },
+  { color: "#dc2626", label: "Rojo" },
+];
+
 // ── Componente ────────────────────────────────────────────────────────────────
 
-const MathTextEditor: React.FC<EditorProps> = ({
+const MathTextEditorDiapositiva: React.FC<EditorProps> = ({
   initialData = "",
   onChange,
   siglaCurso = "",
+  tema = "beige",
 }) => {
-
   const [latexModal, setLatexModal] =
     useState<LatexModalState>(LATEX_MODAL_CLOSED);
   const [urlModal, setUrlModal] = useState<UrlModalState>({ open: false });
   const [envModal, setEnvModal] = useState<EnvModalState>(ENV_MODAL_CLOSED);
+  const [geogebraOpen, setGeogebraOpen] = useState(false); // + GEOGEBRA
 
   // Ref al editor — asignado en onReady, leído en handlers
   const editorRef = useRef<Editor | null>(null);
+
+  // Host medido para el escalado + función de recálculo expuesta a onReady.
+  const scaleHostRef = useRef<HTMLDivElement>(null);
+  const sensorRef = useRef<HTMLDivElement>(null);
+  const scaleWrapRef = useRef<HTMLDivElement>(null); // ← NUEVO: wrapper escalable
+  const recalcularEscalaRef = useRef<() => void>(() => {});
+
+  // Dato inicial fijado una sola vez al montar via useMemo con deps [].
+  // No puede ser un ref porque leer .current durante render está
+  // prohibido en React 19 (react-hooks/refs).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const initialDataFixed = useMemo(() => initialData, []);
 
   // Refs a los callbacks onSave de los modales — actualizados via useEffect
   // para no violar react-hooks/refs (prohibido escribir refs durante render).
@@ -249,6 +356,52 @@ const MathTextEditor: React.FC<EditorProps> = ({
   useEffect(() => {
     envOnSaveRef.current = envModal.onSave;
   }, [envModal.onSave]);
+
+  // Inyectar CSS de Reveal + Tailwind al montar y cuando cambia el tema
+  useEffect(() => {
+    injectRevealStyles(tema);
+  }, [tema]);
+
+  // ── Escalado automático del área editable al espacio disponible ───────────
+  // scale = min(anchoPanel/width, altoPanel/height) → slide completa, sin
+  // recortes. Se recalcula vía ResizeObserver, en resize de ventana, y desde
+  // onReady (cuando el editable ya existe) con doble rAF.
+  useEffect(() => {
+    const host = scaleHostRef.current;
+    const sensor = sensorRef.current;
+    if (!host || !sensor) return;
+
+    const aplicarEscala = () => {
+      const wrap = scaleWrapRef.current;
+      if (!wrap) return;
+
+      const dispW = sensor.clientWidth - 24;
+      const top = host.getBoundingClientRect().top;
+      const dispH = window.innerHeight - top - 24;
+
+      const scale = Math.min(dispW / SLIDE.width, dispH / SLIDE.height);
+      if (scale <= 0 || !isFinite(scale)) return;
+
+      // Escalamos el WRAPPER (no el .ck-editor__editable), porque CKEditor
+      // reescribe el editable al enfocar y borraría el transform.
+      wrap.style.transform = `scale(${scale})`;
+      wrap.style.transformOrigin = "top left";
+      // El wrapper mide 1280px de ancho; reservamos el alto escalado en el host.
+      host.style.height = `${wrap.offsetHeight * scale}px`;
+    };
+
+    recalcularEscalaRef.current = aplicarEscala;
+    aplicarEscala();
+
+    const ro = new ResizeObserver(aplicarEscala);
+    ro.observe(sensor); // ← observar el sensor, no el host ni el padre
+    window.addEventListener("resize", aplicarEscala);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", aplicarEscala);
+    };
+  }, []);
 
   // ── Handlers imagen ────────────────────────────────────────────────────────
 
@@ -267,7 +420,16 @@ const MathTextEditor: React.FC<EditorProps> = ({
     setUrlModal({ open: false });
   }, []);
 
-  // ── Handlers fórmulas LaTeX ────────────────────────────────────────────────
+  // ── Handlers GeoGebra ──────────────────────────────────────────────────────
+  // + GEOGEBRA
+  const handleInsertGeoGebra = useCallback(() => setGeogebraOpen(true), []);
+  const handleGeoGebraInsert = useCallback((params: GeoGebraParams) => {
+    editorRef.current?.execute("insertGeoGebra", params);
+    editorRef.current?.editing.view.focus();
+    setGeogebraOpen(false);
+  }, []);
+
+  // ── Handlers LaTeX ─────────────────────────────────────────────────────────
 
   const handleInsertMath = useCallback(() => {
     setLatexModal({ open: true, latex: "", type: "inline", onSave: null });
@@ -305,7 +467,7 @@ const MathTextEditor: React.FC<EditorProps> = ({
     [],
   );
 
-  // ── Handlers entornos matemáticos ──────────────────────────────────────────
+  // ── Handlers entornos ──────────────────────────────────────────────────────
 
   const handleEditSubtitulo = useCallback(
     (
@@ -376,15 +538,31 @@ const MathTextEditor: React.FC<EditorProps> = ({
               title: "Título 3",
               class: "ck-heading_heading3",
             },
+            {
+              model: "heading4",
+              view: "h4",
+              title: "Título 4",
+              class: "ck-heading_heading4",
+            },
           ],
         },
         table: {
           contentToolbar: ["tableColumn", "tableRow", "mergeTableCells"],
         },
         htmlSupport: HTML_SUPPORT_CONFIG,
+        fontSize: {
+          options: ["tiny", "small", "default", "big", "huge"],
+          supportAllValues: false,
+        },
+        fontColor: {
+          colors: FONT_COLORS,
+          columns: 5,
+          documentColors: 0,
+          colorPicker: false,
+        },
         image: {
           toolbar: ["imageTextAlternative"],
-          resizeUnit: "px",
+          resizeUnit: "%",
           insert: {
             type: "auto",
             integrations: ["insertImageViaUrl", "upload"],
@@ -399,6 +577,9 @@ const MathTextEditor: React.FC<EditorProps> = ({
           onInsertUrl: handleInsertUrl,
           onInsertGaleria: handleInsertGaleria,
         } satisfies InsertImageUrlPluginConfig,
+        insertGeoGebra: {
+          onInsert: handleInsertGeoGebra,
+        } satisfies InsertGeoGebraPluginConfig, // + GEOGEBRA
         math: {
           onInsert: handleInsertMath,
           onEdit: handleEditMath,
@@ -414,28 +595,48 @@ const MathTextEditor: React.FC<EditorProps> = ({
 
   return (
     <div className="editor-wrapper">
-      <div className="p-3">
+      {/* <div ref={sensorRef} style={{ width: "100%", height: 0 }} /> */}
+      {/* <div ref={scaleHostRef} style={{ overflow: "hidden", padding: 12 }}> */}
+      {/* wrapper escalable: ancho lógico fijo de slide; CKEditor vive dentro */}
+      <div
+        ref={scaleWrapRef}
+      >
         <CKEditor
           editor={ClassicEditor}
-          config={editorConfig}
-          data={initialData}
+          config={{
+            ...editorConfig,
+            toolbar: { ...editorConfig.toolbar, shouldNotGroupWhenFull: true },
+          }}
+          data={initialDataFixed}
           onReady={(editor) => {
+            // FIX #3: sin esta asignación, editorRef.current queda en null y
+            // los comandos de inserción (insertMathInline/insertMathBlock,
+            // insertImageFromUrl, insertGeoGebra) ejecutados desde los modales
+            // hacen no-op silencioso. La edición de fórmulas sí funcionaba
+            // porque usa el `editor` del propio MathPlugin, no este ref.
             editorRef.current = editor;
+
             const root = editor.editing.view.document.getRoot();
             if (root) {
               editor.editing.view.change((writer: ViewDowncastWriter) => {
-                writer.setStyle("min-height", "150px", root);
-                writer.setStyle("font-size", "16px", root);
+                writer.addClass("reveal-preview", root);
+                writer.setStyle("box-sizing", "border-box", root);
+                writer.setStyle("text-align", "justify!important", root);
+                writer.setStyle("line-height", "1.8!important", root);
+                writer.setStyle("font-size", "14px", root);
               });
             }
+            requestAnimationFrame(() =>
+              requestAnimationFrame(() => recalcularEscalaRef.current()),
+            );
           }}
-          onChange={(_event, editor) => onChange?.(editor.getData())}
+          onChange={(_event, editor) => onChange?.(cleanForDB(editor.getData()))}
           onFocus={handleFocus}
           onBlur={handleBlur}
         />
+        {/* </div> */}
       </div>
 
-      {/* Modal: imagen por URL / galería */}
       {urlModal.open && (
         <InsertImageUrlModal
           siglaCurso={siglaCurso}
@@ -445,7 +646,14 @@ const MathTextEditor: React.FC<EditorProps> = ({
         />
       )}
 
-      {/* Modal: fórmula LaTeX — onSave: (latex, type) => void */}
+      {/* + GEOGEBRA */}
+      {geogebraOpen && (
+        <GeoGebraModal
+          onInsert={handleGeoGebraInsert}
+          onClose={() => setGeogebraOpen(false)}
+        />
+      )}
+
       {latexModal.open && (
         <MathEditModal
           latex={latexModal.latex}
@@ -455,8 +663,6 @@ const MathTextEditor: React.FC<EditorProps> = ({
         />
       )}
 
-      {/* Modal: subtítulo de entorno — onSave: (subtitulo) => void
-          key fuerza remonte limpio al cambiar de tipo */}
       {envModal.open && (
         <MathBlockModal
           key={envModal.tipo}
@@ -471,4 +677,4 @@ const MathTextEditor: React.FC<EditorProps> = ({
   );
 };
 
-export default MathTextEditor;
+export default MathTextEditorDiapositiva;

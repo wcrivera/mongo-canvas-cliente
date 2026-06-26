@@ -28,15 +28,15 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import CheckIcon from "@mui/icons-material/Check";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloseIcon from "@mui/icons-material/Close";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   actualizarDiapositiva,
   eliminarDiapositiva,
-} from "../../store/slices/diapositiva";
-import { fetchConToken } from "../../helpers/fetch";
-import MathTextEditor from "../../components/CKEditor/MathTextEditorDiapositiva";
+} from "@/store/slices/diapositiva";
+import { fetchConToken } from "@/helpers/fetch";
+import MathTextEditor from "@/components/CKEditor/MathTextEditorDiapositiva";
 import SlidePreviewMiniatura from "./components/SlidePreviewMiniatura"; // mismo directorio: src/pages/diapositiva/
-import { normalizeForEditor } from "../../components/CKEditor/mathUtils";
+import { normalizeForEditor } from "@/components/CKEditor/mathUtils";
 import ModalPreview from "./components/ModalPreview";
 
 // ── Wrapper que mide el espacio disponible y centra el preview ────────────────

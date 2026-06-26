@@ -7,7 +7,7 @@ import type {
 } from "../../diapositiva/EditorDiapositiva";
 import { transformarHtmlParaReveal } from "../../diapositiva/compilarHtmlReveal";
 import RevealMath from "reveal.js";
-import TiptapRenderer from "../../../components/CKEditor/TiptapRenderer";
+import TiptapRenderer from "@/components/CKEditor/TiptapRenderer";
 
 interface Props {
   slides: ISlide[];

@@ -1,11 +1,11 @@
 import { Alert, Button, CircularProgress, Typography } from "@mui/material";
-import { BaseModal } from "../../../components/BaseModal/BaseModal";
-import type { IMongoCurso } from "../../../types/mongo.types";
+import { BaseModal } from "@/components/BaseModal/BaseModal";
+
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { useAppDispatch } from "../../../store/hooks";
-import { eliminarMongoCurso } from "../../../store/slices/mongoCurso";
+import { useAppDispatch } from "@/store/hooks";
+import { eliminarMongoCurso, type IMongoCurso } from "@/store/slices/mongoCurso";
 import { useState } from "react";
-import { chapter } from "../../../db/db";
+import { chapter } from "@/db/db";
 
 interface Props {
   curso: IMongoCurso;

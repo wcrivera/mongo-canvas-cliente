@@ -1,4 +1,4 @@
-import { store } from '../store';
+import { store } from '@/store';
 
 const baseUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -31,7 +31,7 @@ export const fetchWithJWT = async (
   const response = await fetch(url, config);
 
   if (response.status === 401) {
-    const { logout } = await import('../store/slices/auth/authSlice');
+    const { logout } = await import('@/store/slices/auth/authSlice');
     store.dispatch(logout());
     throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
   }

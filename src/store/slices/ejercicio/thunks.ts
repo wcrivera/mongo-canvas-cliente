@@ -1,4 +1,4 @@
-import { fetchConToken } from "../../../helpers/fetch";
+import { fetchConToken } from "@/helpers/fetch";
 import type { AppDispatch } from "../..";
 import type {
   TipoPreguntaEjercicio,
@@ -208,11 +208,13 @@ export const cambiarPositionEjercicio = ({
     dispatch(startLoadingEjercicio());
     try {
       const resp = await fetchConToken(
-        `api/ejercicios/${ejercicio_id}/position`,
+        `api/admin/quizzes/${ejercicio_id}/position`,
         { direction },
         "PATCH",
       );
       const body = await resp.json();
+      console.log("cambiarPositionEjercicio", body);
+
       if (body.ok) {
         dispatch(intercambiarEjercicios(body.data));
         dispatch(endLoadingEjercicio());

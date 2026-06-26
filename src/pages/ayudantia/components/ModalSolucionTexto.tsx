@@ -4,15 +4,15 @@ import {
   Button, Typography, CircularProgress,
 } from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   crearSolucionTexto,
   editarSolucionTexto,
   eliminarSolucionTexto,
-} from "../../../store/slices/solucionTexto";
-import type { ISolucionTexto } from "../../../store/slices/solucionTexto";
-import MathTextEditor from "../../../components/CKEditor/MathTextEditor";
-import { normalizeForEditor } from "../../../components/CKEditor/mathUtils";
+} from "@/store/slices/solucionTexto";
+import type { ISolucionTexto } from "@/store/slices/solucionTexto";
+import MathTextEditor from "@/components/CKEditor/MathTextEditor";
+import { normalizeForEditor } from "@/components/CKEditor/mathUtils";
 
 interface Props {
   ayudantia_id: string;

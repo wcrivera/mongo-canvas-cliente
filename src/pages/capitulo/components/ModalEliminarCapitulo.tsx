@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useAppDispatch } from "../../../store/hooks";
-import { eliminarCapitulo, type ICapitulo } from "../../../store/slices/capitulo";
+import { useAppDispatch } from "@/store/hooks";
+import { eliminarCapitulo, type ICapitulo } from "@/store/slices/capitulo";
 import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
 import { WarningAmber } from "@mui/icons-material";
-import { chapter } from "../../../db/db";
+import { chapter } from "@/db/db";
 
 export const ModalEliminarCapitulo = ({
   capitulo,

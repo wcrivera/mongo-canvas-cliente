@@ -2,9 +2,9 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setCredenciales } from "../../store/slices/auth/authSlice";
-import { cargarPerfil }    from "../../store/slices/auth/thunks";
-import type { AppDispatch } from "../../store";
+import { setCredenciales } from "@/store/slices/auth/authSlice";
+import { cargarPerfil }    from "@/store/slices/auth/thunks";
+import type { AppDispatch } from "@/store";
 
 const decodeJWT = (token: string) => {
   const base64Url = token.split(".")[1];

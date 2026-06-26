@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 
 import Reveal from "reveal.js";
 import RevealMath from "reveal.js";
-import TiptapRenderer from "../../../components/CKEditor/TiptapRenderer";
+import TiptapRenderer from "@/components/CKEditor/TiptapRenderer";
 import type { IConfigReveal, ISlide } from "../EditorDiapositiva";
 
 type Props = {

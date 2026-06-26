@@ -1,8 +1,8 @@
 import { Button, CircularProgress, TextField, Typography } from "@mui/material";
-import { BaseModal } from "../../../components/BaseModal/BaseModal";
+import { BaseModal } from "@/components/BaseModal/BaseModal";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import { crearMongoCurso } from "../../../store/slices/mongoCurso";
-import { useAppDispatch } from "../../../store/hooks";
+import { crearMongoCurso } from "@/store/slices/mongoCurso";
+import { useAppDispatch } from "@/store/hooks";
 import { useState } from "react";
 
 interface Props {

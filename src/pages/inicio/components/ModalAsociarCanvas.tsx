@@ -6,12 +6,12 @@ import {
   Radio, RadioGroup, FormControlLabel,
 } from "@mui/material";
 import SchoolIcon             from "@mui/icons-material/School";
-import { useAppDispatch, useAppSelector } from "../../../store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   obtenerCanvasCursosDisponibles,
   limpiarDisponibles,
-} from "../../../store/slices/canvasCurso";
-import { asociarCanvasCurso } from "../../../store/slices/mongoCurso";
+} from "@/store/slices/canvasCurso";
+import { asociarCanvasCurso } from "@/store/slices/mongoCurso";
 
 interface Props {
   curso_id: string;

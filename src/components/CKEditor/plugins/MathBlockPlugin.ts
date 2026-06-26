@@ -231,6 +231,7 @@ export class MathBlockPlugin extends Plugin {
 
         const styleParts: string[] = [
           "border-radius:6px",
+          "padding-top: 0em",
           "padding-left: 1em",
           "margin-bottom: 2em",
         ];

@@ -4,9 +4,9 @@ import {
   DialogTitle, TextField, CircularProgress,
 } from "@mui/material";
 import LayersIcon from "@mui/icons-material/Layers";
-import { useAppDispatch } from "../../../store/hooks";
-import { crearCapitulo } from "../../../store/slices/capitulo";
-import { chapter } from "../../../db/db";
+import { useAppDispatch } from "@/store/hooks";
+import { crearCapitulo } from "@/store/slices/capitulo";
+import { chapter } from "@/db/db";
 
 const ModalCrearCapitulo = ({
   curso_id,
