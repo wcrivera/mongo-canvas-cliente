@@ -50,7 +50,7 @@ import type { IItemFIBViewer } from "@/components/quiz/PreguntaViewer";
 import ModalEliminar from "./ModalEliminar";
 import FormPregunta from "../../quiz/components/FormPregunta";
 import { obtenerPreguntas } from "@/store/slices/quiz";
-import { normalizeForEditor } from "@/components/CKEditor/mathUtils";
+import { normalizeForEditor, cleanForDB } from "@/components/CKEditor/mathUtils";
 
 // ── Colores por tipo ──────────────────────────────────────────────────────────
 
@@ -176,10 +176,6 @@ const EjercicioCard = ({
       : (pregunta?.enunciado ?? ""),
   );
 
-  const enunciadoPregunta = esFIB
-    ? pregunta?.enunciado_contexto || pregunta?.enunciado || ""
-    : (pregunta?.enunciado ?? "");
-
   const [puntos, setPuntos] = useState(pregunta?.puntos ?? 1);
   const [opciones, setOpciones] = useState<IOpcionEditor[]>(
     (pregunta?.opciones ?? []).map((op) => ({
@@ -189,12 +185,6 @@ const EjercicioCard = ({
     })),
   );
 
-  const opcionesPregunta = (pregunta?.opciones ?? []).map((op) => ({
-    texto: op.texto,
-    es_correcta: op.es_correcta,
-    blank_id: op.blank_id ?? null,
-  }));
-  
   const [pares, setPares] = useState<IParEditor[]>(
     (pregunta?.pares ?? []).map((p) => ({
       izquierda: p.izquierda,
@@ -322,7 +312,7 @@ const EjercicioCard = ({
 
     const payload: Parameters<typeof editarPregunta>[0] = {
       pregunta_id: pregunta._id,
-      enunciado,
+      enunciado: cleanForDB(enunciado), // ← limpiar
       puntos,
     };
 
@@ -330,7 +320,10 @@ const EjercicioCard = ({
       case "multiple_choice":
       case "multiple_answers":
       case "true_false":
-        payload.opciones = opciones;
+        payload.opciones = opciones.map((op) => ({
+          ...op,
+          texto: cleanForDB(op.texto), // ← limpiar cada alternativa
+        }));
         break;
       case "matching":
         payload.pares = pares;
@@ -339,7 +332,7 @@ const EjercicioCard = ({
         payload.respuesta_numerica = respNum;
         break;
       case "fill_in_multiple_blanks":
-        payload.enunciado_contexto = enunciado;
+        payload.enunciado_contexto = cleanForDB(enunciado);
         payload.columnas = columnas;
         payload.tipo_pimu = items[0]?.tipoPimu ?? "numero";
         payload.items = items.map((it) => ({
@@ -362,7 +355,7 @@ const EjercicioCard = ({
               o.texto.trim(),
             )
             .map((o: { texto: string; es_correcta: boolean }) => ({
-              texto: o.texto.trim(),
+              texto: cleanForDB(o.texto.trim()), // ← limpiar
               es_correcta: o.es_correcta,
               blank_id: b.blank_id,
             })),
@@ -725,11 +718,11 @@ const EjercicioCard = ({
               {editando ? (
                 <PreguntaEditor
                   tipo={pregunta.tipo as TipoPreguntaEditor}
-                  enunciado={normalizeForEditor(enunciadoPregunta)}
+                  enunciado={normalizeForEditor(enunciado)}
                   onEnunciadoChange={setEnunciado}
                   puntos={puntos}
                   onPuntosChange={setPuntos}
-                  opciones={opcionesPregunta}
+                  opciones={opciones}
                   onOpcionesChange={setOpciones}
                   pares={pares}
                   onParesChange={setPares}

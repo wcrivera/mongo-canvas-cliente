@@ -81,6 +81,7 @@ export const HTML_SUPPORT_CONFIG = {
       ],
       classes: false,
       styles: true,
+      module: "GeneralHtmlSupport",
     },
     {
       name: "table",

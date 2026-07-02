@@ -106,6 +106,9 @@ export const crearDiapositiva = ({
         "POST",
       );
       const body = await resp.json();
+
+      console.log("crearDiapositiva", body);
+
       if (body.ok) {
         dispatch(agregarDiapositiva(body.data));
         dispatch(endLoadingDiapositiva());
